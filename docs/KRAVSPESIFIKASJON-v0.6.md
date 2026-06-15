@@ -29,13 +29,24 @@ Legeerklæring for førerrett er et offentlig skjema som legen fyller ut og send
 
 ## 2. Avgrensninger
 
-| Inkludert i PoC | Ikke inkludert |
+### 2.1 MVP-scope
+
+Dette er eksplisitt innenfor scope for PoC og v1:
+
+| I scope | Ikke i scope |
 |---|---|
-| SMART EHR Launch-flyt | Fullstendig PKI-signering av lege |
-| FHIR-prefill av alle feltgrupper | DocumentReference writeback til EPJ |
-| Altinn-innlogging via ID-porten | Integrasjon mot produksjons-EPJ |
-| PDF-generering og arkivering | Samtykke-/tilgangsmodell |
-| Norske FHIR OID-identifikatorer | Multifaktor-autentisering i EPJ |
+| SMART App Launch 2.0 (EHR Launch) | SMART Backend Services |
+| Read-only FHIR (prefill) | FHIR Write / FHIR-innsending |
+| Konfidensielt klient (server-side) | Dynamic Client Registration |
+| EHR Launch-flyt | Standalone Launch |
+| Én pasient, én konsultasjon | Multi-pasient-arbeidsflyt |
+| Norske FHIR-basisprofiler (no-basis) | CDS Hooks |
+| Altinn-innlogging via ID-porten | PKI-signering av lege (kvalifisert) |
+| PDF-generering og arkivering i Altinn | DocumentReference writeback til EPJ |
+| — | Samtykke-/tilgangsmodell |
+| — | Multifaktor-autentisering i EPJ |
+
+**Uten denne listen** vil prosjektet typisk bli dratt mot SMART Backend Services, CDS Hooks og FHIR Write — som alle er separate integrasjonsprosjekter.
 
 ---
 
@@ -142,6 +153,16 @@ patient/Patient.read patient/Encounter.read patient/Condition.read
 user/Practitioner.read user/Organization.read
 ```
 
+Scopes er konfigurert i `SmartLaunchController.cs` og sendes som `scope`-parameter i authorize-requesten. Appen **skal ikke be om mer enn det som trengs** (prinsippet om minste privilegium). Dersom EPJ-et avviser et scope (returnerer `scope`-felt i tokenresponsen som er smalere enn forespurt), må appen degradere elegant — se seksjon om feilhåndtering i IMPLEMENTERING.md.
+
+**Leverandørvariasjoner:** Ikke alle EPJ-systemer støtter alle scopes. Kjente utfordringer:
+
+| Scope | Status i norske EPJ-er |
+|---|---|
+| `launch/encounter` | Ikke støttet av alle — kan mangle Encounter i token |
+| `user/PractitionerRole.read` | Varierer — noen eksponerer `PractitionerRole`, andre bare `Practitioner` |
+| `fhirUser` | Returneres enten som token-felt eller JWT-claim (se implementeringsguiden) |
+
 ### 6.3 Sikkerhetskrav
 
 - PKCE påkrevd (S256)
@@ -150,7 +171,42 @@ user/Practitioner.read user/Organization.read
 - `iss`-validering mot tillatt-liste (`AllowedIssuerList` i konfig)
 - State-parameter for CSRF-beskyttelse
 
-### 6.4 Åpne problemer
+### 6.4 EPJ-variasjoner og kompatibilitetsstrategi
+
+SMART App Launch-spesifikasjonen standardiserer launch-flyt og autentisering — **ikke** hvilke FHIR-ressurser som finnes, hvilke profiler som brukes, eller hvilke søk som støttes. Dette er den største praktiske risikoen i et multi-EPJ-scenario.
+
+**Kjente norske EPJ-systemer og forventet SMART-støtte:**
+
+| EPJ | SMART App Launch | FHIR R4 | HelseID-integrert | Encounter | PractitionerRole |
+|---|---|---|---|---|---|
+| DIPS Arena | Ja (eget SMART-lag) | R4 | Planlagt | Ja | Delvis |
+| CGM Allmennlegesystem | Ukjent | Ukjent | Ukjent | Ukjent | Ukjent |
+| Infodoc Plenario | Ukjent | Ukjent | Ukjent | Ukjent | Ukjent |
+| Pridok | Ukjent | Ukjent | Ukjent | Ukjent | Ukjent |
+
+**Strategi for håndtering av variasjoner:**
+
+1. **CapabilityStatement-sjekk** (se seksjon 4.3, punkt 2): Les `GET /fhir/metadata` ved oppstart og tilpass oppførsel
+2. **Ressursfallback**: Hvis `Encounter` mangler i token — forsøk søk via `Patient/$everything` eller `Encounter?patient={id}&status=in-progress`
+3. **Profil-toleranse**: Ikke anta `identifier[0]` er fnr — søk etter OID `2.16.578.1.12.4.1.4.1` eksplisitt
+4. **Graceful degradation**: Manglende ressurser betyr tomme felt, ikke feil — legen fyller inn manuelt
+
+**Det viktigste arkitekturspørsmålet:** Hvilken konkret EPJ er første integrasjonsmål? Arkitekturen er moden nok — den største gjenværende risikoen er hva DIPS, CGM, Infodoc eller Pridok faktisk eksponerer av FHIR R4 i praksis.
+
+### 6.5 SMART App Lifecycle
+
+Klientregistrering mot EPJ-leverandøren er ikke en engangsoperasjon:
+
+| Hendelse | Konsekvens | Håndtering |
+|---|---|---|
+| Ny scope kreves | Ny klientregistrering eller re-consent | Planlegg scope-lista konservativt |
+| Ny redirect URI | Oppdatering hos EPJ-leverandør (kan ta uker) | Fryse URI-er tidlig i prosjektet |
+| Ny EPJ-versjon | SMART-server-URL kan endre seg | Bruk discovery (`/.well-known/smart-configuration`), ikke hardkod |
+| Klienthemmelighet roteres | Koordinert deploy av ny `client_secret` | Secrets via Azure Key Vault, ikke konfig-fil |
+
+**Registreringsprosess mot norske EPJ-leverandører** er per i dag manuell og leverandørspesifikk. Det finnes ingen nasjonal klientregistry (per 2026). Tidlig dialog med EPJ-leverandør er kritisk.
+
+### 6.6 Åpne problemer
 
 | Problem | Status | Prioritet |
 |---|---|---|
@@ -181,7 +237,49 @@ Altinn options-fil: `options/kjoretoygrupper.json`
 
 ---
 
-## 8. Referanser
+## 8. Nasjonal profilstrategi
+
+SMART App Launch standardiserer launch og autentisering. FHIR-profiler standardiserer data. **Dette er to separate problemer** — og interoperabilitet krever begge.
+
+### 8.1 Norske basisprofiler (no-basis)
+
+HL7 Norge vedlikeholder basisprofiler for FHIR R4 som norske systemer forventes å følge:
+
+| Profil | Brukt i PoC | Beskrivelse |
+|---|---|---|
+| `NoBasisPatient` | Ja | fnr via OID `2.16.578.1.12.4.1.4.1` |
+| `NoBasisPractitioner` | Ja | HPR-nummer via OID `2.16.578.1.12.4.1.4.4` |
+| `NoBasisOrganization` | Ja | Orgnr via OID `2.16.578.1.12.4.1.4.101`, HER-id via `.4.2` |
+| `NoBasisEncounter` | Delvis | Bruker standard R4-Encounter |
+| `NoBasisCondition` | Nei | ICD-10-kodeverk benyttes, men profil ikke validert |
+
+### 8.2 HelseAPI og nasjonal infrastruktur
+
+| Initiativ | Relevans |
+|---|---|
+| **HelseAPI** (NHN) | Nasjonal FHIR-gateway. Sannsynlig fremtidig integrasjonspunkt i stedet for direktekobling mot EPJ. |
+| **HelseID** (NHN) | Nasjonal identitetstjeneste for helsepersonell. Potensielt erstatning/supplement til EPJ-eget SMART-lag. Støtter PKCE og OpenID Connect. |
+| **Pasientens legemiddelliste (PLL)** | Eksempel på nasjonal FHIR-tjeneste via HelseAPI — viser mønsteret som er i ferd med å etableres. |
+
+### 8.3 Førerrett-spesifikke profiler
+
+Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**. Dette PoC-et bruker generiske no-basis-profiler. Anbefalingen for produksjonssetting er:
+
+1. Definere en `NoFoerTrafikkLegeerklaeringComposition`-profil (basert på Composition eller Bundle)
+2. Registrere i Simplifier.net under HL7 Norway
+3. Koordinere med Helsedirektoratet (tjenesteeier) og Statens vegvesen (mottaker)
+
+### 8.4 Kodeverk
+
+| Kodeverk | OID / system | Brukt til |
+|---|---|---|
+| ICD-10 | `urn:oid:2.16.578.1.12.4.1.1.7110` | Diagnosekoder (Condition) |
+| Kjøretøygrupper | (lokal) | Altinn options |
+| Kjønn (administrativt) | `http://hl7.org/fhir/administrative-gender` | Patient.gender |
+
+---
+
+## 9. Referanser
 
 ### Standarder
 
@@ -225,3 +323,4 @@ Altinn options-fil: `options/kjoretoygrupper.json`
 | v0.5 | 2026-06 | Sikkerhetskrav og kjøretøygrupper |
 | **v0.6** | **2026-06-15** | PoC-resultater innarbeidet. Kjente begrensninger dokumentert. SVG-diagrammer oppdatert. Nettverksruting lagt til. |
 | **v0.6.1** | **2026-06-15** | BFF-mønster presisert. CapabilityStatement lagt til i discovery-flyt. fhirUser-forbehold (JWT-claim vs. tokenfelt) innarbeidet. |
+| **v0.6.2** | **2026-06-15** | Eksplisitt MVP-avgrensning (seksjon 2.1). Scope governance og EPJ-variasjonstrategi (seksjon 6.2/6.4). SMART App Lifecycle (6.5). Nasjonal profilstrategi og HelseAPI/HelseID (seksjon 8). |

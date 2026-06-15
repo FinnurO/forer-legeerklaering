@@ -16,6 +16,12 @@
 6. [Nettverksruting](#6-nettverksruting)
 7. [Beste praksis](#7-beste-praksis)
 8. [Kjente fallgruver](#8-kjente-fallgruver)
+9. [Test-endepunkt for lokal utvikling](#9-test-endepunkt-for-lokal-utvikling)
+10. [Feilhåndtering — krav til robusthet](#10-feilhåndtering--krav-til-robusthet)
+11. [Cache-strategi for FHIR-data](#11-cache-strategi-for-fhir-data)
+12. [Proxy-sikkerhet og audit logging](#12-proxy-sikkerhet-og-audit-logging)
+13. [Teststrategi](#13-teststrategi)
+14. [Referanser og inspirasjonskilder](#14-referanser-og-inspirasjonskilder)
 
 ---
 
@@ -377,7 +383,27 @@ Uten dette får du redirect-loop: Altinn sender uautentiserte requests til innlo
 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 ```
 
-### 7.4 Nginx og URL-parametere med `://`
+### 7.4 CapabilityStatement og graceful degradation
+
+Les alltid `GET /fhir/metadata` ved oppstart og tilpass:
+
+```csharp
+// Sjekk om SMART-extensions finnes i CapabilityStatement
+var meta = await client.GetStringAsync($"{fhirBase}/metadata");
+// Hvis "http://fhir-registry.smarthealthit.org/StructureDefinition/capabilities"
+// ikke finnes → fall tilbake til hardkodet SMART-konfig fra appsettings
+
+// Sjekk om Encounter støttes
+// Hvis ikke: forsøk GET /fhir/Encounter?patient={id}&status=in-progress
+```
+
+Dersom `/.well-known/smart-configuration` mangler men CapabilityStatement finnes:
+```
+GET /fhir/metadata → rest[0].security.extension[smarts-capabilities]
+                                        → authorizationUrl, tokenUrl
+```
+
+### 7.5 Nginx og URL-parametere med `://`
 
 Nginx i Altinn Local Test stripper query-parametere som inneholder `://` i verdien. Dette betyr at `?iss=http://localhost:9090` vil miste `iss`-parameteren.
 
@@ -387,7 +413,7 @@ iss ??= _config["SmartOnFhir:DefaultIss"];
 launch ??= _config["SmartOnFhir:DefaultLaunch"];
 ```
 
-### 7.5 IDataProcessor.ProcessDataRead
+### 7.6 IDataProcessor.ProcessDataRead
 
 - Kalles av `DataController.Get` ved hver GET til data-endepunktet
 - Kjøres i kontekst av HTTP-requesten (session er tilgjengelig)
@@ -397,7 +423,7 @@ launch ??= _config["SmartOnFhir:DefaultLaunch"];
 _logger.LogInformation("ProcessDataRead called for instance {Id}", instance?.Id);
 ```
 
-### 7.6 FHIR URL-konstruksjon
+### 7.7 FHIR URL-konstruksjon
 
 Practitioner-URL fra SMART token (`fhirUser`) er en absolutt URL. Bruk den direkte:
 ```csharp
@@ -458,7 +484,160 @@ public async Task<IActionResult> TestPrefill()
 
 ---
 
-## 10. Referanser og inspirasjonskilder
+## 10. Feilhåndtering — krav til robusthet
+
+FHIR-kall kan feile på mange måter. Løsningen **må ikke krasje** når en ressurs mangler — legen skal alltid få opp skjemaet og kan fylle inn manuelt.
+
+### Forventede feilscenarier
+
+| Scenario | Årsak | Håndtering |
+|---|---|---|
+| `launch` finnes, men `patient` mangler i token | EPJ støtter ikke `launch/patient` | Forsøk `GET /fhir/Patient?identifier={fnr}` fra HelseID-kontekst, ellers tom |
+| `Patient` returnerer 404 | Feil pasient-ID i token | Logg advarsel, la felt stå tomme |
+| `Encounter` returnerer 404 eller 403 | Encounter-ID utløpt eller `launch/encounter` ikke støttet | Forsøk `GET /fhir/Encounter?patient={id}&status=in-progress`, ellers tom |
+| `Condition.read` ikke autorisert (403) | Scope ikke innvilget av EPJ | Fang `HttpRequestException` med status 403, logg, hopp over |
+| `fhirUser` mangler i token | EPJ inkluderer ikke `fhirUser` | Forsøk `/fhir/Practitioner/{id}` via annen kontekst, ellers tom |
+| FHIR-server utilgjengelig (timeout) | Nettverksfeil, EPJ nede | Timeout etter 5 sek, skjema åpnes uten prefill |
+
+### Mønster for defensiv FHIR-henting
+
+```csharp
+private async Task<JsonDocument?> TryGetFhirResource(HttpClient client, string url, string name)
+{
+    try
+    {
+        var json = await client.GetStringAsync(url);
+        return JsonDocument.Parse(json);
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+    {
+        _logger.LogWarning("FHIR {Name} not found: {Url}", name, url);
+        return null;
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
+    {
+        _logger.LogWarning("FHIR {Name} access denied (scope not granted): {Url}", name, url);
+        return null;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "FHIR {Name} fetch failed: {Url}", name, url);
+        return null;
+    }
+}
+```
+
+Scoped scope-nedgradering (hvis EPJ returnerer smalere scope enn forespurt):
+```csharp
+// Etter token-utveksling: sjekk hva EPJ faktisk innvilget
+var grantedScope = tokenResponse["scope"]?.GetString() ?? "";
+var hasEncounter = grantedScope.Contains("launch/encounter");
+// Tilpass hva vi forsøker å hente
+```
+
+---
+
+## 11. Cache-strategi for FHIR-data
+
+### Hva som caches i dag
+
+| Data | Lagring | Levetid |
+|---|---|---|
+| Access token | ASP.NET Core Session + IMemoryCache | Session-timeout (30 min) |
+| FHIR-kontekst (patientId, encounterId) | Samme | Samme |
+| FHIR-ressursdata (Patient, Practitioner...) | **Ikke cachet** — hentes ved hver `ProcessDataRead` | — |
+
+### Vurdering
+
+FHIR-data hentes på nytt ved **hver** GET mot data-endepunktet. Dette er akseptabelt i PoC der:
+- Skjemaet åpnes én gang
+- FHIR-kall er raske (lokal server)
+
+I produksjon bør data caches per instans:
+```csharp
+// Cachet i IMemoryCache med instans-ID som nøkkel
+var cacheKey = $"fhir_data_{instance.Id}";
+if (!_memoryCache.TryGetValue(cacheKey, out ForerLegeerklaeringModel cached))
+{
+    cached = await FetchFromFhir(ctx);
+    _memoryCache.Set(cacheKey, cached, TimeSpan.FromMinutes(15));
+}
+```
+
+### Personvern
+
+FHIR-data er helseopplysninger. Krav:
+- **Ingen logging av helseopplysninger** (innhold i FHIR-ressurser) — logg kun ressurs-ID og HTTP-statuskoder
+- **Ingen persistering til disk** — kun minne, og kun for sessionens varighet
+- **Cache tømmes** når session utløper (IMemoryCache med AbsoluteExpiration = session-timeout)
+- I distribuert deploy: bruk Redis med kryptering, ikke IDistributedMemoryCache uten kryptering
+
+---
+
+## 12. Proxy-sikkerhet og audit logging
+
+BFF-mønsteret (Altinn-appen som FHIR-proxy) krever egne sikkerhetskrav i produksjon:
+
+### Krav
+
+| Krav | Beskrivelse |
+|---|---|
+| Audit logging | Alle FHIR-kall skal logges med: tidspunkt, legens HPR, pasientens fnr (som hash eller referanse), ressurstype, HTTP-status |
+| Token forwarding | Access token videresendes **kun** til den EPJ-en det ble utstedt fra (`iss`-validering) |
+| Token exchange | Vurder om legens HelseID-token bør brukes i stedet for EPJ-token der HelseAPI er integrasjonspunkt |
+| Tilgangskontroll | Verifiser at EPJ-ets token faktisk tilhører den innloggede Altinn-brukeren (fnr-match via ID-porten og HelseID) |
+| Rate limiting | Begrens antall FHIR-kall per session for å hindre misbruk |
+
+### Minimalt audit-mønster
+
+```csharp
+_logger.LogInformation(
+    "FHIR audit: hpr={Hpr} resource={Resource} id={Id} status={Status}",
+    practitionerHpr, resourceType, resourceId, (int)response.StatusCode
+);
+// Aldri log fnr eller annet pasientidentifiserende i klartekst
+```
+
+---
+
+## 13. Teststrategi
+
+### Lokalt (PoC)
+
+| Verktøy | Formål |
+|---|---|
+| HAPI FHIR (lokal) | Testserver med syntetiske ressurser (se `seed.ps1`) |
+| SMART Auth Mock | Simulerer EPJ-autorisasjonsserver |
+| `/smart/test-prefill` | Bypasser OAuth for rask prefill-testing |
+
+### Integrasjonstesting mot reelle SMART-servere
+
+| Verktøy | URL | Formål |
+|---|---|---|
+| SMARTHealthIT Sandbox | https://launch.smarthealthit.org/ | Offentlig SMART EHR Launch-simulator med syntetiske pasienter |
+| Inferno Test Suite | https://inferno.healthit.gov/ | Sertifiseringstesting av SMART App Launch-klienter |
+| HAPI FHIR public | https://hapi.fhir.org/baseR4 | Offentlig FHIR R4-testserver |
+
+### Testscenarioer som bør dekkes
+
+| Scenario | Prioritet |
+|---|---|
+| Happy path: alle ressurser finnes og returneres | Kritisk |
+| Encounter mangler i token | Høy |
+| Condition.read ikke autorisert | Høy |
+| Patient har ingen aktiv Encounter | Medium |
+| fhirUser mangler i token | Medium |
+| FHIR-server timeout | Medium |
+| EPJ returnerer smalere scope enn forespurt | Høy |
+| CapabilityStatement mangler SMART-extensions | Medium |
+
+### Syntetiske pasienter
+
+For testing mot SMARTHealthIT og Inferno: bruk syntetiske testpasienter fra [Synthea](https://github.com/synthetichealth/synthea). For norske OID-er: bruk testfødselsnummer fra Skatteetaten testdataregister.
+
+---
+
+## 14. Referanser og inspirasjonskilder
 
 ### Standarder og spesifikasjoner
 
