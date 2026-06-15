@@ -61,7 +61,7 @@ app.get("/.well-known/smart-configuration", (req, res) => {
       "launch/encounter", "offline_access",
       "patient/Patient.read", "patient/Encounter.read",
       "patient/Condition.read", "patient/Observation.read",
-      "user/Practitioner.read", "user/Organization.read",
+      "user/Practitioner.read", "user/Organization.read", "user/PractitionerRole.read",
     ],
     response_types_supported: ["code"],
     code_challenge_methods_supported: ["S256"],

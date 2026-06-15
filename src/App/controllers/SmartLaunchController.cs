@@ -116,6 +116,7 @@ namespace Altinn.App.Controllers
                     "patient/Observation.read",
                     "user/Practitioner.read",
                     "user/Organization.read",
+                    "user/PractitionerRole.read",
                 }
             );
 

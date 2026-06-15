@@ -321,6 +321,44 @@ dotnet run
 # Lytter på http://localhost:5005 og https://localhost:5006
 ```
 
+### Token-livssyklus
+
+SMART access token lever kun server-side i ASP.NET Core session. Her er hele livssyklusen:
+
+```
+EPJ utsteder token (expires_in: 3600s typisk)
+        │
+        ▼
+SmartLaunchController.Callback()
+  → Lagrer i session: smart_token, smart_fhir_context
+  → Lagrer i IMemoryCache (fallback, AbsoluteExpiration = token-utløp)
+        │
+        ▼
+FhirPrefillService.ProcessDataRead()
+  → Leser session → gjør FHIR-kall → prefyller skjema
+        │
+        ├─ Token utløpt? → FHIR-kall returnerer 401
+        │                  → Tom prefill, legen fyller inn manuelt
+        │                  → Logger advarsel (ikke exception)
+        │
+        └─ Session utløpt (IdleTimeout 30 min)? → Ny SMART-launch nødvendig
+```
+
+**Refresh token:** `offline_access`-scope forespørres for å få refresh token. Ikke alle EPJ-systemer støtter dette. Refresh-logikk er **ikke implementert i PoC** — tokenet brukes til det utløper, deretter må legen gjøre en ny launch.
+
+**Produksjonskrav for token-håndtering:**
+
+| Krav | Implementering |
+|---|---|
+| Token aldri i nettleser | `HttpOnly` session cookie — ✓ implementert |
+| Token utløp håndteres | Graceful degradation til tom prefill — ✓ implementert |
+| Refresh token | `offline_access`-scope forespurt — **ikke** implementert i PoC |
+| Session timeout | `IdleTimeout = 30 min` i `AddSession()` — ✓ implementert |
+| Logout / token revocation | Ikke implementert — session ryddes ved nettleser-lukk |
+| Token binding (DPoP) | Kreves av HelseID prod — ikke implementert i PoC |
+
+**Hva skjer ved token-utløp under utfylling:** Legen er midt i skjemautfyllingen. FHIR-prefill er allerede gjort. Skjemaet er åpent. Token-utløp påvirker ikke det pågående arbeidet — dataene er allerede i Altinns datamodell. Legen kan fullføre og sende inn normalt.
+
 ---
 
 ## 6. Nettverksruting

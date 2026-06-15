@@ -48,6 +48,21 @@ Dette er eksplisitt innenfor scope for PoC og v1:
 
 **Uten denne listen** vil prosjektet typisk bli dratt mot SMART Backend Services, CDS Hooks og FHIR Write — som alle er separate integrasjonsprosjekter.
 
+### 2.2 Suksesskriterier
+
+PoC er vellykket når følgende er demonstrert ende-til-ende:
+
+| Kriterium | Målbar definisjon |
+|---|---|
+| SMART EHR Launch | Legen starter appen fra EPJ med `iss` + `launch`-parameter; OAuth-flyten fullføres uten manuell innlogging i FHIR |
+| Pasientdata prefylt | Navn og fødselsnummer er automatisk utfylt fra `Patient`-ressurs |
+| Legedata prefylt | HPR-nummer og legens navn er automatisk utfylt fra `Practitioner`-ressurs |
+| Konsultasjonskontekst | Minst én klinisk ressurs (`Encounter` eller `Condition`) er hentet og brukt |
+| Innsending | Skjemaet kan fylles ut og sendes inn via Altinn; PDF-kvittering genereres |
+| Feiltoleranse | Dersom én FHIR-ressurs mangler, åpnes skjemaet med tomme felt — ikke feilmelding |
+
+**Akseptansetest:** PoC er bestått mot minimum én SMART-kompatibel server — `SMARTHealthIT Sandbox` i automatisert test, og lokal HAPI FHIR + SMART Auth Mock i manuell test.
+
 ---
 
 ## 3. Aktører
@@ -72,7 +87,12 @@ EPJ → SMART Launch → Altinn App → FHIR API → Prefill → Skjema → Inns
 
 **Nøkkelprinsipp:** FHIR brukes **utelukkende til forhåndsutfylling**. Altinns datamodell og innsendingsmekanisme er uendret. Access token lagres **aldri** i nettleseren — kun server-side i ASP.NET Core session.
 
-**BFF-mønster (Backend For Frontend):** Altinn-appen fungerer som konfidensielt klient og mellomlag. All token-utveksling skjer server-side; nettleseren ser aldri access token. FHIR-kall gjøres server-side med Bearer token. Dette er et krav for sikker EPJ-integrasjon.
+**BFF-mønster (Backend For Frontend) — dette er arkitekturvalget:** Altinn-appen fungerer som konfidensielt klient og mellomlag. All token-utveksling og alle FHIR-kall skjer server-side. Nettleseren ser aldri access token og gjør aldri direkte FHIR-kall.
+
+Dette er ikke ett av flere alternativer — det er det eneste valget i dette prosjektet. En browser-direkte-FHIR-tilnærming (f.eks. via `fhirclient-js`) er **avvist** fordi:
+- SMART-tokenet ville ligget eksponert i nettleseren
+- Det er ikke mulig å beskytte `client_secret` i en SPA
+- Loggings- og audit-krav forutsetter server-side kontroll
 
 Se: [Arkitekturoversikt](./arkitektur-oversikt.svg) | [Sekvensdiagram](./smart-launch-sekvens.svg) | [Nettverksruting](./nettverksruting.svg)
 
@@ -151,10 +171,12 @@ XmlRoot: ForerLegeerklaering
 ### 6.2 Scopes som kreves
 
 ```
-openid profile fhirUser launch launch/patient launch/encounter
-patient/Patient.read patient/Encounter.read patient/Condition.read
-user/Practitioner.read user/Organization.read
+openid profile fhirUser launch launch/patient launch/encounter offline_access
+patient/Patient.read patient/Encounter.read patient/Condition.read patient/Observation.read
+user/Practitioner.read user/Organization.read user/PractitionerRole.read
 ```
+
+**Begrunnelse for `user/`-prefix på behandlerdata:** `patient/`-scopes gir kun tilgang til ressurser knyttet til den aktuelle pasienten i launch-konteksten. `Practitioner`, `Organization` og `PractitionerRole` tilhører *behandleren*, ikke pasienten — disse forespørres med `user/`-prefix. Pasientrelaterte ressurser (`Patient`, `Encounter`, `Condition`, `Observation`) forespørres med `patient/`.
 
 Scopes er konfigurert i `SmartLaunchController.cs` og sendes som `scope`-parameter i authorize-requesten. Appen **skal ikke be om mer enn det som trengs** (prinsippet om minste privilegium). Dersom EPJ-et avviser et scope (returnerer `scope`-felt i tokenresponsen som er smalere enn forespurt), må appen degradere elegant — se seksjon om feilhåndtering i IMPLEMENTERING.md.
 
@@ -165,6 +187,7 @@ Scopes er konfigurert i `SmartLaunchController.cs` og sendes som `scope`-paramet
 | `launch/encounter` | Ikke støttet av alle — kan mangle Encounter i token |
 | `user/PractitionerRole.read` | Varierer — noen eksponerer `PractitionerRole`, andre bare `Practitioner` |
 | `fhirUser` | Returneres enten som token-felt eller JWT-claim (se implementeringsguiden) |
+| `offline_access` | Gir refresh token — EPJ-støtte varierer |
 
 ### 6.3 Sikkerhetskrav
 
@@ -320,7 +343,80 @@ Fra NAVs "SMART on FHIR i ny sykmelding"-presentasjon (Standardiseringsutvalg 2-
 
 ---
 
-## 7. Digdir-kapabiliteter og helsesektorens tilsvarende løsninger
+## 7. Personvern og behandlingsgrunnlag
+
+### 7.1 Behandlingsgrunnlag
+
+Løsningen behandler helseopplysninger — en særskilt kategori personopplysninger etter GDPR art. 9. Behandlingsgrunnlaget er:
+
+| Hjemmel | Grunnlag |
+|---|---|
+| **Helsepersonelloven § 45** | Legen kan innhente helseopplysninger som er nødvendige for å yte forsvarlig hjelp |
+| **Pasientjournalloven § 6** | Databehandling er nødvendig for å yte helsehjelp |
+| **Vegtrafikkloven / førerkorforskriften** | Legen er pålagt å vurdere helsekrav for førerrett |
+| **GDPR art. 9 nr. 2 h** | Behandling er nødvendig for medisinsk diagnose eller yting av helsetjenester |
+
+Pasienten gir eksplisitt samtykke i egenerklæringens signatur: *«Når det er krav om helseattest, gir jeg legen fullmakt til å innhente nødvendige og relevante helseopplysninger fra spesialist og tidligere fastlege uavhengig av taushetsplikt.»*
+
+### 7.2 Dataflyt og behandlingsansvar
+
+```
+EPJ-system (behandlingsansvarlig for FHIR-data)
+    │
+    │  FHIR-oppslag (read-only, begrenset til konsultasjonskontekst)
+    ▼
+Altinn-appen / BFF (databehandler under Digdir)
+    │
+    │  Prefill av skjema — data i minne, aldri lagret i Altinn Storage
+    ▼
+Altinn-skjema (databehandler under Digdir)
+    │
+    │  Innsending av utfylt legeerklæring
+    ▼
+Helsedirektoratet / Statens vegvesen (behandlingsansvarlig for skjema)
+```
+
+**FHIR-data lagres ikke i Altinn.** Data hentes fra EPJ, brukes til å prefylle skjemaets datamodell i minnet, og forkastes. Det er kun legens ferdig utfylte IS-2569-skjema som arkiveres i Altinn.
+
+### 7.3 Dataminimering
+
+| Ressurs | Felt som hentes | Felt som ikke hentes |
+|---|---|---|
+| `Patient` | Navn, fødselsnummer, adresse | Diagnosehistorikk, legemidler, journalnotater |
+| `Practitioner` | Navn, HPR-nummer | Privatadresse, personal-ID |
+| `Organization` | Navn, orgnr, HER-id | Intern organisasjonsstruktur |
+| `Encounter` | Dato, type | Behandlingsbeskrivelse, notater |
+| `Condition` | ICD-10-kode, dato | Kliniske noter, behandlingsplan |
+
+Appen skal **aldri** be om `MedicationStatement`, `AllergyIntolerance`, `Immunization`, `DiagnosticReport` eller andre ressurser utover det IS-2569 krever.
+
+### 7.4 Logging og sporbarhet
+
+Alle FHIR-oppslag skal kunne spores. Minimum audit-informasjon per oppslag:
+
+| Felt | Beskrivelse |
+|---|---|
+| Tidspunkt | ISO 8601 |
+| Legens HPR-nummer | Fra SMART-token / FHIR Practitioner |
+| FHIR-ressurstype | Patient, Practitioner, osv. |
+| HTTP-statuskode | 200, 404, 403... |
+| SMART-issuer | EPJ-ets `iss`-verdi |
+
+Fnr og andre direkte identifikatorer logges **ikke** i klartekst — kun hashes eller referanser.
+
+### 7.5 Hva som ikke er avklart i PoC
+
+Følgende personvernspørsmål krever avklaring av Helsedirektoratet, NHN og Digdir — og er eksplisitt **ikke** løst i PoC:
+
+- Formell databehandleravtale mellom EPJ-leverandør og Digdir
+- Risikovurdering (DPIA) for hele dataflyten
+- Lagringstid for Altinn-arkivert legeerklæring
+- Passering av helseopplysninger gjennom Altinns infrastruktur — er Digdir databehandler eller behandlingsansvarlig?
+- Tilgangsstyring: kan alle Altinn-brukere med lege-rolle se alle legeerklæringer?
+
+---
+
+## 8. Digdir-kapabiliteter og helsesektorens tilsvarende løsninger
 
 Altinn Studio bygger på Digdirs fellesløsninger. Nedenfor beskrives tre sentrale kapabiliteter, deres relevans for dette prosjektet, og hva helsesektoren tilbyr av tilsvarende mekanismer.
 
@@ -369,7 +465,7 @@ Tillitsrammeverket er i praksis helsesektorens svar på Altinn Autorisasjon for 
 
 ---
 
-## 8. Kjøretøygrupper (kodeverk)
+## 9. Kjøretøygrupper (kodeverk)
 
 
 Altinn options-fil: `options/kjoretoygrupper.json`
@@ -390,7 +486,7 @@ Altinn options-fil: `options/kjoretoygrupper.json`
 
 ---
 
-## 9. Nasjonal profilstrategi
+## 10. Nasjonal profilstrategi
 
 SMART App Launch standardiserer launch og autentisering. FHIR-profiler standardiserer data. **Dette er to separate problemer** — og interoperabilitet krever begge.
 
@@ -432,7 +528,7 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 
 ---
 
-## 10. Referanser
+## 11. Referanser
 
 ### Standarder
 
@@ -467,7 +563,7 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 
 ---
 
-## 11. Endringslogg
+## 12. Endringslogg
 
 | Versjon | Dato | Endring |
 |---|---|---|
@@ -484,3 +580,4 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 | **v0.6.5** | **2026-06-16** | SSO-analyse revidert etter møte med NHN: HelseID bruker ID-porten som identitetsrot — SSO skjer via felles `pid`-claim uten ny plattformavtale. BFF-sidig tokenvalidering er riktig tilnærming. TestIDP og selvbetjening.test.nhn.no dokumentert. |
 | **v0.6.6** | **2026-06-16** | Ny seksjon 7: Digdir-kapabiliteter (Maskinporten, Altinn Autorisasjon, Ressursregisteret) med helsesektorens tilsvarende løsninger (HelseID client_credentials, HPR-autorisasjon, NHN Tillitsrammeverk). Seksjoner renummerert. |
 | **v0.6.7** | **2026-06-16** | Ny fil `PASIENTFLYT.md`: arkitekturforslag for digital egenerklæring (NA-0201) med Dialogporten og helsenorge.no. Fullstendig feltstruktur for egenerklæringen. Mapping NA-0201 → IS-2569 helsekategorier. Faseplan v1.0–v3.0. |
+| **v0.6.8** | **2026-06-16** | Fem forbedringer basert på ekstern gjennomgang: (A) Scope-korreksjon — `user/PractitionerRole.read` lagt til, begrunnelse for `user/` vs `patient/` dokumentert. (B) Suksesskriterier — ny seksjon 2.2 med 6 målbare kriterier og akseptansetest. (C) Eksplisitt BFF-valg — browser-direkte FHIR avvist med begrunnelse i seksjon 4. (D) Ny seksjon 7 Personvern og behandlingsgrunnlag — hjemmel, dataflyt, dataminimering, logging, åpne spørsmål. (E) Token-livssyklus — refresh, utløp, session timeout i IMPLEMENTERING. Seksjoner renummerert til 12. |
