@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://altinn.no/ForerLegeerklaering",
+  "title": "ForerLegeerklaering",
+  "type": "object",
+  "properties": {
+    "Pasient_Fnr": { "type": "string" },
+    "Pasient_Fornavn": { "type": "string" },
+    "Pasient_Etternavn": { "type": "string" },
+    "Pasient_Fodselsdato": { "type": "string" },
+    "Pasient_Kjonn": { "type": "string" },
+    "Lege_HPR": { "type": "string" },
+    "Lege_Fornavn": { "type": "string" },
+    "Lege_Etternavn": { "type": "string" },
+    "Virksomhet_Navn": { "type": "string" },
+    "Virksomhet_Orgnr": { "type": "string" },
+    "Virksomhet_HerId": { "type": "string" },
+    "Konsultasjon_Dato": { "type": "string" },
+    "Diagnose_Kode": { "type": "string" },
+    "Diagnose_Tekst": { "type": "string" },
+    "Forer_Kjoretoygruppe": { "type": "string" },
+    "Forer_ErSkikket": { "type": "boolean" },
+    "Forer_Merknad": { "type": "string" },
+    "Forer_Vilkar": { "type": "string" }
+  }
+}

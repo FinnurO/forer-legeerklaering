@@ -1,0 +1,13 @@
+[
+  { "value": "A", "label": "Gruppe A – Motorsykkel" },
+  { "value": "B", "label": "Gruppe B – Personbil" },
+  { "value": "BE", "label": "Gruppe BE – Personbil med tilhenger" },
+  { "value": "C1", "label": "Gruppe C1 – Lett lastebil" },
+  { "value": "C1E", "label": "Gruppe C1E – Lett lastebil med tilhenger" },
+  { "value": "C", "label": "Gruppe C – Tung lastebil" },
+  { "value": "CE", "label": "Gruppe CE – Tung lastebil med tilhenger" },
+  { "value": "D1", "label": "Gruppe D1 – Minibuss" },
+  { "value": "D", "label": "Gruppe D – Buss" },
+  { "value": "S", "label": "Gruppe S – Snøscooter" },
+  { "value": "T", "label": "Gruppe T – Traktor" }
+]

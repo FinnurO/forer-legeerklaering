@@ -1,0 +1,161 @@
+{
+  "$schema": "https://altinncdn.no/toolkits/altinn-app-frontend/4/schemas/json/layout/layout.schema.v1.json",
+  "data": {
+    "hidden": false,
+    "layout": [
+      {
+        "id": "header-pasient",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.pasient" }
+      },
+      {
+        "id": "Pasient_Fnr",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Fnr" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.fnr" }
+      },
+      {
+        "id": "Pasient_Fornavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Fornavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.fornavn" }
+      },
+      {
+        "id": "Pasient_Etternavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Etternavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.etternavn" }
+      },
+      {
+        "id": "Pasient_Fodselsdato",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Fodselsdato" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.fodselsdato" }
+      },
+      {
+        "id": "header-lege",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.lege" }
+      },
+      {
+        "id": "Lege_Fornavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Lege_Fornavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.lege.fornavn" }
+      },
+      {
+        "id": "Lege_Etternavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Lege_Etternavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.lege.etternavn" }
+      },
+      {
+        "id": "Lege_HPR",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Lege_HPR" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.lege.hpr" }
+      },
+      {
+        "id": "header-virksomhet",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.virksomhet" }
+      },
+      {
+        "id": "Virksomhet_Navn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Virksomhet_Navn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.virksomhet.navn" }
+      },
+      {
+        "id": "Virksomhet_Orgnr",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Virksomhet_Orgnr" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.virksomhet.orgnr" }
+      },
+      {
+        "id": "header-konsultasjon",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.konsultasjon" }
+      },
+      {
+        "id": "Konsultasjon_Dato",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Konsultasjon_Dato" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.konsultasjon.dato" }
+      },
+      {
+        "id": "Diagnose_Kode",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Diagnose_Kode" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.diagnose.kode" }
+      },
+      {
+        "id": "Diagnose_Tekst",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Diagnose_Tekst" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.diagnose.tekst" }
+      },
+      {
+        "id": "header-vurdering",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.vurdering" }
+      },
+      {
+        "id": "Forer_Kjoretoygruppe",
+        "type": "Dropdown",
+        "dataModelBindings": { "simpleBinding": "Forer_Kjoretoygruppe" },
+        "required": true,
+        "optionsId": "kjoretoygrupper",
+        "textResourceBindings": { "title": "field.forer.kjoretoygruppe" }
+      },
+      {
+        "id": "Forer_ErSkikket",
+        "type": "RadioButtons",
+        "dataModelBindings": { "simpleBinding": "Forer_ErSkikket" },
+        "required": true,
+        "options": [
+          { "value": "true", "label": "choice.skikket" },
+          { "value": "false", "label": "choice.ikke_skikket" }
+        ],
+        "textResourceBindings": { "title": "field.forer.er_skikket" }
+      },
+      {
+        "id": "Forer_Vilkar",
+        "type": "TextArea",
+        "dataModelBindings": { "simpleBinding": "Forer_Vilkar" },
+        "textResourceBindings": { "title": "field.forer.vilkar", "description": "field.forer.vilkar.description" }
+      },
+      {
+        "id": "Forer_Merknad",
+        "type": "TextArea",
+        "dataModelBindings": { "simpleBinding": "Forer_Merknad" },
+        "textResourceBindings": { "title": "field.forer.merknad" }
+      },
+      {
+        "id": "submit-button",
+        "type": "Button",
+        "mode": "submit",
+        "textResourceBindings": {
+          "title": "Send inn legeerklæring"
+        }
+      }
+    ]
+  }
+}
