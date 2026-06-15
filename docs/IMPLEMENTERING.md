@@ -72,14 +72,27 @@ hapi_fhir:
     - hapi.fhir.allow_multiple_delete=true
 ```
 
-### Testdata
+### Testdata og rollemodell
+
+**Kritisk:** Det er legen, ikke pasienten, som logger inn i Altinn. Testdataene må holdes konsistente på tvers av FHIR og Altinn Local Test via fødselsnummer som felles nøkkel.
+
+| Person | Rolle | Fnr | Altinn-bruker | FHIR-ressurs |
+|---|---|---|---|---|
+| Ola Nordmann | **Lege (innlogget i Altinn)** | `01017512345` | `OlaNordmann` (UserId 12345) | `Practitioner/lege-ola` |
+| Sophie Salt | **Pasient (kun i FHIR)** | `01039012345` | `SophieDDG` (UserId 1337) — **ikke bruk** | `Patient/sophie-salt` |
+
+> **Bruk alltid `OlaNordmann` (UserId 12345) når du logger inn i Altinn Local Test — ikke `SophieDDG`.** Sophie Salt skal være pasient i skjemaet, ikke brukeren som fyller det ut.
+
+Synkroniseringsnøkkelen er fødselsnummeret: samme fnr må finnes i Altinn Local Tests profilfil (`testdata/Profile/User/12345.json`) og i FHIR Practitioner-ressursens `identifier`-liste.
+
 Testdata lastes inn via `fhir-testdata/seed.ps1`. Scriptet bruker HTTP PUT for å opprette ressurser med kjente ID-er:
 
 | Ressurs | ID | Innhold |
 |---|---|---|
-| `Patient` | `sophie-salt` | Fnr 01039012345, navn Sophie Salt |
-| `Practitioner` | `lege-ola` | HPR 1234567, navn Ola Nordmann |
-| `Organization` | `sandvika-legesenter` | Orgnr 987654321, HER-id 8141253 |
+| `Patient` | `sophie-salt` | Fnr 01039012345, navn Sophie Salt — **pasient** |
+| `Practitioner` | `lege-ola` | HPR 1234567 + fnr **01017512345**, navn Ola Nordmann — **lege** |
+| `PractitionerRole` | `role-lege-ola` | Kobler lege til org: fastlege, allmennmedisin |
+| `Organization` | `sandvika-legesenter` | Orgnr 987654321, HER-id 8765432 |
 | `Encounter` | `enc-sophie-001` | Kobler pasient, lege og org |
 | `Condition` | `cond-sophie-001` | ICD-10: R55 Synkope |
 
