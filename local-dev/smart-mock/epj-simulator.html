@@ -1,481 +1,376 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="no" data-color-scheme="light">
 <head>
   <meta charset="UTF-8" />
-  <title>DIPS Arena — EPJ Simulator (mock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klinisk system — EPJ-simulator</title>
+
+  <!-- Digdir designsystemet -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@digdir/designsystemet-theme@1.11.0/src/themes/designsystemet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@digdir/designsystemet-css@1.15.0/dist/src/index.css" />
+  <!-- Inter-font (brukt av designsystemet) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f0f2f5;
-      color: #1a1a2e;
+      font-family: "Inter", var(--ds-font-family, sans-serif);
+      background: var(--ds-color-neutral-background-tinted, #f3f3f4);
+      margin: 0;
       min-height: 100vh;
     }
 
-    /* ── Top bar ── */
+    /* ── Topbar ── */
     .topbar {
-      background: #0d2137;
-      color: white;
+      background: var(--ds-color-accent-base-default, #0062ba);
+      color: #fff;
+      padding: 0 24px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
-      height: 52px;
     }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
     .topbar-logo {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: #fff;
     }
-    .topbar-logo span { color: #4fc3f7; }
-    .topbar-mock-badge {
-      background: #ff6b35;
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 10px;
-      letter-spacing: 1px;
-    }
-    .topbar-user {
-      font-size: 13px;
-      color: #b0c4de;
-    }
-    .topbar-user strong { color: white; }
+    .topbar-user { font-size: 13px; color: rgba(255,255,255,0.8); }
+    .topbar-user strong { color: #fff; }
 
-    /* ── Layout ── */
-    .shell {
-      display: flex;
-      height: calc(100vh - 52px);
-    }
+    /* ── Shell ── */
+    .shell { display: flex; min-height: calc(100vh - 52px); }
 
-    /* ── Sidebar ── */
+    /* ── Sidemeny ── */
     .sidebar {
-      width: 220px;
-      background: #16304e;
-      color: #b0c4de;
-      padding-top: 16px;
+      width: 200px;
+      background: var(--ds-color-neutral-surface-default, #fff);
+      border-right: 1px solid var(--ds-color-neutral-border-subtle, #bbbcbd);
+      padding: 16px 0;
       flex-shrink: 0;
     }
     .sidebar-section {
-      padding: 8px 16px 4px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #5b8ab0;
+      padding: 12px 16px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
+      color: var(--ds-color-neutral-text-subtle, #5b5d60);
     }
     .sidebar-item {
-      padding: 10px 20px;
-      font-size: 13px;
-      cursor: pointer;
       display: flex;
       align-items: center;
       gap: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      color: var(--ds-color-neutral-text-subtle, #5b5d60);
+      cursor: pointer;
       border-left: 3px solid transparent;
-      transition: background 0.15s;
+      text-decoration: none;
+      transition: background 0.1s;
     }
-    .sidebar-item:hover { background: #1e3f60; }
+    .sidebar-item:hover {
+      background: var(--ds-color-neutral-surface-hover, #d9dadb);
+      color: var(--ds-color-neutral-text-default, #292c30);
+    }
     .sidebar-item.active {
-      background: #1e4a78;
-      border-left-color: #4fc3f7;
-      color: white;
-    }
-    .sidebar-item .icon { font-size: 15px; width: 18px; text-align: center; }
-
-    /* ── Main content ── */
-    .main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 32px;
+      background: var(--ds-color-accent-surface-tinted, #ddeaf6);
+      border-left-color: var(--ds-color-accent-base-default, #0062ba);
+      color: var(--ds-color-accent-text-default, #002c54);
+      font-weight: 500;
     }
 
-    .page-title {
-      font-size: 22px;
-      font-weight: 600;
-      color: #0d2137;
-      margin-bottom: 6px;
-    }
-    .page-subtitle {
-      font-size: 13px;
-      color: #6b7c93;
-      margin-bottom: 28px;
-    }
+    /* ── Hovedinnhold ── */
+    .main { flex: 1; padding: 32px; max-width: 780px; }
 
-    /* ── Doctor card ── */
+    /* ── Lege-kortvisning ── */
     .doctor-card {
-      background: #e8f4fd;
-      border: 1px solid #90caf9;
-      border-radius: 10px;
-      padding: 16px 20px;
+      background: var(--ds-color-accent-surface-tinted, #ddeaf6);
+      border: 1px solid var(--ds-color-accent-border-subtle, #99c0e3);
+      border-radius: 8px;
+      padding: 14px 18px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 28px;
+      gap: 14px;
+      margin-bottom: 24px;
     }
-    .doctor-avatar {
-      width: 52px;
-      height: 52px;
+    .avatar {
+      width: 48px; height: 48px;
       border-radius: 50%;
-      background: #1976d2;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: 700;
+      background: var(--ds-color-accent-base-default, #0062ba);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 600;
       flex-shrink: 0;
     }
     .doctor-info { flex: 1; }
-    .doctor-name { font-size: 16px; font-weight: 700; color: #0d2137; }
-    .doctor-meta { font-size: 12px; color: #4a6583; margin-top: 2px; }
-    .doctor-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .doctor-name {
+      font-size: 15px; font-weight: 600;
+      color: var(--ds-color-accent-text-default, #002c54);
+    }
+    .doctor-meta {
       font-size: 12px;
-      color: #2e7d32;
+      color: var(--ds-color-accent-text-subtle, #005db1);
+      margin-top: 2px;
     }
-    .doctor-status::before {
-      content: "";
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #4caf50;
-      display: inline-block;
+    .helseid-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 500;
+      color: var(--ds-color-success-text-default, #1a5c1a);
+      background: var(--ds-color-success-surface-default, #e8f5e8);
+      border: 1px solid var(--ds-color-success-border-default, #4caf50);
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .helseid-badge::before {
+      content: ""; width: 7px; height: 7px;
+      border-radius: 50%; background: currentColor;
     }
 
-    /* ── Section cards ── */
-    .card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      margin-bottom: 24px;
-      overflow: hidden;
+    /* ── Seksjoner ── */
+    .section-label {
+      font-size: 13px; font-weight: 600;
+      color: var(--ds-color-neutral-text-default, #292c30);
+      margin-bottom: 10px;
+      margin-top: 20px;
     }
-    .card-header {
-      background: #f7f9fc;
-      border-bottom: 1px solid #e8ecf0;
-      padding: 14px 20px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #374151;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-body { padding: 20px; }
+    .section-label:first-of-type { margin-top: 0; }
 
-    /* ── Patient list ── */
-    .patient-list { display: flex; flex-direction: column; gap: 10px; }
-    .patient-row {
-      display: flex;
-      align-items: center;
+    /* ── Valgkort (pasient / dokumenttype) ── */
+    .choice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+
+    .choice-card {
+      display: flex; align-items: center; gap: 14px;
       padding: 12px 16px;
-      border: 2px solid #e8ecf0;
+      background: var(--ds-color-neutral-surface-default, #fff);
+      border: 1.5px solid var(--ds-color-neutral-border-subtle, #bbbcbd);
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.15s;
-      gap: 14px;
+      transition: border-color 0.12s, background 0.12s;
     }
-    .patient-row:hover { border-color: #90caf9; background: #f5fbff; }
-    .patient-row.selected { border-color: #1976d2; background: #e3f2fd; }
-    .patient-avatar {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: #e91e63;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      font-weight: 700;
-      flex-shrink: 0;
+    .choice-card:hover {
+      border-color: var(--ds-color-accent-border-default, #2a7cc5);
+      background: var(--ds-color-accent-surface-default, #fff);
     }
-    .patient-info { flex: 1; }
-    .patient-name { font-size: 14px; font-weight: 600; }
-    .patient-meta { font-size: 12px; color: #6b7c93; margin-top: 1px; }
-    .patient-tag {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: #fff3e0;
-      color: #e65100;
-      border: 1px solid #ffcc02;
+    .choice-card.selected {
+      border-color: var(--ds-color-accent-base-default, #0062ba);
+      background: var(--ds-color-accent-surface-tinted, #ddeaf6);
     }
-    .patient-check {
-      font-size: 20px;
-      color: #1976d2;
-      opacity: 0;
-      transition: opacity 0.15s;
+    .choice-card.disabled {
+      opacity: 0.45; cursor: not-allowed;
+      pointer-events: none;
     }
-    .patient-row.selected .patient-check { opacity: 1; }
+    .choice-icon {
+      width: 40px; height: 40px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+      background: var(--ds-color-accent-base-default, #0062ba);
+      color: #fff;
+    }
+    .choice-body { flex: 1; min-width: 0; }
+    .choice-title {
+      font-size: 14px; font-weight: 500;
+      color: var(--ds-color-neutral-text-default, #292c30);
+    }
+    .choice-meta {
+      font-size: 12px; color: var(--ds-color-neutral-text-subtle, #5b5d60);
+      margin-top: 2px;
+    }
+    .choice-check {
+      font-size: 18px;
+      color: var(--ds-color-accent-base-default, #0062ba);
+      opacity: 0; flex-shrink: 0;
+      transition: opacity 0.12s;
+    }
+    .choice-card.selected .choice-check { opacity: 1; }
 
-    /* ── Dokument type ── */
-    .doc-list { display: flex; flex-direction: column; gap: 10px; }
-    .doc-row {
-      display: flex;
-      align-items: center;
-      padding: 14px 16px;
-      border: 2px solid #e8ecf0;
+    /* ── Oppsummering / launch ── */
+    .launch-section {
+      background: var(--ds-color-neutral-surface-default, #fff);
+      border: 1px solid var(--ds-color-neutral-border-subtle, #bbbcbd);
+      border-top: 4px solid var(--ds-color-accent-base-default, #0062ba);
       border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.15s;
-      gap: 14px;
-    }
-    .doc-row:hover { border-color: #90caf9; background: #f5fbff; }
-    .doc-row.selected { border-color: #1976d2; background: #e3f2fd; }
-    .doc-icon {
-      width: 44px; height: 44px;
-      border-radius: 8px;
-      background: #0d47a1;
-      color: white;
+      padding: 20px;
+      margin-top: 24px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    .doc-icon.green { background: #2e7d32; }
-    .doc-info { flex: 1; }
-    .doc-name { font-size: 14px; font-weight: 600; }
-    .doc-meta { font-size: 12px; color: #6b7c93; margin-top: 1px; }
-    .doc-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: #e8f5e9;
-      color: #2e7d32;
-      border: 1px solid #a5d6a7;
-    }
-    .doc-check {
-      font-size: 20px;
-      color: #1976d2;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-    .doc-row.selected .doc-check { opacity: 1; }
-
-    /* ── Launch panel ── */
-    .launch-panel {
-      background: linear-gradient(135deg, #0d2137 0%, #1565c0 100%);
-      border-radius: 12px;
-      padding: 28px;
-      color: white;
-      display: flex;
-      align-items: center;
-      gap: 24px;
+      align-items: flex-start;
+      gap: 20px;
     }
     .launch-summary { flex: 1; }
-    .launch-summary h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .launch-detail { font-size: 13px; color: #b0c8e8; line-height: 1.6; }
-    .launch-detail strong { color: white; }
+    .launch-summary h2 {
+      font-size: 15px; font-weight: 600;
+      color: var(--ds-color-neutral-text-default, #292c30);
+      margin-bottom: 8px;
+    }
+    .launch-detail {
+      font-size: 13px;
+      color: var(--ds-color-neutral-text-subtle, #5b5d60);
+      line-height: 1.7;
+    }
+    .launch-detail strong { color: var(--ds-color-neutral-text-default, #292c30); }
 
-    .launch-btn {
-      background: #4caf50;
-      color: white;
-      border: none;
-      padding: 14px 32px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .launch-actions {
+      display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
       flex-shrink: 0;
-      transition: background 0.2s, transform 0.1s;
-      white-space: nowrap;
     }
-    .launch-btn:hover:not(:disabled) { background: #388e3c; transform: translateY(-1px); }
-    .launch-btn:active { transform: translateY(0); }
-    .launch-btn:disabled { background: #546e7a; cursor: not-allowed; transform: none; }
-
-    .alt-btn {
-      background: transparent;
-      color: #90caf9;
-      border: 1px solid #4a6a8a;
-      padding: 8px 18px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      margin-top: 12px;
-      display: inline-block;
-      text-decoration: none;
-      transition: border-color 0.15s;
-    }
-    .alt-btn:hover { border-color: #90caf9; }
 
     .info-box {
       font-size: 11px;
-      color: #7899b8;
-      margin-top: 10px;
-      line-height: 1.5;
+      color: var(--ds-color-neutral-text-subtle, #5b5d60);
+      margin-top: 10px; line-height: 1.5;
     }
 
-    .tag-fhir {
-      display: inline-block;
-      background: #0d3b6e;
-      color: #4fc3f7;
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      vertical-align: middle;
-    }
+    /* ds-button overrides for sizing */
+    .ds-button { white-space: nowrap; }
   </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="topbar-logo">DIPS <span>Arena</span></div>
-    <div class="topbar-mock-badge">MOCK</div>
+<!-- Topbar -->
+<header class="topbar" role="banner">
+  <div class="topbar-left">
+    <span class="topbar-logo">Klinisk system</span>
+    <span class="ds-tag" data-color="warning" style="font-size:11px">demo</span>
   </div>
   <div class="topbar-user">Innlogget som: <strong>Ola Nordmann</strong></div>
-</div>
+</header>
 
 <div class="shell">
 
-  <!-- Sidebar -->
-  <nav class="sidebar">
+  <!-- Sidemeny -->
+  <nav class="sidebar" aria-label="Navigasjon">
     <div class="sidebar-section">Pasientarbeid</div>
-    <div class="sidebar-item active"><span class="icon">📋</span> Pasientliste</div>
-    <div class="sidebar-item"><span class="icon">📅</span> Timebok</div>
-    <div class="sidebar-item"><span class="icon">💊</span> Medikamenter</div>
-    <div class="sidebar-item"><span class="icon">🔬</span> Prøvesvar</div>
-    <div class="sidebar-section" style="margin-top:16px">Dokumentasjon</div>
-    <div class="sidebar-item"><span class="icon">📝</span> Journal</div>
-    <div class="sidebar-item"><span class="icon">📄</span> Attester</div>
-    <div class="sidebar-item"><span class="icon">📤</span> Henvisninger</div>
-    <div class="sidebar-section" style="margin-top:16px">System</div>
-    <div class="sidebar-item"><span class="icon">⚙️</span> Innstillinger</div>
+    <a class="sidebar-item active" href="#">📋 Pasientliste</a>
+    <a class="sidebar-item" href="#">📅 Timebok</a>
+    <a class="sidebar-item" href="#">💊 Medikamenter</a>
+    <a class="sidebar-item" href="#">🔬 Prøvesvar</a>
+    <div class="sidebar-section">Dokumentasjon</div>
+    <a class="sidebar-item" href="#">📝 Journal</a>
+    <a class="sidebar-item" href="#">📄 Attester</a>
+    <a class="sidebar-item" href="#">📤 Henvisninger</a>
   </nav>
 
-  <!-- Main -->
-  <main class="main">
-    <div class="page-title">Start helsedokument</div>
-    <div class="page-subtitle">
-      Velg pasient og dokumenttype. Appen åpnes i Altinn med forhåndsutfylte opplysninger via <span class="tag-fhir">SMART on FHIR</span>.
-    </div>
+  <!-- Innhold -->
+  <main class="main" aria-label="Start helsedokument">
+
+    <h1 class="ds-heading" data-size="md" style="margin-bottom:6px">Start helsedokument</h1>
+    <p class="ds-paragraph" data-size="sm" style="margin-bottom:24px;color:var(--ds-color-neutral-text-subtle)">
+      Velg pasient og dokumenttype. Altinn-appen åpnes med forhåndsutfylte opplysninger via SMART on FHIR.
+    </p>
 
     <!-- Innlogget lege -->
     <div class="doctor-card">
-      <div class="doctor-avatar">ON</div>
+      <div class="avatar" aria-hidden="true">ON</div>
       <div class="doctor-info">
         <div class="doctor-name">Dr. Ola Nordmann</div>
-        <div class="doctor-meta">HPR-nummer: 1234567 &nbsp;·&nbsp; Fastlege, allmennmedisin &nbsp;·&nbsp; Sandvika Legesenter</div>
+        <div class="doctor-meta">HPR-nummer: 1234567 · Fastlege, allmennmedisin · Sandvika Legesenter</div>
       </div>
-      <div class="doctor-status">Innlogget via HelseID</div>
+      <div class="helseid-badge" aria-label="Pålogget via HelseID">Innlogget via HelseID</div>
     </div>
 
     <!-- Velg pasient -->
-    <div class="card">
-      <div class="card-header">
-        👤 Velg pasient
-      </div>
-      <div class="card-body">
-        <div class="patient-list" id="patientList">
+    <div class="section-label" id="label-patient">Velg pasient</div>
+    <div class="choice-list" role="radiogroup" aria-labelledby="label-patient" id="patientList">
 
-          <div class="patient-row selected" onclick="selectPatient(this, 'enc-sophie-001', 'Sophie Salt', '01.03.1990')">
-            <div class="patient-avatar">SS</div>
-            <div class="patient-info">
-              <div class="patient-name">Sophie Salt</div>
-              <div class="patient-meta">f. 01.03.1990 &nbsp;·&nbsp; fnr: 01039012345 &nbsp;·&nbsp; Konsultasjon: 15.06.2026</div>
-            </div>
-            <span class="patient-tag">Aktiv konsultasjon</span>
-            <span class="patient-check">✓</span>
-          </div>
-
-          <div class="patient-row" onclick="selectPatient(this, 'enc-per-001', 'Per Hansen', '12.05.1955')">
-            <div class="patient-avatar" style="background:#7b1fa2">PH</div>
-            <div class="patient-info">
-              <div class="patient-name">Per Hansen</div>
-              <div class="patient-meta">f. 12.05.1955 &nbsp;·&nbsp; fnr: 12055589765 &nbsp;·&nbsp; Kontroll: 10.06.2026</div>
-            </div>
-            <span class="patient-check">✓</span>
-          </div>
-
-          <div class="patient-row" onclick="selectPatient(this, 'enc-anne-001', 'Anne Johansen', '03.11.1978')">
-            <div class="patient-avatar" style="background:#00695c">AJ</div>
-            <div class="patient-info">
-              <div class="patient-name">Anne Johansen</div>
-              <div class="patient-meta">f. 03.11.1978 &nbsp;·&nbsp; fnr: 03117845231 &nbsp;·&nbsp; Kontroll: 08.06.2026</div>
-            </div>
-            <span class="patient-check">✓</span>
-          </div>
-
+      <div class="choice-card selected" role="radio" aria-checked="true" tabindex="0"
+           onclick="selectPatient(this, 'enc-sophie-001', 'Sophie Salt', '01.03.1990')"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectPatient(this,'enc-sophie-001','Sophie Salt','01.03.1990')">
+        <div class="choice-icon" style="background:#1a5c8a" aria-hidden="true">SS</div>
+        <div class="choice-body">
+          <div class="choice-title">Sophie Salt</div>
+          <div class="choice-meta">f. 01.03.1990 · fnr: 01039012345 · Konsultasjon: 15.06.2026</div>
         </div>
+        <span class="ds-tag" data-color="info" style="flex-shrink:0">Aktiv konsultasjon</span>
+        <span class="choice-check" aria-hidden="true">✓</span>
       </div>
+
+      <div class="choice-card" role="radio" aria-checked="false" tabindex="0"
+           onclick="selectPatient(this, 'enc-per-001', 'Per Hansen', '12.05.1955')"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectPatient(this,'enc-per-001','Per Hansen','12.05.1955')">
+        <div class="choice-icon" style="background:#5b3a8a" aria-hidden="true">PH</div>
+        <div class="choice-body">
+          <div class="choice-title">Per Hansen</div>
+          <div class="choice-meta">f. 12.05.1955 · fnr: 12055589765 · Kontroll: 10.06.2026</div>
+        </div>
+        <span class="choice-check" aria-hidden="true">✓</span>
+      </div>
+
+      <div class="choice-card" role="radio" aria-checked="false" tabindex="0"
+           onclick="selectPatient(this, 'enc-anne-001', 'Anne Johansen', '03.11.1978')"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectPatient(this,'enc-anne-001','Anne Johansen','03.11.1978')">
+        <div class="choice-icon" style="background:#1a6b5a" aria-hidden="true">AJ</div>
+        <div class="choice-body">
+          <div class="choice-title">Anne Johansen</div>
+          <div class="choice-meta">f. 03.11.1978 · fnr: 03117845231 · Kontroll: 08.06.2026</div>
+        </div>
+        <span class="choice-check" aria-hidden="true">✓</span>
+      </div>
+
     </div>
 
     <!-- Velg dokumenttype -->
-    <div class="card">
-      <div class="card-header">
-        📄 Velg dokumenttype
-      </div>
-      <div class="card-body">
-        <div class="doc-list" id="docList">
+    <div class="section-label" id="label-doc" style="margin-top:24px">Velg dokumenttype</div>
+    <div class="choice-list" role="radiogroup" aria-labelledby="label-doc" id="docList">
 
-          <div class="doc-row selected" onclick="selectDoc(this, 'Helseattest for førerkort (IS-2569)', 'digdir', 'forer-legeerklaering')">
-            <div class="doc-icon">🚗</div>
-            <div class="doc-info">
-              <div class="doc-name">Helseattest for førerkort — IS-2569</div>
-              <div class="doc-meta">Statens vegvesen &nbsp;·&nbsp; Helsedirektoratet &nbsp;·&nbsp; SMART on FHIR prefill</div>
-            </div>
-            <span class="doc-badge">PoC tilgjengelig</span>
-            <span class="doc-check">✓</span>
-          </div>
-
-          <div class="doc-row" style="opacity:0.5;cursor:not-allowed" title="Ikke tilgjengelig i denne PoC">
-            <div class="doc-icon green">💊</div>
-            <div class="doc-info">
-              <div class="doc-name">Sykmelding (NAV)</div>
-              <div class="doc-meta">NAV &nbsp;·&nbsp; Basert på syk-dig-mønsteret</div>
-            </div>
-            <span class="doc-badge" style="background:#fce4ec;color:#c62828;border-color:#ef9a9a">Ikke implementert</span>
-            <span class="doc-check">✓</span>
-          </div>
-
-          <div class="doc-row" style="opacity:0.5;cursor:not-allowed" title="Ikke tilgjengelig i denne PoC">
-            <div class="doc-icon" style="background:#e65100">🏥</div>
-            <div class="doc-info">
-              <div class="doc-name">Henvisning til spesialist</div>
-              <div class="doc-meta">Helse Sør-Øst &nbsp;·&nbsp; Elektiv henvisning</div>
-            </div>
-            <span class="doc-badge" style="background:#fce4ec;color:#c62828;border-color:#ef9a9a">Ikke implementert</span>
-            <span class="doc-check">✓</span>
-          </div>
-
+      <div class="choice-card selected" role="radio" aria-checked="true" tabindex="0"
+           onclick="selectDoc(this, 'Helseattest for førerkort (IS-2569)', 'digdir', 'forer-legeerklaering')"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectDoc(this,'Helseattest for førerkort (IS-2569)','digdir','forer-legeerklaering')">
+        <div class="choice-icon" aria-hidden="true">🚗</div>
+        <div class="choice-body">
+          <div class="choice-title">Helseattest for førerkort — IS-2569</div>
+          <div class="choice-meta">Statens vegvesen · Helsedirektoratet · SMART on FHIR prefill</div>
         </div>
+        <span class="ds-tag" data-color="success" style="flex-shrink:0">Tilgjengelig (PoC)</span>
+        <span class="choice-check" aria-hidden="true">✓</span>
       </div>
+
+      <div class="choice-card disabled" role="radio" aria-checked="false" aria-disabled="true" tabindex="-1">
+        <div class="choice-icon" style="background:#2e7d32" aria-hidden="true">💊</div>
+        <div class="choice-body">
+          <div class="choice-title">Sykmelding (NAV)</div>
+          <div class="choice-meta">NAV · Basert på syk-dig-mønsteret</div>
+        </div>
+        <span class="ds-tag" data-color="neutral" style="flex-shrink:0">Ikke implementert</span>
+        <span class="choice-check" aria-hidden="true">✓</span>
+      </div>
+
+      <div class="choice-card disabled" role="radio" aria-checked="false" aria-disabled="true" tabindex="-1">
+        <div class="choice-icon" style="background:#b84800" aria-hidden="true">🏥</div>
+        <div class="choice-body">
+          <div class="choice-title">Henvisning til spesialist</div>
+          <div class="choice-meta">Helse Sør-Øst · Elektiv henvisning</div>
+        </div>
+        <span class="ds-tag" data-color="neutral" style="flex-shrink:0">Ikke implementert</span>
+        <span class="choice-check" aria-hidden="true">✓</span>
+      </div>
+
     </div>
 
     <!-- Launch -->
-    <div class="launch-panel" id="launchPanel">
+    <div class="launch-section" aria-label="Oppstart">
       <div class="launch-summary">
-        <h3>Klar til å starte</h3>
-        <div class="launch-detail" id="launchDetail">
+        <h2>Klar til å starte</h2>
+        <div class="launch-detail">
           Pasient: <strong id="summaryPatient">Sophie Salt</strong><br>
-          Dokument: <strong id="summaryDoc">Helseattest for førerkort (IS-2569)</strong><br>
-          Konsultasjon: <strong id="summaryEnc">enc-sophie-001</strong>
-        </div>
-        <div style="margin-top:12px">
-          <a class="alt-btn" id="altBtn"
-             href="http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/test-prefill"
-             title="Bypasser full OAuth — nyttig hvis localhost:9090 ikke kjører">
-            ⚡ Hurtigstart (test-prefill, ingen OAuth)
-          </a>
+          Konsultasjon: <strong id="summaryEnc">enc-sophie-001</strong><br>
+          Dokument: <strong id="summaryDoc">Helseattest for førerkort (IS-2569)</strong>
         </div>
         <div class="info-box">
-          Hurtigstart bypasser SMART OAuth og hopper direkte til skjema.<br>
-          Normalt oppstart bruker full SMART EHR Launch med PKCE (krever at mock-serveren kjører på port 9090).
+          <strong>Normal oppstart</strong> bruker full SMART EHR Launch med PKCE (krever mock på port 9090).<br>
+          <strong>Hurtigstart</strong> bypasser OAuth — nyttig hvis mock ikke kjører.
         </div>
       </div>
-      <div style="text-align:center">
-        <button class="launch-btn" id="launchBtn" onclick="doLaunch()">
-          🚀 Start i Altinn
+      <div class="launch-actions">
+        <button class="ds-button" data-variant="filled" data-color="accent"
+                onclick="doLaunch()" id="launchBtn">
+          Start i Altinn →
+        </button>
+        <button class="ds-button" data-variant="outline" data-color="neutral"
+                onclick="doTestPrefill()" id="prefillBtn">
+          ⚡ Hurtigstart
         </button>
       </div>
     </div>
@@ -484,65 +379,53 @@
 </div>
 
 <script>
-  // State
-  let selectedLaunch = "enc-sophie-001";
-  let selectedOrg = "digdir";
-  let selectedApp = "forer-legeerklaering";
-  let selectedPatientName = "Sophie Salt";
-  let selectedDocName = "Helseattest for førerkort (IS-2569)";
-
   const ALTINN_BASE = "http://local.altinn.cloud:8000";
   const ISS = "http://localhost:9090";
 
-  function selectPatient(row, launchToken, name, bday) {
-    document.querySelectorAll(".patient-row").forEach(r => r.classList.remove("selected"));
+  let state = {
+    launch: "enc-sophie-001",
+    org: "digdir",
+    app: "forer-legeerklaering",
+    patient: "Sophie Salt",
+    doc: "Helseattest for førerkort (IS-2569)",
+    enc: "enc-sophie-001",
+  };
+
+  function selectPatient(row, launch, name, bday) {
+    document.querySelectorAll("#patientList .choice-card").forEach(r => {
+      r.classList.remove("selected");
+      r.setAttribute("aria-checked", "false");
+    });
     row.classList.add("selected");
-    selectedLaunch = launchToken;
-    selectedPatientName = name;
+    row.setAttribute("aria-checked", "true");
+    state.launch = launch;
+    state.patient = name;
+    state.enc = launch;
     document.getElementById("summaryPatient").textContent = name;
-    document.getElementById("summaryEnc").textContent = launchToken;
+    document.getElementById("summaryEnc").textContent = launch;
   }
 
   function selectDoc(row, docName, org, app) {
-    document.querySelectorAll(".doc-row:not([style*='cursor:not-allowed'])").forEach(r => r.classList.remove("selected"));
+    document.querySelectorAll("#docList .choice-card:not(.disabled)").forEach(r => {
+      r.classList.remove("selected");
+      r.setAttribute("aria-checked", "false");
+    });
     row.classList.add("selected");
-    selectedOrg = org;
-    selectedApp = app;
-    selectedDocName = docName;
+    row.setAttribute("aria-checked", "true");
+    state.org = org;
+    state.app = app;
+    state.doc = docName;
     document.getElementById("summaryDoc").textContent = docName;
   }
 
-  function buildSmartLaunchUrl() {
-    const base = `${ALTINN_BASE}/${selectedOrg}/${selectedApp}/smart/launch`;
-    const params = new URLSearchParams({ iss: ISS, launch: selectedLaunch });
-    return `${base}?${params}`;
-  }
-
-  function buildTestPrefillUrl() {
-    return `${ALTINN_BASE}/${selectedOrg}/${selectedApp}/smart/test-prefill`;
-  }
-
   function doLaunch() {
-    const url = buildSmartLaunchUrl();
+    const url = `${ALTINN_BASE}/${state.org}/${state.app}/smart/launch?iss=${encodeURIComponent(ISS)}&launch=${encodeURIComponent(state.launch)}`;
     window.location.href = url;
   }
 
-  // Keep alt-btn URL in sync with patient/doc selection
-  function syncUrls() {
-    document.getElementById("altBtn").href = buildTestPrefillUrl();
+  function doTestPrefill() {
+    window.location.href = `${ALTINN_BASE}/${state.org}/${state.app}/smart/test-prefill`;
   }
-
-  const origSelectPatient = selectPatient;
-  selectPatient = function(row, token, name, bday) {
-    origSelectPatient(row, token, name, bday);
-    syncUrls();
-  };
-
-  const origSelectDoc = selectDoc;
-  selectDoc = function(row, docName, org, app) {
-    origSelectDoc(row, docName, org, app);
-    syncUrls();
-  };
 </script>
 
 </body>
