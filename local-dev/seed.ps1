@@ -84,9 +84,90 @@ Put-Resource "Condition" "cond-sophie-001" @{
     recordedDate = "2026-06-15"
 }
 
-Write-Host "`nFerdig! Verifiser pa:" -ForegroundColor Green
-Write-Host "  $baseUrl/Patient/sophie-salt"
-Write-Host "  $baseUrl/Practitioner/lege-ola"
-Write-Host "  $baseUrl/Organization/sandvika-legesenter"
-Write-Host "  $baseUrl/Encounter/enc-sophie-001"
-Write-Host "  $baseUrl/Condition/cond-sophie-001"
+Put-Resource "Patient" "per-hansen" @{
+    resourceType = "Patient"
+    id = "per-hansen"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "12055589765" })
+    name = @(@{ family = "Hansen"; given = @("Per") })
+    birthDate = "1955-05-12"
+    gender = "male"
+}
+
+Put-Resource "Patient" "anne-johansen" @{
+    resourceType = "Patient"
+    id = "anne-johansen"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "03117845231" })
+    name = @(@{ family = "Johansen"; given = @("Anne") })
+    birthDate = "1978-11-03"
+    gender = "female"
+}
+
+Put-Resource "Patient" "kari-larsen" @{
+    resourceType = "Patient"
+    id = "kari-larsen"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "22076812345" })
+    name = @(@{ family = "Larsen"; given = @("Kari") })
+    birthDate = "1968-07-22"
+    gender = "female"
+}
+
+Put-Resource "Patient" "olav-berg" @{
+    resourceType = "Patient"
+    id = "olav-berg"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "05024512345" })
+    name = @(@{ family = "Berg"; given = @("Olav") })
+    birthDate = "1945-02-05"
+    gender = "male"
+}
+
+Put-Resource "Encounter" "enc-per-001" @{
+    resourceType = "Encounter"
+    id = "enc-per-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/per-hansen" }
+    participant = @(@{ individual = @{ reference = "Practitioner/lege-ola" } })
+    serviceProvider = @{ reference = "Organization/sandvika-legesenter" }
+    period = @{ start = "2026-06-16T09:00:00+02:00"; end = "2026-06-16T09:20:00+02:00" }
+}
+
+Put-Resource "Encounter" "enc-anne-001" @{
+    resourceType = "Encounter"
+    id = "enc-anne-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/anne-johansen" }
+    participant = @(@{ individual = @{ reference = "Practitioner/lege-ola" } })
+    serviceProvider = @{ reference = "Organization/sandvika-legesenter" }
+    period = @{ start = "2026-06-16T10:00:00+02:00"; end = "2026-06-16T10:30:00+02:00" }
+}
+
+Put-Resource "Encounter" "enc-kari-001" @{
+    resourceType = "Encounter"
+    id = "enc-kari-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/kari-larsen" }
+    participant = @(@{ individual = @{ reference = "Practitioner/lege-ola" } })
+    serviceProvider = @{ reference = "Organization/sandvika-legesenter" }
+    period = @{ start = "2026-06-16T11:00:00+02:00"; end = "2026-06-16T11:15:00+02:00" }
+}
+
+Put-Resource "Encounter" "enc-olav-001" @{
+    resourceType = "Encounter"
+    id = "enc-olav-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/olav-berg" }
+    participant = @(@{ individual = @{ reference = "Practitioner/lege-ola" } })
+    serviceProvider = @{ reference = "Organization/sandvika-legesenter" }
+    period = @{ start = "2026-06-16T13:00:00+02:00"; end = "2026-06-16T13:30:00+02:00" }
+}
+
+Write-Host "`nFerdig! Pasienter seeded:" -ForegroundColor Green
+Write-Host "  sophie-salt  (enc-sophie-001)"
+Write-Host "  per-hansen   (enc-per-001)"
+Write-Host "  anne-johansen (enc-anne-001)"
+Write-Host "  kari-larsen  (enc-kari-001)"
+Write-Host "  olav-berg    (enc-olav-001)"
+Write-Host "  Practitioner: lege-ola | Org: sandvika-legesenter"

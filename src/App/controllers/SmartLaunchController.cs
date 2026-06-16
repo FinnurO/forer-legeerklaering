@@ -194,6 +194,89 @@ namespace Altinn.App.Controllers
         }
 
         /// <summary>
+        /// Dev-only: fetches a localtest JWT for the given userId/partyId, sets Altinn auth cookies,
+        /// then runs test-prefill and redirects to the app — one click auto-login without the localtest UI.
+        /// </summary>
+        [HttpGet("dev-login")]
+        public async Task<IActionResult> DevLogin(
+            [FromQuery] int userId = 12345,
+            [FromQuery] int partyId = 512345,
+            [FromQuery] string patientId = "sophie-salt",
+            [FromQuery] string encounterId = "enc-sophie-001"
+        )
+        {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
+            // Fetch JWT from localtest (server-to-server, bypasses CSRF)
+            var localtestBase =
+                _config["PlatformSettings:ApiAuthenticationEndpoint"]?.Replace("/authentication/api/v1/", "")
+                ?? "http://localhost:5101";
+
+            var client = _httpClientFactory.CreateClient();
+            var tokenResponse = await client.GetAsync(
+                $"{localtestBase}/Home/GetTestUserToken/{userId}?authenticationLevel=2"
+            );
+            if (!tokenResponse.IsSuccessStatusCode)
+                return StatusCode(502, $"Kunne ikke hente token fra localtest for userId={userId}");
+
+            var token = await tokenResponse.Content.ReadAsStringAsync();
+
+            // Set the same cookies localtest's LogInTestUser sets
+            var runtimeCookieName = _config["AppSettings:RuntimeCookieName"] ?? "AltinnStudioRuntime";
+            var partyCookieName = _config["AppSettings:AltinnPartyCookieName"] ?? "AltinnPartyId";
+            var cookieOptions = new CookieOptions
+            {
+                Path = "/",
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true,
+            };
+            Response.Cookies.Append(runtimeCookieName, token, cookieOptions);
+            Response.Cookies.Append(partyCookieName, partyId.ToString(), cookieOptions);
+
+            _logger.LogInformation(
+                "DevLogin: userId={UserId} partyId={PartyId} patient={PatientId} encounter={EncounterId}",
+                userId,
+                partyId,
+                patientId,
+                encounterId
+            );
+
+            // Seed FHIR session with the selected patient/encounter
+            var fhirBase = _config["SmartOnFhir:FhirBaseUrlOverride"];
+            if (!string.IsNullOrEmpty(fhirBase))
+            {
+                var mockTokenJson = System.Text.Json.JsonSerializer.Serialize(new { AccessToken = "mock-test-token" });
+                var fhirContext = new FhirLaunchContext
+                {
+                    PatientId = patientId,
+                    EncounterId = encounterId,
+                    FhirUser = $"{fhirBase}/Practitioner/lege-ola",
+                    FhirBaseUrl = fhirBase,
+                };
+                await HttpContext.Session.LoadAsync();
+                HttpContext.Session.SetString(TokenSessionKey, mockTokenJson);
+                HttpContext.Session.SetString(
+                    FhirContextSessionKey,
+                    System.Text.Json.JsonSerializer.Serialize(fhirContext)
+                );
+                _memoryCache.Set(
+                    FhirPrefillService.CacheKeyPrefix + HttpContext.Session.Id,
+                    new FhirPrefillService.CachedFhirData
+                    {
+                        TokenJson = mockTokenJson,
+                        ContextJson = System.Text.Json.JsonSerializer.Serialize(fhirContext),
+                    },
+                    TimeSpan.FromMinutes(30)
+                );
+            }
+
+            var org = RouteData.Values["org"]?.ToString();
+            var app = RouteData.Values["app"]?.ToString();
+            return Redirect($"/{org}/{app}");
+        }
+
+        /// <summary>
         /// OAuth2 callback. Exchanges authorization code for token server-side.
         /// </summary>
         [HttpGet("callback")]

@@ -34,6 +34,26 @@ const LAUNCH_CONTEXTS = {
     encounter: "enc-sophie-001",
     fhirUser: `http://${HOST_IP}:8080/fhir/Practitioner/lege-ola`,
   },
+  "enc-per-001": {
+    patient: "per-hansen",
+    encounter: "enc-per-001",
+    fhirUser: `http://${HOST_IP}:8080/fhir/Practitioner/lege-ola`,
+  },
+  "enc-anne-001": {
+    patient: "anne-johansen",
+    encounter: "enc-anne-001",
+    fhirUser: `http://${HOST_IP}:8080/fhir/Practitioner/lege-ola`,
+  },
+  "enc-kari-001": {
+    patient: "kari-larsen",
+    encounter: "enc-kari-001",
+    fhirUser: `http://${HOST_IP}:8080/fhir/Practitioner/lege-ola`,
+  },
+  "enc-olav-001": {
+    patient: "olav-berg",
+    encounter: "enc-olav-001",
+    fhirUser: `http://${HOST_IP}:8080/fhir/Practitioner/lege-ola`,
+  },
 };
 
 // Midlertidig lagring av auth-koder
