@@ -1,179 +1,151 @@
-<svg viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" font-size="11">
-  <title>SMART on FHIR EHR Launch — Sekvensdiagram v0.6.1</title>
-  <desc>Sekvensdiagram for SMART App Launch IG v2.2.0 EHR Launch-flyt. Oppdatert etter ekspertvurdering.</desc>
+<svg viewBox="0 0 920 780" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" font-size="11">
+  <title>SMART EHR Launch — Sekvensdiagram v0.7</title>
+  <desc>Sekvensdiagram for SMART App Launch IG v2.2.0 EHR Launch-flyt med BFF-mønster og «Signer og send inn»</desc>
 
-  <rect width="900" height="860" fill="#fafafa"/>
-  <text x="450" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#212121">SMART EHR Launch — Sekvensdiagram v0.6.1</text>
-  <text x="450" y="38" text-anchor="middle" font-size="10" fill="#757575">SMART App Launch IG v2.2.0 · BFF-mønster (server-side token) · Oppdatert etter ekspertvurdering</text>
+  <rect width="920" height="780" fill="#fafafa"/>
+  <text x="460" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#212121">SMART EHR Launch — Sekvensdiagram v0.7</text>
+  <text x="460" y="38" text-anchor="middle" font-size="10" fill="#757575">SMART App Launch IG v2.2.0 · BFF-mønster · PKCE S256 · «Signer og send inn»</text>
 
-  <!-- ===== ACTORS ===== -->
-  <rect x="20" y="48" width="110" height="38" rx="5" fill="#1976d2"/>
+  <!-- ACTORS -->
+  <rect x="20" y="48" width="110" height="38" rx="5" fill="#1565c0"/>
   <text x="75" y="63" text-anchor="middle" fill="white" font-weight="bold">EPJ-system</text>
   <text x="75" y="78" text-anchor="middle" fill="#bbdefb" font-size="9">DIPS / tilsvarende</text>
-  <line x1="75" y1="86" x2="75" y2="848" stroke="#1976d2" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="75" y1="86" x2="75" y2="768" stroke="#1565c0" stroke-width="1" stroke-dasharray="4,3"/>
 
   <rect x="170" y="48" width="110" height="38" rx="5" fill="#f57c00"/>
   <text x="225" y="63" text-anchor="middle" fill="white" font-weight="bold">Nettleser</text>
   <text x="225" y="78" text-anchor="middle" fill="#fff8e1" font-size="9">Legens browser</text>
-  <line x1="225" y1="86" x2="225" y2="848" stroke="#f57c00" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="225" y1="86" x2="225" y2="768" stroke="#f57c00" stroke-width="1" stroke-dasharray="4,3"/>
 
   <rect x="320" y="48" width="145" height="38" rx="5" fill="#388e3c"/>
   <text x="392" y="63" text-anchor="middle" fill="white" font-weight="bold">Altinn App (BFF)</text>
   <text x="392" y="78" text-anchor="middle" fill="#c8e6c9" font-size="9">SmartLaunchController</text>
-  <line x1="392" y1="86" x2="392" y2="848" stroke="#388e3c" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="392" y1="86" x2="392" y2="768" stroke="#388e3c" stroke-width="1" stroke-dasharray="4,3"/>
 
   <rect x="505" y="48" width="140" height="38" rx="5" fill="#7b1fa2"/>
   <text x="575" y="63" text-anchor="middle" fill="white" font-weight="bold">EPJ Auth Server</text>
   <text x="575" y="78" text-anchor="middle" fill="#e1bee7" font-size="9">SMART Auth / OAuth2</text>
-  <line x1="575" y1="86" x2="575" y2="848" stroke="#7b1fa2" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="575" y1="86" x2="575" y2="768" stroke="#7b1fa2" stroke-width="1" stroke-dasharray="4,3"/>
 
-  <rect x="690" y="48" width="195" height="38" rx="5" fill="#e65100"/>
-  <text x="787" y="63" text-anchor="middle" fill="white" font-weight="bold">FHIR Server</text>
-  <text x="787" y="78" text-anchor="middle" fill="#ffe0b2" font-size="9">EPJ FHIR R4 API</text>
-  <line x1="787" y1="86" x2="787" y2="848" stroke="#e65100" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="685" y="48" width="215" height="38" rx="5" fill="#e65100"/>
+  <text x="792" y="63" text-anchor="middle" fill="white" font-weight="bold">FHIR + Altinn Platform</text>
+  <text x="792" y="78" text-anchor="middle" fill="#ffe0b2" font-size="9">HAPI :8080 / localtest :5101</text>
+  <line x1="792" y1="86" x2="792" y2="768" stroke="#e65100" stroke-width="1" stroke-dasharray="4,3"/>
 
-  <!-- ===== DEFS ===== -->
   <defs>
-    <marker id="a1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1976d2"/></marker>
+    <marker id="a1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1565c0"/></marker>
     <marker id="a2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f57c00"/></marker>
     <marker id="a3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#388e3c"/></marker>
     <marker id="a4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7b1fa2"/></marker>
     <marker id="a5" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#e65100"/></marker>
+    <marker id="a6" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c62828"/></marker>
   </defs>
 
-  <!-- ===== STEP 1: EHR Launch ===== -->
-  <rect x="0" y="96" width="900" height="16" fill="#e3f2fd" opacity="0.6"/>
+  <!-- STEP 1: EHR Launch -->
+  <rect x="0" y="96" width="920" height="16" fill="#e3f2fd" opacity="0.6"/>
   <text x="6" y="108" font-size="10" font-weight="bold" fill="#1565c0">① EHR Launch — EPJ starter Altinn-appen med launch-kontekst</text>
 
-  <line x1="75" y1="122" x2="220" y2="122" stroke="#1976d2" stroke-width="1.5" marker-end="url(#a1)"/>
-  <text x="148" y="118" text-anchor="middle" fill="#1976d2" font-size="9">Redirect browser til</text>
-  <text x="148" y="130" text-anchor="middle" fill="#1976d2" font-size="9">/smart/launch?iss=&lt;FHIR base URL&gt;&amp;launch=&lt;token&gt;</text>
+  <line x1="75" y1="122" x2="220" y2="122" stroke="#1565c0" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="148" y="118" text-anchor="middle" fill="#1565c0" font-size="9">Redirect browser til</text>
+  <text x="148" y="130" text-anchor="middle" fill="#1565c0" font-size="9">/smart/launch?iss=&lt;FHIR URL&gt;&amp;launch=enc-xxx</text>
+  <line x1="225" y1="146" x2="387" y2="146" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="306" y="142" text-anchor="middle" fill="#388e3c" font-size="9">GET /smart/launch?iss&amp;launch</text>
 
-  <line x1="225" y1="148" x2="387" y2="148" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
-  <text x="306" y="144" text-anchor="middle" fill="#388e3c" font-size="9">GET /smart/launch?iss&amp;launch</text>
+  <!-- STEP 2: Discovery -->
+  <rect x="0" y="158" width="920" height="16" fill="#f3e5f5" opacity="0.6"/>
+  <text x="6" y="170" font-size="10" font-weight="bold" fill="#6a1b9a">② Discovery — hent SMART metadata fra EPJ</text>
 
-  <!-- ===== STEP 2: Discovery ===== -->
-  <rect x="0" y="160" width="900" height="16" fill="#f3e5f5" opacity="0.6"/>
-  <text x="6" y="172" font-size="10" font-weight="bold" fill="#6a1b9a">② Discovery — iss peker til FHIR base URL → SMART metadata</text>
+  <line x1="392" y1="184" x2="787" y2="184" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
+  <text x="589" y="180" text-anchor="middle" fill="#388e3c" font-size="9">GET {iss}/.well-known/smart-configuration</text>
+  <line x1="787" y1="198" x2="397" y2="198" stroke="#e65100" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
+  <text x="589" y="208" text-anchor="middle" fill="#e65100" font-size="9">{ authorization_endpoint, token_endpoint, capabilities }</text>
 
-  <line x1="392" y1="186" x2="782" y2="186" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
-  <text x="587" y="182" text-anchor="middle" fill="#388e3c" font-size="9">GET {iss}/.well-known/smart-configuration</text>
-  <text x="587" y="192" text-anchor="middle" fill="#9e9e9e" font-size="8">(alternativt: GET {iss}/metadata → CapabilityStatement)</text>
-
-  <line x1="782" y1="208" x2="397" y2="208" stroke="#e65100" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
-  <text x="587" y="204" text-anchor="middle" fill="#e65100" font-size="9">{ authorization_endpoint, token_endpoint, capabilities }</text>
-
-  <!-- ===== STEP 3: PKCE ===== -->
-  <rect x="0" y="220" width="900" height="16" fill="#e8f5e9" opacity="0.6"/>
-  <text x="6" y="232" font-size="10" font-weight="bold" fill="#2e7d32">③ PKCE + State — genereres og lagres server-side</text>
+  <!-- STEP 3: PKCE -->
+  <rect x="0" y="220" width="920" height="16" fill="#e8f5e9" opacity="0.6"/>
+  <text x="6" y="232" font-size="10" font-weight="bold" fill="#2e7d32">③ PKCE S256 + State — genereres og lagres server-side</text>
 
   <rect x="347" y="240" width="90" height="28" rx="3" fill="#e8f5e9" stroke="#388e3c" stroke-width="1"/>
   <text x="392" y="252" text-anchor="middle" fill="#2e7d32" font-size="9">code_verifier →</text>
   <text x="392" y="262" text-anchor="middle" fill="#2e7d32" font-size="9">code_challenge (S256)</text>
 
-  <rect x="347" y="274" width="90" height="18" rx="3" fill="#e8f5e9" stroke="#388e3c" stroke-width="1"/>
-  <text x="392" y="287" text-anchor="middle" fill="#2e7d32" font-size="9">state = random()</text>
+  <line x1="392" y1="272" x2="230" y2="272" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a2)"/>
+  <text x="311" y="268" text-anchor="middle" fill="#388e3c" font-size="9">Redirect → /authorize?response_type=code&amp;code_challenge&amp;state&amp;launch</text>
 
-  <line x1="392" y1="296" x2="230" y2="296" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a2)"/>
-  <text x="311" y="292" text-anchor="middle" fill="#388e3c" font-size="9">Redirect → /auth?response_type=code&amp;code_challenge&amp;state&amp;launch</text>
+  <!-- STEP 4: Auth -->
+  <rect x="0" y="284" width="920" height="16" fill="#fce4ec" opacity="0.6"/>
+  <text x="6" y="296" font-size="10" font-weight="bold" fill="#880e4f">④ Autorisasjon — EPJ Auth utsteder kode</text>
 
-  <!-- ===== STEP 4: Auth ===== -->
-  <rect x="0" y="308" width="900" height="16" fill="#fce4ec" opacity="0.6"/>
-  <text x="6" y="320" font-size="10" font-weight="bold" fill="#880e4f">④ Autorisasjon — EPJ Auth utsteder kode (ingen brukerinteraksjon i mock)</text>
+  <line x1="225" y1="310" x2="570" y2="310" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a4)"/>
+  <text x="397" y="306" text-anchor="middle" fill="#7b1fa2" font-size="9">GET /authorize?... (nettleser)</text>
+  <line x1="570" y1="326" x2="230" y2="326" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a2)"/>
+  <text x="397" y="322" text-anchor="middle" fill="#7b1fa2" font-size="9">Redirect → /smart/callback?code=…&amp;state=…</text>
 
-  <line x1="225" y1="334" x2="570" y2="334" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a4)"/>
-  <text x="397" y="330" text-anchor="middle" fill="#7b1fa2" font-size="9">GET /auth?... (videresendes av browser)</text>
+  <!-- STEP 5: Token exchange -->
+  <rect x="0" y="338" width="920" height="16" fill="#e8f5e9" opacity="0.6"/>
+  <text x="6" y="350" font-size="10" font-weight="bold" fill="#1b5e20">⑤ Token-utveksling — server-side (BFF — token forlater aldri nettleseren)</text>
 
-  <line x1="570" y1="352" x2="230" y2="352" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a2)"/>
-  <text x="397" y="348" text-anchor="middle" fill="#7b1fa2" font-size="9">Redirect → /smart/callback?code=&lt;kode&gt;&amp;state=&lt;state&gt;</text>
+  <line x1="225" y1="364" x2="387" y2="364" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="306" y="360" text-anchor="middle" fill="#f57c00" font-size="9">GET /smart/callback?code&amp;state</text>
 
-  <!-- ===== STEP 5: Callback + token ===== -->
-  <rect x="0" y="364" width="900" height="16" fill="#e8f5e9" opacity="0.6"/>
-  <text x="6" y="376" font-size="10" font-weight="bold" fill="#1b5e20">⑤ Token-utveksling — server-side (BFF-mønster, aldri i browser)</text>
+  <rect x="347" y="372" width="90" height="26" rx="3" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+  <text x="392" y="383" text-anchor="middle" fill="#e65100" font-size="9" font-weight="bold">Validerer state</text>
+  <text x="392" y="393" text-anchor="middle" fill="#e65100" font-size="9">+ code_verifier</text>
 
-  <line x1="225" y1="390" x2="387" y2="390" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
-  <text x="306" y="386" text-anchor="middle" fill="#f57c00" font-size="9">GET /smart/callback?code&amp;state</text>
+  <line x1="392" y1="402" x2="570" y2="402" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a4)"/>
+  <text x="481" y="398" text-anchor="middle" fill="#388e3c" font-size="9">POST /token { code, code_verifier, … }</text>
+  <line x1="570" y1="418" x2="397" y2="418" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
+  <text x="481" y="414" text-anchor="middle" fill="#7b1fa2" font-size="9">{ access_token, patient, encounter, fhirUser }</text>
 
-  <!-- State + PKCE validation box -->
-  <rect x="347" y="398" width="90" height="36" rx="3" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
-  <text x="392" y="411" text-anchor="middle" fill="#e65100" font-size="9" font-weight="bold">Validerer state</text>
-  <text x="392" y="423" text-anchor="middle" fill="#e65100" font-size="9">Henter code_verifier</text>
-  <text x="392" y="433" text-anchor="middle" fill="#9e9e9e" font-size="8">(CSRF-beskyttelse)</text>
+  <rect x="347" y="424" width="90" height="18" rx="3" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="392" y="436" text-anchor="middle" fill="#1b5e20" font-size="9">token → sesjon (BFF)</text>
 
-  <line x1="392" y1="438" x2="570" y2="438" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a4)"/>
-  <text x="481" y="434" text-anchor="middle" fill="#388e3c" font-size="9">POST /token { code, code_verifier, client_id, ... }</text>
+  <line x1="392" y1="446" x2="230" y2="446" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a2)"/>
+  <text x="311" y="442" text-anchor="middle" fill="#388e3c" font-size="9">Redirect → /{org}/{app}  (session-cookie settes)</text>
 
-  <line x1="570" y1="456" x2="397" y2="456" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
-  <text x="481" y="452" text-anchor="middle" fill="#7b1fa2" font-size="9">{ access_token, patient?, encounter?, ... }</text>
+  <!-- STEP 6: FHIR prefill -->
+  <rect x="0" y="458" width="920" height="16" fill="#fff3e0" opacity="0.7"/>
+  <text x="6" y="470" font-size="10" font-weight="bold" fill="#bf360c">⑥ FHIR-prefill — FhirPrefillService henter ressurser server-side</text>
 
-  <!-- fhirUser note -->
-  <rect x="595" y="462" width="290" height="28" rx="3" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1"/>
-  <text x="740" y="474" text-anchor="middle" fill="#4a148c" font-size="9" font-weight="bold">fhirUser: JWT-claim i access_token</text>
-  <text x="740" y="484" text-anchor="middle" fill="#6a1b9a" font-size="8">(ikke eget felt i tokenrespons — dekodes server-side)</text>
+  <line x1="225" y1="484" x2="387" y2="484" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="306" y="480" text-anchor="middle" fill="#f57c00" font-size="9">GET /data/{dataId}  (Altinn frontend)</text>
 
-  <!-- BFF session storage -->
-  <rect x="347" y="494" width="90" height="28" rx="3" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="392" y="506" text-anchor="middle" fill="#1b5e20" font-size="9" font-weight="bold">BFF: lagrer token</text>
-  <text x="392" y="518" text-anchor="middle" fill="#2e7d32" font-size="9">server-session (HttpOnly)</text>
+  <line x1="392" y1="498" x2="787" y2="498" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
+  <text x="589" y="494" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/Patient/{id}</text>
+  <line x1="392" y1="514" x2="787" y2="514" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
+  <text x="589" y="510" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/Practitioner/{id}  (fra fhirUser JWT-claim)</text>
+  <line x1="392" y1="530" x2="787" y2="530" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
+  <text x="589" y="526" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/Encounter/{id}, /fhir/Organization/{id}</text>
+  <line x1="787" y1="546" x2="397" y2="546" stroke="#e65100" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
+  <text x="589" y="556" text-anchor="middle" fill="#e65100" font-size="9">FHIR-ressurser → ForerLegeerklaeringModel (prefyllt)</text>
 
-  <line x1="392" y1="526" x2="230" y2="526" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a2)"/>
-  <text x="311" y="522" text-anchor="middle" fill="#388e3c" font-size="9">Redirect → /{org}/{app}  (session-cookie settes)</text>
+  <line x1="392" y1="562" x2="230" y2="562" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a2)"/>
+  <text x="311" y="558" text-anchor="middle" fill="#388e3c" font-size="9">Forhåndsutfylt skjema</text>
 
-  <!-- ===== STEP 6: Capability discovery ===== -->
-  <rect x="0" y="538" width="900" height="16" fill="#fff8e1" opacity="0.7"/>
-  <text x="6" y="550" font-size="10" font-weight="bold" fill="#e65100">⑥ Capability discovery — feature detection før FHIR-oppslag</text>
+  <!-- STEP 7: Signering og innsending -->
+  <rect x="0" y="574" width="920" height="16" fill="#fce4ec" opacity="0.6"/>
+  <text x="6" y="586" font-size="10" font-weight="bold" fill="#880e4f">⑦ Signering og innsending — «Signer og send inn» (Task_1: signing)</text>
 
-  <line x1="392" y1="564" x2="782" y2="564" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
-  <text x="587" y="560" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/metadata  (valgfritt, anbefalt)</text>
+  <line x1="225" y1="600" x2="387" y2="600" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="306" y="596" text-anchor="middle" fill="#f57c00" font-size="9">Legen trykker «Signer og send inn»</text>
 
-  <line x1="782" y1="580" x2="397" y2="580" stroke="#e65100" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
-  <text x="587" y="576" text-anchor="middle" fill="#e65100" font-size="9">CapabilityStatement  { rest[].resource[], security.extension }</text>
+  <line x1="392" y1="616" x2="787" y2="616" stroke="#c62828" stroke-width="2" marker-end="url(#a6)"/>
+  <text x="589" y="612" text-anchor="middle" fill="#c62828" font-size="9">POST /process/next  { action: "sign" }</text>
+  <text x="589" y="628" text-anchor="middle" fill="#c62828" font-size="9">sign-aksjon oppretter signatur-dataElement (allowedContributors: app:owned)</text>
 
-  <!-- ===== STEP 7: ProcessDataRead / FHIR prefill ===== -->
-  <rect x="0" y="592" width="900" height="16" fill="#e3f2fd" opacity="0.6"/>
-  <text x="6" y="604" font-size="10" font-weight="bold" fill="#0d47a1">⑦ Forhåndsutfylling — IDataProcessor.ProcessDataRead (FhirPrefillService)</text>
+  <line x1="787" y1="636" x2="397" y2="636" stroke="#c62828" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
+  <text x="589" y="648" text-anchor="middle" fill="#c62828" font-size="9">Instans arkivert · PDF generert · prosess avsluttet</text>
 
-  <line x1="225" y1="618" x2="387" y2="618" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
-  <text x="306" y="614" text-anchor="middle" fill="#388e3c" font-size="9">GET /data/{dataId}  (Altinn frontend)</text>
+  <!-- STEP 8: Writeback (planlagt) -->
+  <rect x="0" y="660" width="920" height="16" fill="#eeeeee" opacity="0.8"/>
+  <text x="6" y="672" font-size="10" font-weight="bold" fill="#757575">⑧ Writeback (planlagt) — PDF tilbake til EPJ</text>
 
-  <line x1="392" y1="634" x2="782" y2="634" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
-  <text x="587" y="630" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/Patient/{id}</text>
+  <line x1="392" y1="686" x2="787" y2="686" stroke="#bdbdbd" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#a5)"/>
+  <text x="589" y="682" text-anchor="middle" fill="#9e9e9e" font-size="9">PUT /fhir/DocumentReference  (ikke implementert — fase 2)</text>
 
-  <line x1="392" y1="650" x2="782" y2="650" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
-  <text x="587" y="646" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/Practitioner/{id}  (fra fhirUser JWT-claim)</text>
-
-  <line x1="392" y1="666" x2="782" y2="666" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a5)"/>
-  <text x="587" y="662" text-anchor="middle" fill="#388e3c" font-size="9">GET /fhir/Encounter/{id}, /fhir/Organization/{id}, /fhir/Condition?...</text>
-
-  <line x1="782" y1="682" x2="397" y2="682" stroke="#e65100" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a3)"/>
-  <text x="587" y="678" text-anchor="middle" fill="#e65100" font-size="9">FHIR-ressurser (JSON) → mappes til ForerLegeerklaeringModel</text>
-
-  <line x1="392" y1="696" x2="230" y2="696" stroke="#388e3c" stroke-width="1.5" marker-end="url(#a2)"/>
-  <text x="311" y="692" text-anchor="middle" fill="#388e3c" font-size="9">Forhåndsutfylt datamodell</text>
-
-  <!-- ===== STEP 8: Innsending ===== -->
-  <rect x="0" y="708" width="900" height="16" fill="#fce4ec" opacity="0.6"/>
-  <text x="6" y="720" font-size="10" font-weight="bold" fill="#880e4f">⑧ Innsending — lege kontrollerer, supplerer og sender</text>
-
-  <line x1="225" y1="734" x2="387" y2="734" stroke="#f57c00" stroke-width="1.5" marker-end="url(#a3)"/>
-  <text x="306" y="730" text-anchor="middle" fill="#f57c00" font-size="9">POST submit</text>
-
-  <line x1="392" y1="752" x2="230" y2="752" stroke="#388e3c" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a2)"/>
-  <text x="311" y="748" text-anchor="middle" fill="#388e3c" font-size="9">Altinn-kvittering / referansenummer  (evt. PDF)</text>
-
-  <!-- ===== FUTURE: DocumentReference ===== -->
-  <rect x="0" y="764" width="900" height="16" fill="#eeeeee" opacity="0.8"/>
-  <text x="6" y="776" font-size="10" font-weight="bold" fill="#757575">⑨ Writeback (planlagt) — PDF tilbake til EPJ</text>
-
-  <line x1="392" y1="790" x2="782" y2="790" stroke="#bdbdbd" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#a5)"/>
-  <text x="587" y="786" text-anchor="middle" fill="#9e9e9e" font-size="9">PUT /fhir/DocumentReference  (ikke implementert)</text>
-
-  <!-- ===== LEGEND ===== -->
-  <rect x="10" y="810" width="880" height="38" rx="5" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/>
-  <text x="20" y="824" fill="#424242" font-size="9" font-weight="bold">BFF-mønster:</text>
-  <text x="80" y="824" fill="#616161" font-size="9">Access token lagres aldri i browser. Nettleser kommuniserer kun med Altinn App via session-cookie (HttpOnly, SameSite=Lax).</text>
-  <text x="20" y="840" fill="#424242" font-size="9" font-weight="bold">fhirUser:</text>
-  <text x="65" y="840" fill="#616161" font-size="9">JWT-claim i access_token — dekodes server-side av Altinn App. Ikke eksponert til browser.</text>
-  <text x="450" y="840" fill="#424242" font-size="9" font-weight="bold">Discovery:</text>
-  <text x="500" y="840" fill="#616161" font-size="9">iss-parameter = FHIR base URL. smart-configuration hentes fra {iss}/.well-known/smart-configuration.</text>
+  <!-- Hurtigstart note -->
+  <rect x="10" y="704" width="900" height="60" rx="5" fill="#f5f5f5" stroke="#9e9e9e" stroke-width="1"/>
+  <text x="20" y="720" fill="#424242" font-weight="bold" font-size="9">Hurtigstart (/smart/dev-login) — bypasser steg ①–⑤:</text>
+  <text x="20" y="735" fill="#616161" font-size="9">EPJ-simulator → /{org}/{app}/smart/dev-login?userId=12345&amp;partyId=512345&amp;patientId=…&amp;encounterId=…</text>
+  <text x="20" y="749" fill="#616161" font-size="9">BFF henter JWT fra localtest server-to-server (GET localhost:5101/Home/GetTestUserToken/{userId}), setter cookies, redirecter til skjema</text>
+  <text x="20" y="763" fill="#9e9e9e" font-size="8">Kun tilgjengelig i Development-miljø (IsDevelopment()-sjekk). Steg ⑥–⑦ kjøres som normalt.</text>
 </svg>

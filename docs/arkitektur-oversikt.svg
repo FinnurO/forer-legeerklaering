@@ -1,143 +1,162 @@
-<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" font-size="12">
-  <title>SMART on FHIR + Altinn Studio — Arkitekturoversikt v0.6</title>
-  <desc>Overordnet arkitektur for SMART on FHIR-integrasjon med Altinn Studio</desc>
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" font-size="11">
+  <title>Arkitekturoversikt — SMART on FHIR + Altinn Studio v0.7</title>
+  <desc>Overordnet arkitektur for legeerklæring førerrett PoC med SMART EHR Launch, BFF-mønster, FHIR-prefill og Altinn signing</desc>
 
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6 Z" fill="#555"/>
     </marker>
     <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#1976d2"/>
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1565c0"/>
     </marker>
     <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6 Z" fill="#388e3c"/>
     </marker>
     <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#f57c00"/>
+      <path d="M0,0 L8,3 L0,6 Z" fill="#e65100"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#c62828"/>
     </marker>
   </defs>
 
-  <!-- Background -->
-  <rect width="900" height="560" fill="#fafafa"/>
-
-  <!-- Title -->
-  <text x="450" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#212121">SMART on FHIR + Altinn Studio — Arkitekturoversikt v0.6</text>
+  <rect width="900" height="620" fill="#fafafa"/>
+  <text x="450" y="24" text-anchor="middle" font-size="15" font-weight="bold" fill="#212121">SMART on FHIR + Altinn Studio — Arkitekturoversikt v0.7</text>
+  <text x="450" y="40" text-anchor="middle" font-size="10" fill="#757575">Legeerklæring førerrett PoC · Digdir · BFF-mønster · «Signer og send inn»</text>
 
   <!-- EPJ zone -->
-  <rect x="20" y="55" width="200" height="200" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
-  <text x="120" y="75" text-anchor="middle" font-weight="bold" fill="#1976d2" font-size="13">EPJ-system</text>
-  <text x="120" y="90" text-anchor="middle" fill="#1565c0" font-size="10">(f.eks. DIPS Arena)</text>
+  <rect x="20" y="55" width="200" height="220" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="120" y="75" text-anchor="middle" font-weight="bold" fill="#1565c0" font-size="12">EPJ-system</text>
+  <text x="120" y="89" text-anchor="middle" fill="#1565c0" font-size="9">(DIPS Arena / tilsvarende)</text>
 
-  <!-- EPJ components -->
-  <rect x="35" y="100" width="170" height="40" rx="4" fill="#1976d2"/>
-  <text x="120" y="116" text-anchor="middle" fill="white" font-weight="bold">SMART Auth Server</text>
-  <text x="120" y="130" text-anchor="middle" fill="#bbdefb" font-size="10">OAuth2 / SMART App Launch IG</text>
+  <rect x="35" y="98" width="170" height="42" rx="4" fill="#1565c0"/>
+  <text x="120" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="10">SMART Auth Server</text>
+  <text x="120" y="129" text-anchor="middle" fill="#bbdefb" font-size="9">OAuth2 / SMART App Launch IG v2.2.0</text>
 
-  <rect x="35" y="155" width="170" height="40" rx="4" fill="#1976d2"/>
-  <text x="120" y="171" text-anchor="middle" fill="white" font-weight="bold">FHIR R4 API</text>
-  <text x="120" y="185" text-anchor="middle" fill="#bbdefb" font-size="10">Patient, Practitioner, Encounter...</text>
+  <rect x="35" y="150" width="170" height="42" rx="4" fill="#1565c0"/>
+  <text x="120" y="167" text-anchor="middle" fill="white" font-weight="bold" font-size="10">FHIR R4 API</text>
+  <text x="120" y="181" text-anchor="middle" fill="#bbdefb" font-size="9">Patient, Practitioner, Encounter…</text>
 
-  <rect x="35" y="210" width="170" height="36" rx="4" fill="#42a5f5"/>
-  <text x="120" y="224" text-anchor="middle" fill="white" font-size="11">Lege (bruker)</text>
-  <text x="120" y="238" text-anchor="middle" fill="#e3f2fd" font-size="10">Starter EHR Launch</text>
+  <rect x="35" y="203" width="170" height="38" rx="4" fill="#42a5f5"/>
+  <text x="120" y="218" text-anchor="middle" fill="white" font-size="10" font-weight="bold">EPJ-simulator (PoC)</text>
+  <text x="120" y="231" text-anchor="middle" fill="#e3f2fd" font-size="9">5 pasienter · Dr. Ola Nordmann</text>
+
+  <rect x="35" y="251" width="170" height="16" rx="3" fill="#0d47a1"/>
+  <text x="120" y="263" text-anchor="middle" fill="#90caf9" font-size="8">localhost:9090  (mock)</text>
 
   <!-- Altinn zone -->
-  <rect x="340" y="55" width="220" height="320" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
-  <text x="450" y="75" text-anchor="middle" font-weight="bold" fill="#388e3c" font-size="13">Altinn App (.NET)</text>
-  <text x="450" y="90" text-anchor="middle" fill="#2e7d32" font-size="10">digdir/forer-legeerklaering</text>
+  <rect x="340" y="55" width="220" height="340" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+  <text x="450" y="75" text-anchor="middle" font-weight="bold" fill="#388e3c" font-size="12">Altinn App (BFF)</text>
+  <text x="450" y="89" text-anchor="middle" fill="#2e7d32" font-size="9">digdir/forer-legeerklaering · ASP.NET Core</text>
 
-  <rect x="355" y="100" width="190" height="40" rx="4" fill="#388e3c"/>
-  <text x="450" y="116" text-anchor="middle" fill="white" font-weight="bold">SmartLaunchController</text>
-  <text x="450" y="130" text-anchor="middle" fill="#c8e6c9" font-size="10">/smart/launch, /callback, /test-prefill</text>
+  <rect x="355" y="98" width="190" height="50" rx="4" fill="#388e3c"/>
+  <text x="450" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="10">SmartLaunchController</text>
+  <text x="450" y="129" text-anchor="middle" fill="#c8e6c9" font-size="9">/smart/launch, /smart/callback</text>
+  <text x="450" y="141" text-anchor="middle" fill="#a5d6a7" font-size="9">/smart/dev-login  (dev only)</text>
 
-  <rect x="355" y="155" width="190" height="40" rx="4" fill="#388e3c"/>
-  <text x="450" y="171" text-anchor="middle" fill="white" font-weight="bold">FhirPrefillService</text>
-  <text x="450" y="185" text-anchor="middle" fill="#c8e6c9" font-size="10">IDataProcessor.ProcessDataRead</text>
+  <rect x="355" y="160" width="190" height="42" rx="4" fill="#388e3c"/>
+  <text x="450" y="177" text-anchor="middle" fill="white" font-weight="bold" font-size="10">FhirPrefillService</text>
+  <text x="450" y="191" text-anchor="middle" fill="#c8e6c9" font-size="9">IDataProcessor · FHIR → datamodell</text>
 
-  <rect x="355" y="210" width="190" height="40" rx="4" fill="#43a047"/>
-  <text x="450" y="226" text-anchor="middle" fill="white" font-weight="bold">ASP.NET Session</text>
-  <text x="450" y="240" text-anchor="middle" fill="#c8e6c9" font-size="10">Token-lagring (server-side)</text>
+  <rect x="355" y="213" width="190" height="42" rx="4" fill="#43a047"/>
+  <text x="450" y="230" text-anchor="middle" fill="white" font-weight="bold" font-size="10">SMART Token Store</text>
+  <text x="450" y="244" text-anchor="middle" fill="#c8e6c9" font-size="9">Server-side sesjon (BFF-mønster)</text>
 
-  <rect x="355" y="265" width="190" height="40" rx="4" fill="#43a047"/>
-  <text x="450" y="281" text-anchor="middle" fill="white" font-weight="bold">Altinn UI (React)</text>
-  <text x="450" y="295" text-anchor="middle" fill="#c8e6c9" font-size="10">Forhåndsutfylt skjema</text>
+  <rect x="355" y="266" width="190" height="42" rx="4" fill="#43a047"/>
+  <text x="450" y="283" text-anchor="middle" fill="white" font-weight="bold" font-size="10">Altinn UI (React)</text>
+  <text x="450" y="297" text-anchor="middle" fill="#c8e6c9" font-size="9">Forhåndsutfylt legeerklæring IS-2569</text>
 
-  <rect x="355" y="320" width="190" height="40" rx="4" fill="#66bb6a"/>
-  <text x="450" y="336" text-anchor="middle" fill="white" font-weight="bold">Altinn Platform</text>
-  <text x="450" y="350" text-anchor="middle" fill="#e8f5e9" font-size="10">Storage, Auth, PDF, Register</text>
+  <rect x="355" y="319" width="190" height="50" rx="4" fill="#2e7d32"/>
+  <text x="450" y="336" text-anchor="middle" fill="white" font-weight="bold" font-size="10">process.bpmn</text>
+  <text x="450" y="350" text-anchor="middle" fill="#c8e6c9" font-size="9">Task_1: signing (Signer og send inn)</text>
+  <text x="450" y="362" text-anchor="middle" fill="#a5d6a7" font-size="9">sign-aksjon → signatur-dataElement</text>
 
-  <!-- Innbygger/Lege zone -->
+  <!-- Altinn Platform -->
+  <rect x="355" y="380" width="190" height="8" rx="2" fill="#1b5e20"/>
+  <rect x="355" y="395" width="190" height="0" rx="0"/>
+  <text x="450" y="391" text-anchor="middle" fill="#1b5e20" font-size="9">↓ Altinn Platform (localtest)</text>
+
+  <!-- Nettleser zone -->
   <rect x="680" y="55" width="200" height="100" rx="8" fill="#fff8e1" stroke="#f57c00" stroke-width="2"/>
-  <text x="780" y="75" text-anchor="middle" font-weight="bold" fill="#f57c00" font-size="13">Nettleser</text>
-  <rect x="695" y="85" width="170" height="55" rx="4" fill="#f57c00"/>
-  <text x="780" y="106" text-anchor="middle" fill="white" font-weight="bold">Lege</text>
-  <text x="780" y="122" text-anchor="middle" fill="#fff8e1" font-size="10">Bruker skjemaet i Altinn</text>
-  <text x="780" y="135" text-anchor="middle" fill="#fff8e1" font-size="10">Fyller ut og sender inn</text>
+  <text x="780" y="75" text-anchor="middle" font-weight="bold" fill="#e65100" font-size="12">Nettleser</text>
+  <rect x="695" y="85" width="170" height="55" rx="4" fill="#e65100"/>
+  <text x="780" y="104" text-anchor="middle" fill="white" font-weight="bold">Lege (Dr. Ola Nordmann)</text>
+  <text x="780" y="118" text-anchor="middle" fill="#fff8e1" font-size="9">Fyller ut og signerer</text>
+  <text x="780" y="130" text-anchor="middle" fill="#fff8e1" font-size="9">local.altinn.cloud:8000</text>
 
-  <!-- Output zone -->
-  <rect x="680" y="180" width="200" height="195" rx="8" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
-  <text x="780" y="200" text-anchor="middle" font-weight="bold" fill="#c62828" font-size="13">Utdata</text>
-  <rect x="695" y="210" width="170" height="40" rx="4" fill="#e53935"/>
-  <text x="780" y="226" text-anchor="middle" fill="white" font-weight="bold">Altinn-innsending</text>
-  <text x="780" y="240" text-anchor="middle" fill="#ffcdd2" font-size="10">XML til tjenesteeier</text>
-  <rect x="695" y="260" width="170" height="40" rx="4" fill="#e53935"/>
-  <text x="780" y="276" text-anchor="middle" fill="white" font-weight="bold">PDF-kvittering</text>
-  <text x="780" y="290" text-anchor="middle" fill="#ffcdd2" font-size="10">Generert av Altinn</text>
-  <rect x="695" y="310" width="170" height="55" rx="4" fill="#ef9a9a"/>
-  <text x="780" y="330" text-anchor="middle" fill="#b71c1c" font-weight="bold">DocumentReference</text>
-  <text x="780" y="344" text-anchor="middle" fill="#b71c1c" font-size="10">Tilbake til EPJ journal</text>
-  <text x="780" y="357" text-anchor="middle" fill="#b71c1c" font-size="10">(planlagt — ikke impl.)</text>
+  <!-- Altinn Platform zone -->
+  <rect x="680" y="180" width="200" height="215" rx="8" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
+  <text x="780" y="200" text-anchor="middle" font-weight="bold" fill="#c62828" font-size="12">Altinn Platform</text>
+  <text x="780" y="214" text-anchor="middle" fill="#c62828" font-size="9">localtest · App API 8.6.4</text>
+  <rect x="695" y="222" width="170" height="38" rx="4" fill="#e53935"/>
+  <text x="780" y="237" text-anchor="middle" fill="white" font-weight="bold" font-size="10">Storage + Auth</text>
+  <text x="780" y="251" text-anchor="middle" fill="#ffcdd2" font-size="9">instanser, signerte data, tokens</text>
+  <rect x="695" y="268" width="170" height="38" rx="4" fill="#e53935"/>
+  <text x="780" y="283" text-anchor="middle" fill="white" font-weight="bold" font-size="10">PDF-generator</text>
+  <text x="780" y="297" text-anchor="middle" fill="#ffcdd2" font-size="9">Chromium headless · :5300</text>
+  <rect x="695" y="314" width="170" height="38" rx="4" fill="#ef9a9a"/>
+  <text x="780" y="329" text-anchor="middle" fill="#b71c1c" font-weight="bold" font-size="10">DocumentReference</text>
+  <text x="780" y="343" text-anchor="middle" fill="#b71c1c" font-size="9">Writeback til EPJ (planlagt)</text>
+  <rect x="695" y="360" width="170" height="27" rx="4" fill="#ffcdd2"/>
+  <text x="780" y="375" text-anchor="middle" fill="#b71c1c" font-size="9">nginx :8000 (Podman/WSL2)</text>
 
-  <!-- Data model box -->
-  <rect x="340" y="400" width="220" height="90" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
-  <text x="450" y="420" text-anchor="middle" font-weight="bold" fill="#7b1fa2" font-size="12">Datamodell</text>
-  <text x="450" y="437" text-anchor="middle" fill="#6a1b9a" font-size="10">ForerLegeerklaeringModel</text>
-  <text x="355" y="455" fill="#6a1b9a" font-size="9">Pasient: Fnr, Navn, Fødselsdato, Kjønn</text>
-  <text x="355" y="468" fill="#6a1b9a" font-size="9">Lege: HPR, Navn</text>
-  <text x="355" y="481" fill="#6a1b9a" font-size="9">Virksomhet: Orgnr, HER-id, Navn</text>
+  <!-- Datamodel box -->
+  <rect x="340" y="415" width="220" height="90" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
+  <text x="450" y="435" text-anchor="middle" font-weight="bold" fill="#7b1fa2" font-size="11">Datamodell</text>
+  <text x="450" y="451" text-anchor="middle" fill="#6a1b9a" font-size="9">ForerLegeerklaeringModel</text>
+  <text x="355" y="467" fill="#6a1b9a" font-size="9">Pasient: Fnr, Navn, Fødselsdato, Kjønn</text>
+  <text x="355" y="480" fill="#6a1b9a" font-size="9">Lege: HPR, Navn · Virksomhet: Orgnr, Navn</text>
+  <text x="355" y="493" fill="#6a1b9a" font-size="9">Kjøretøygrupper, helsekategorier (IS-2569)</text>
 
   <!-- ARROWS -->
-  <!-- EPJ → Altinn: EHR Launch (1) -->
-  <line x1="220" y1="160" x2="340" y2="120" stroke="#1976d2" stroke-width="2" marker-end="url(#arrow-blue)"/>
-  <text x="270" y="128" fill="#1976d2" font-size="10" text-anchor="middle">① EHR Launch</text>
-  <text x="270" y="140" fill="#1976d2" font-size="10" text-anchor="middle">iss + launch</text>
+  <!-- EPJ → Altinn: EHR Launch -->
+  <line x1="220" y1="150" x2="340" y2="125" stroke="#1565c0" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="268" y="128" fill="#1565c0" font-size="9" text-anchor="middle">① EHR Launch</text>
+  <text x="268" y="140" fill="#1565c0" font-size="9" text-anchor="middle">?iss=&amp;launch=</text>
 
-  <!-- Altinn → EPJ Auth: (2) -->
-  <line x1="355" y1="130" x2="220" y2="115" stroke="#1976d2" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-blue)"/>
-  <text x="285" y="108" fill="#1976d2" font-size="9" text-anchor="middle">② Authorize</text>
+  <!-- dev-login shortcut -->
+  <line x1="220" y1="218" x2="340" y2="135" stroke="#42a5f5" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-blue)"/>
+  <text x="258" y="195" fill="#42a5f5" font-size="8" text-anchor="middle">/dev-login</text>
+  <text x="258" y="206" fill="#42a5f5" font-size="8" text-anchor="middle">(Hurtigstart)</text>
 
-  <!-- EPJ Auth → Altinn callback: (3) -->
-  <line x1="220" y1="130" x2="355" y2="145" stroke="#1976d2" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-blue)"/>
-  <text x="285" y="155" fill="#1976d2" font-size="9" text-anchor="middle">③ code</text>
+  <!-- Altinn → EPJ Auth -->
+  <line x1="355" y1="120" x2="220" y2="113" stroke="#388e3c" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-green)"/>
+  <text x="283" y="109" fill="#388e3c" font-size="8" text-anchor="middle">② Authorize</text>
 
-  <!-- Altinn → FHIR: fetch data (4) -->
-  <line x1="355" y1="175" x2="220" y2="172" stroke="#388e3c" stroke-width="2" marker-end="url(#arrow-green)"/>
-  <text x="285" y="168" fill="#388e3c" font-size="9" text-anchor="middle">④ GET /fhir/...</text>
+  <!-- EPJ Auth → Altinn callback -->
+  <line x1="220" y1="135" x2="355" y2="142" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-blue)"/>
+  <text x="283" y="148" fill="#1565c0" font-size="8" text-anchor="middle">③ code</text>
+
+  <!-- Altinn → FHIR: fetch data -->
+  <line x1="355" y1="174" x2="220" y2="170" stroke="#388e3c" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <text x="283" y="165" fill="#388e3c" font-size="9" text-anchor="middle">④ GET /fhir/…</text>
 
   <!-- Nettleser → Altinn -->
-  <line x1="680" y1="110" x2="560" y2="290" stroke="#f57c00" stroke-width="2" marker-end="url(#arrow-orange)"/>
-  <text x="648" y="200" fill="#f57c00" font-size="10" text-anchor="middle">⑤ Åpner</text>
-  <text x="648" y="212" fill="#f57c00" font-size="10" text-anchor="middle">skjema</text>
+  <line x1="680" y1="112" x2="560" y2="285" stroke="#e65100" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <text x="643" y="198" fill="#e65100" font-size="9" text-anchor="middle">⑤ Skjema</text>
 
-  <!-- Altinn → Utdata -->
-  <line x1="560" y1="335" x2="680" y2="255" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="628" y="300" fill="#555" font-size="9" text-anchor="middle">⑥ Innsendt</text>
+  <!-- Altinn → Altinn Platform: sign+submit -->
+  <line x1="560" y1="345" x2="680" y2="270" stroke="#c62828" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="630" y="316" fill="#c62828" font-size="9" text-anchor="middle">⑥ sign +</text>
+  <text x="630" y="328" fill="#c62828" font-size="9" text-anchor="middle">send inn</text>
 
   <!-- Datamodel ↔ FhirPrefillService -->
-  <line x1="450" y1="360" x2="450" y2="400" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="450" y1="369" x2="450" y2="415" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <!-- Legend -->
-  <rect x="20" y="390" width="300" height="155" rx="6" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1"/>
-  <text x="30" y="408" font-weight="bold" fill="#424242" font-size="11">Forklaring</text>
-  <line x1="30" y1="420" x2="60" y2="420" stroke="#1976d2" stroke-width="2"/>
-  <text x="65" y="424" fill="#424242" font-size="10">SMART OAuth-flyt (konfidensielt klient)</text>
-  <line x1="30" y1="437" x2="60" y2="437" stroke="#388e3c" stroke-width="2"/>
-  <text x="65" y="441" fill="#424242" font-size="10">FHIR-datahenting (server-side, Bearer token)</text>
-  <line x1="30" y1="454" x2="60" y2="454" stroke="#f57c00" stroke-width="2"/>
-  <text x="65" y="458" fill="#424242" font-size="10">Brukerinteraksjon (nettleser)</text>
-  <line x1="30" y1="471" x2="60" y2="471" stroke="#555" stroke-width="1.5"/>
-  <text x="65" y="475" fill="#424242" font-size="10">Innsending og kvittering</text>
-  <text x="30" y="495" fill="#7b1fa2" font-size="10">★ Token forlater aldri nettleseren</text>
-  <text x="30" y="510" fill="#7b1fa2" font-size="10">★ FHIR kun for prefill — Altinn-modell uendret</text>
-  <text x="30" y="525" fill="#7b1fa2" font-size="10">★ Altinn-innlogging og SMART-auth er separate</text>
+  <rect x="20" y="415" width="300" height="165" rx="6" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1"/>
+  <text x="30" y="433" font-weight="bold" fill="#424242" font-size="10">Forklaring</text>
+  <line x1="30" y1="445" x2="58" y2="445" stroke="#1565c0" stroke-width="2"/>
+  <text x="63" y="449" fill="#424242" font-size="9">SMART OAuth-flyt (PKCE S256)</text>
+  <line x1="30" y1="462" x2="58" y2="462" stroke="#388e3c" stroke-width="2"/>
+  <text x="63" y="466" fill="#424242" font-size="9">FHIR-datahenting (server-side, Bearer token)</text>
+  <line x1="30" y1="479" x2="58" y2="479" stroke="#e65100" stroke-width="2"/>
+  <text x="63" y="483" fill="#424242" font-size="9">Brukerinteraksjon (nettleser)</text>
+  <line x1="30" y1="496" x2="58" y2="496" stroke="#c62828" stroke-width="2"/>
+  <text x="63" y="500" fill="#424242" font-size="9">Signering og innsending</text>
+  <line x1="30" y1="513" x2="58" y2="513" stroke="#42a5f5" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="63" y="517" fill="#424242" font-size="9">/dev-login Hurtigstart (kun lokalt)</text>
+  <text x="30" y="533" fill="#7b1fa2" font-size="9">★ Token forlater aldri nettleseren (BFF)</text>
+  <text x="30" y="547" fill="#7b1fa2" font-size="9">★ Task_1: signing — «Signer og send inn»</text>
+  <text x="30" y="561" fill="#7b1fa2" font-size="9">★ Altinn App API 8.6.4+ (signing task support)</text>
 </svg>

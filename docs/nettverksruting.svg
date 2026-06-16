@@ -1,153 +1,169 @@
-<svg viewBox="0 0 880 640" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" font-size="11">
-  <title>Nettverksruting — Lokal utviklingsmiljø v0.6</title>
+<svg viewBox="0 0 900 680" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" font-size="11">
+  <title>Nettverksruting — Lokal utviklingsmiljø v0.7</title>
   <desc>Fullstendig nettverksruting for SMART on FHIR PoC i lokalt utviklingsmiljø med Podman på Windows</desc>
 
-  <rect width="880" height="640" fill="#fafafa"/>
-  <text x="440" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#212121">Nettverksruting — Lokalt utviklingsmiljø v0.6</text>
+  <rect width="900" height="680" fill="#fafafa"/>
+  <text x="450" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#212121">Nettverksruting — Lokalt utviklingsmiljø v0.7</text>
 
   <!-- Zone: Windows Host -->
-  <rect x="10" y="35" width="860" height="215" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" stroke-dasharray="8,4"/>
+  <rect x="10" y="35" width="880" height="240" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" stroke-dasharray="8,4"/>
   <text x="26" y="55" font-size="11" font-weight="bold" fill="#388e3c">WINDOWS HOST</text>
   <text x="26" y="68" font-size="9" fill="#555">localhost / 127.0.0.1 — prosesser som kjører direkte på Windows</text>
 
   <!-- .NET App -->
-  <rect x="25" y="78" width="180" height="68" rx="5" fill="#388e3c"/>
-  <text x="115" y="97" text-anchor="middle" fill="white" font-weight="bold">Altinn .NET App</text>
-  <text x="115" y="112" text-anchor="middle" fill="#c8e6c9" font-size="9">localhost:5005</text>
-  <text x="115" y="125" text-anchor="middle" fill="#c8e6c9" font-size="9">dotnet run</text>
-  <text x="115" y="138" text-anchor="middle" fill="#a5d6a7" font-size="9">src/App/</text>
+  <rect x="25" y="78" width="185" height="80" rx="5" fill="#388e3c"/>
+  <text x="117" y="97" text-anchor="middle" fill="white" font-weight="bold">Altinn .NET App</text>
+  <text x="117" y="112" text-anchor="middle" fill="#c8e6c9" font-size="9">localhost:5005</text>
+  <text x="117" y="125" text-anchor="middle" fill="#c8e6c9" font-size="9">dotnet run · src/App/</text>
+  <text x="117" y="138" text-anchor="middle" fill="#a5d6a7" font-size="9">/smart/dev-login (→ localtest JWT)</text>
+  <text x="117" y="150" text-anchor="middle" fill="#a5d6a7" font-size="9">BFF · FHIR-prefill · signing</text>
 
   <!-- SMART Mock -->
-  <rect x="235" y="78" width="180" height="68" rx="5" fill="#7b1fa2"/>
-  <text x="325" y="97" text-anchor="middle" fill="white" font-weight="bold">SMART Auth Mock</text>
-  <text x="325" y="112" text-anchor="middle" fill="#e1bee7" font-size="9">localhost:9090</text>
-  <text x="325" y="125" text-anchor="middle" fill="#e1bee7" font-size="9">node server.js</text>
-  <text x="325" y="138" text-anchor="middle" fill="#ce93d8" font-size="9">local-dev/smart-mock/</text>
+  <rect x="230" y="78" width="185" height="80" rx="5" fill="#7b1fa2"/>
+  <text x="322" y="97" text-anchor="middle" fill="white" font-weight="bold">SMART Auth Mock</text>
+  <text x="322" y="112" text-anchor="middle" fill="#e1bee7" font-size="9">localhost:9090</text>
+  <text x="322" y="125" text-anchor="middle" fill="#e1bee7" font-size="9">node server.js</text>
+  <text x="322" y="138" text-anchor="middle" fill="#ce93d8" font-size="9">local-dev/smart-mock/</text>
+  <text x="322" y="150" text-anchor="middle" fill="#ce93d8" font-size="9">EPJ-simulator · 5 launch-kontekster</text>
 
   <!-- HAPI (port-forwarded) -->
-  <rect x="445" y="78" width="200" height="68" rx="5" fill="#e65100"/>
-  <text x="545" y="97" text-anchor="middle" fill="white" font-weight="bold">HAPI FHIR R4</text>
-  <text x="545" y="112" text-anchor="middle" fill="#ffe0b2" font-size="9">localhost:8080  ← port-forward</text>
-  <text x="545" y="125" text-anchor="middle" fill="#ffe0b2" font-size="9">fra Podman-container</text>
-  <text x="545" y="138" text-anchor="middle" fill="#ffcc80" font-size="9">/fhir  (R4)</text>
+  <rect x="435" y="78" width="205" height="80" rx="5" fill="#e65100"/>
+  <text x="537" y="97" text-anchor="middle" fill="white" font-weight="bold">HAPI FHIR R4</text>
+  <text x="537" y="112" text-anchor="middle" fill="#ffe0b2" font-size="9">localhost:8080  ← port-forward</text>
+  <text x="537" y="125" text-anchor="middle" fill="#ffe0b2" font-size="9">fra Podman-container</text>
+  <text x="537" y="138" text-anchor="middle" fill="#ffcc80" font-size="9">/fhir  (R4)</text>
+  <text x="537" y="150" text-anchor="middle" fill="#ffcc80" font-size="9">5 pasienter + lege + org</text>
 
   <!-- hosts file -->
-  <rect x="670" y="78" width="185" height="68" rx="5" fill="#546e7a"/>
-  <text x="762" y="97" text-anchor="middle" fill="white" font-weight="bold">hosts-fil</text>
-  <text x="762" y="112" text-anchor="middle" fill="#cfd8dc" font-size="9">C:\Windows\System32\</text>
-  <text x="762" y="124" text-anchor="middle" fill="#cfd8dc" font-size="9">drivers\etc\hosts</text>
-  <text x="762" y="138" text-anchor="middle" fill="#b0bec5" font-size="9">127.0.0.1  local.altinn.cloud</text>
+  <rect x="660" y="78" width="215" height="80" rx="5" fill="#546e7a"/>
+  <text x="767" y="97" text-anchor="middle" fill="white" font-weight="bold">hosts-fil</text>
+  <text x="767" y="112" text-anchor="middle" fill="#cfd8dc" font-size="9">C:\Windows\System32\</text>
+  <text x="767" y="124" text-anchor="middle" fill="#cfd8dc" font-size="9">drivers\etc\hosts</text>
+  <text x="767" y="138" text-anchor="middle" fill="#b0bec5" font-size="9">127.0.0.1  local.altinn.cloud</text>
+  <text x="767" y="150" text-anchor="middle" fill="#90a4ae" font-size="9">(én linje, ingen duplikater)</text>
 
   <!-- Host IP label -->
-  <rect x="25" y="160" width="830" height="28" rx="4" fill="#c8e6c9"/>
-  <text x="440" y="172" text-anchor="middle" fill="#1b5e20" font-size="10" font-weight="bold">Windows host er nåbar fra WSL2/Podman på: 172.30.80.1</text>
-  <text x="440" y="183" text-anchor="middle" fill="#2e7d32" font-size="9">LocalPlatformSettings__LocalAppUrl=http://172.30.80.1:5005  |  DefaultIss=http://172.30.80.1:9090</text>
+  <rect x="25" y="170" width="850" height="28" rx="4" fill="#c8e6c9"/>
+  <text x="450" y="182" text-anchor="middle" fill="#1b5e20" font-size="10" font-weight="bold">Windows host er nåbar fra WSL2/Podman på: 172.30.80.1</text>
+  <text x="450" y="193" text-anchor="middle" fill="#2e7d32" font-size="9">LocalPlatformSettings__LocalAppUrl=http://172.30.80.1:5005  |  DefaultIss=http://172.30.80.1:9090</text>
 
   <!-- Zone: WSL2 / Podman -->
-  <rect x="10" y="265" width="860" height="265" rx="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2" stroke-dasharray="8,4"/>
-  <text x="26" y="285" font-size="11" font-weight="bold" fill="#e65100">WSL2 / PODMAN MACHINE (podman-machine-default)</text>
-  <text x="26" y="298" font-size="9" fill="#555">Fedora Linux 44 — containere kjøres her — app-localtest/docker-compose.yml</text>
+  <rect x="10" y="290" width="880" height="270" rx="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="26" y="310" font-size="11" font-weight="bold" fill="#e65100">WSL2 / PODMAN MACHINE (podman-machine-default)</text>
+  <text x="26" y="323" font-size="9" fill="#555">Fedora Linux — containere kjøres her — app-localtest/docker-compose.yml</text>
 
   <!-- nginx -->
-  <rect x="25" y="308" width="185" height="80" rx="5" fill="#f57c00"/>
-  <text x="117" y="328" text-anchor="middle" fill="white" font-weight="bold">nginx / loadbalancer</text>
-  <text x="117" y="343" text-anchor="middle" fill="#fff8e1" font-size="9">container :80 → host :8000</text>
-  <text x="117" y="356" text-anchor="middle" fill="#fff8e1" font-size="9">localtest-loadbalancer</text>
-  <text x="117" y="369" text-anchor="middle" fill="#ffe0b2" font-size="9">→ app: 172.30.80.1:5005</text>
-  <text x="117" y="380" text-anchor="middle" fill="#ffe0b2" font-size="9">→ platform: host.docker.internal</text>
+  <rect x="25" y="333" width="185" height="80" rx="5" fill="#f57c00"/>
+  <text x="117" y="353" text-anchor="middle" fill="white" font-weight="bold">nginx / loadbalancer</text>
+  <text x="117" y="368" text-anchor="middle" fill="#fff8e1" font-size="9">container :80 → host :8000</text>
+  <text x="117" y="381" text-anchor="middle" fill="#fff8e1" font-size="9">localtest-loadbalancer</text>
+  <text x="117" y="394" text-anchor="middle" fill="#ffe0b2" font-size="9">→ app: 172.30.80.1:5005</text>
+  <text x="117" y="406" text-anchor="middle" fill="#ffe0b2" font-size="9">→ platform: host.docker.internal</text>
 
   <!-- Altinn LocalTest -->
-  <rect x="235" y="308" width="185" height="80" rx="5" fill="#1976d2"/>
-  <text x="327" y="328" text-anchor="middle" fill="white" font-weight="bold">Altinn Local Test</text>
-  <text x="327" y="343" text-anchor="middle" fill="#bbdefb" font-size="9">container :5101</text>
-  <text x="327" y="356" text-anchor="middle" fill="#bbdefb" font-size="9">localtest</text>
-  <text x="327" y="369" text-anchor="middle" fill="#90caf9" font-size="9">Storage, Auth, Profile</text>
-  <text x="327" y="380" text-anchor="middle" fill="#90caf9" font-size="9">Register, Events</text>
+  <rect x="230" y="333" width="185" height="80" rx="5" fill="#1976d2"/>
+  <text x="322" y="353" text-anchor="middle" fill="white" font-weight="bold">Altinn Local Test</text>
+  <text x="322" y="368" text-anchor="middle" fill="#bbdefb" font-size="9">container :5101</text>
+  <text x="322" y="381" text-anchor="middle" fill="#bbdefb" font-size="9">localtest</text>
+  <text x="322" y="394" text-anchor="middle" fill="#90caf9" font-size="9">Storage, Auth, Profile</text>
+  <text x="322" y="406" text-anchor="middle" fill="#90caf9" font-size="9">GetTestUserToken/{userId}</text>
 
   <!-- PDF -->
-  <rect x="445" y="308" width="185" height="80" rx="5" fill="#00838f"/>
-  <text x="537" y="328" text-anchor="middle" fill="white" font-weight="bold">PDF Generator</text>
-  <text x="537" y="343" text-anchor="middle" fill="#e0f7fa" font-size="9">container :5031 → host :5300</text>
-  <text x="537" y="356" text-anchor="middle" fill="#e0f7fa" font-size="9">localtest-pdf3</text>
-  <text x="537" y="369" text-anchor="middle" fill="#b2ebf2" font-size="9">Chromium headless</text>
-  <text x="537" y="380" text-anchor="middle" fill="#b2ebf2" font-size="9">PDF3_LOCALTEST_PUBLIC_BASE_URL</text>
+  <rect x="435" y="333" width="185" height="80" rx="5" fill="#00838f"/>
+  <text x="527" y="353" text-anchor="middle" fill="white" font-weight="bold">PDF Generator</text>
+  <text x="527" y="368" text-anchor="middle" fill="#e0f7fa" font-size="9">container :5031 → host :5300</text>
+  <text x="527" y="381" text-anchor="middle" fill="#e0f7fa" font-size="9">localtest-pdf3</text>
+  <text x="527" y="394" text-anchor="middle" fill="#b2ebf2" font-size="9">Chromium headless</text>
+  <text x="527" y="406" text-anchor="middle" fill="#b2ebf2" font-size="9">PDF3_LOCALTEST_PUBLIC_BASE_URL</text>
 
   <!-- HAPI container -->
-  <rect x="655" y="308" width="200" height="80" rx="5" fill="#bf360c"/>
-  <text x="755" y="328" text-anchor="middle" fill="white" font-weight="bold">HAPI FHIR R4</text>
-  <text x="755" y="343" text-anchor="middle" fill="#ffe0b2" font-size="9">container :8080 → host :8080</text>
-  <text x="755" y="356" text-anchor="middle" fill="#ffe0b2" font-size="9">hapi-fhir</text>
-  <text x="755" y="369" text-anchor="middle" fill="#ffcc80" font-size="9">hapiproject/hapi:latest</text>
-  <text x="755" y="380" text-anchor="middle" fill="#ffcc80" font-size="9">hapi.fhir.fhir_version=R4</text>
+  <rect x="640" y="333" width="235" height="80" rx="5" fill="#bf360c"/>
+  <text x="757" y="353" text-anchor="middle" fill="white" font-weight="bold">HAPI FHIR R4</text>
+  <text x="757" y="368" text-anchor="middle" fill="#ffe0b2" font-size="9">container :8080 → host :8080</text>
+  <text x="757" y="381" text-anchor="middle" fill="#ffe0b2" font-size="9">hapi-fhir</text>
+  <text x="757" y="394" text-anchor="middle" fill="#ffcc80" font-size="9">hapiproject/hapi:latest</text>
+  <text x="757" y="406" text-anchor="middle" fill="#ffcc80" font-size="9">hapi.fhir.fhir_version=R4</text>
 
   <!-- Config note -->
-  <rect x="25" y="400" width="830" height="22" rx="4" fill="#ffe0b2"/>
-  <text x="440" y="415" text-anchor="middle" fill="#bf360c" font-size="9" font-weight="bold">ALTINN3LOCAL_PORT=8000  |  HOST_DOMAIN=172.30.80.1  |  INTERNAL_DOMAIN=host.docker.internal</text>
+  <rect x="25" y="425" width="850" height="22" rx="4" fill="#ffe0b2"/>
+  <text x="450" y="440" text-anchor="middle" fill="#bf360c" font-size="9" font-weight="bold">ALTINN3LOCAL_PORT=8000  |  HOST_DOMAIN=172.30.80.1  |  INTERNAL_DOMAIN=host.docker.internal</text>
 
   <!-- Testdata zone -->
-  <rect x="25" y="432" width="830" height="85" rx="5" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1"/>
-  <text x="440" y="450" text-anchor="middle" font-weight="bold" fill="#424242" font-size="11">Testdata — local-dev/</text>
+  <rect x="25" y="455" width="850" height="95" rx="5" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1"/>
+  <text x="450" y="473" text-anchor="middle" font-weight="bold" fill="#424242" font-size="11">Testdata — local-dev/seed.ps1</text>
 
-  <rect x="35" y="458" width="140" height="50" rx="4" fill="#e8eaf6"/>
-  <text x="105" y="474" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Patient</text>
-  <text x="105" y="487" text-anchor="middle" fill="#3949ab" font-size="9">sophie-salt</text>
-  <text x="105" y="499" text-anchor="middle" fill="#5c6bc0" font-size="9">fnr: 01039012345</text>
+  <rect x="35" y="480" width="110" height="60" rx="4" fill="#e8eaf6"/>
+  <text x="90" y="496" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Pasienter (5)</text>
+  <text x="90" y="509" text-anchor="middle" fill="#3949ab" font-size="9">sophie-salt</text>
+  <text x="90" y="521" text-anchor="middle" fill="#3949ab" font-size="9">per-hansen</text>
+  <text x="90" y="533" text-anchor="middle" fill="#5c6bc0" font-size="9">+ 3 til</text>
 
-  <rect x="185" y="458" width="140" height="50" rx="4" fill="#e8eaf6"/>
-  <text x="255" y="474" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Practitioner</text>
-  <text x="255" y="487" text-anchor="middle" fill="#3949ab" font-size="9">lege-ola</text>
-  <text x="255" y="499" text-anchor="middle" fill="#5c6bc0" font-size="9">HPR: 1234567</text>
+  <rect x="155" y="480" width="130" height="60" rx="4" fill="#e8eaf6"/>
+  <text x="220" y="496" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Practitioner</text>
+  <text x="220" y="509" text-anchor="middle" fill="#3949ab" font-size="9">lege-ola</text>
+  <text x="220" y="521" text-anchor="middle" fill="#5c6bc0" font-size="9">HPR: 1234567</text>
+  <text x="220" y="533" text-anchor="middle" fill="#5c6bc0" font-size="9">Altinn: userId=12345</text>
 
-  <rect x="335" y="458" width="140" height="50" rx="4" fill="#e8eaf6"/>
-  <text x="405" y="474" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Organization</text>
-  <text x="405" y="487" text-anchor="middle" fill="#3949ab" font-size="9">sandvika-legesenter</text>
-  <text x="405" y="499" text-anchor="middle" fill="#5c6bc0" font-size="9">orgnr: 987654321</text>
+  <rect x="295" y="480" width="155" height="60" rx="4" fill="#e8eaf6"/>
+  <text x="372" y="496" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Organization</text>
+  <text x="372" y="509" text-anchor="middle" fill="#3949ab" font-size="9">sandvika-legesenter</text>
+  <text x="372" y="521" text-anchor="middle" fill="#5c6bc0" font-size="9">orgnr: 987654321</text>
+  <text x="372" y="533" text-anchor="middle" fill="#5c6bc0" font-size="9">delt av alle pasienter</text>
 
-  <rect x="485" y="458" width="140" height="50" rx="4" fill="#e8eaf6"/>
-  <text x="555" y="474" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Encounter</text>
-  <text x="555" y="487" text-anchor="middle" fill="#3949ab" font-size="9">enc-sophie-001</text>
-  <text x="555" y="499" text-anchor="middle" fill="#5c6bc0" font-size="9">serviceProvider → Org</text>
+  <rect x="460" y="480" width="175" height="60" rx="4" fill="#e8eaf6"/>
+  <text x="547" y="496" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Encounters (5)</text>
+  <text x="547" y="509" text-anchor="middle" fill="#3949ab" font-size="9">enc-sophie-001</text>
+  <text x="547" y="521" text-anchor="middle" fill="#3949ab" font-size="9">enc-per-001 …</text>
+  <text x="547" y="533" text-anchor="middle" fill="#5c6bc0" font-size="9">launch-kontekst i server.js</text>
 
-  <rect x="635" y="458" width="210" height="50" rx="4" fill="#e8eaf6"/>
-  <text x="740" y="474" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Condition</text>
-  <text x="740" y="487" text-anchor="middle" fill="#3949ab" font-size="9">cond-sophie-001</text>
-  <text x="740" y="499" text-anchor="middle" fill="#5c6bc0" font-size="9">R55 Synkope (ICD-10)</text>
+  <rect x="645" y="480" width="225" height="60" rx="4" fill="#e8eaf6"/>
+  <text x="757" y="496" text-anchor="middle" fill="#283593" font-weight="bold" font-size="10">Conditions (5)</text>
+  <text x="757" y="509" text-anchor="middle" fill="#3949ab" font-size="9">cond-sophie-001 …</text>
+  <text x="757" y="521" text-anchor="middle" fill="#5c6bc0" font-size="9">ICD-10 diagnoser</text>
+  <text x="757" y="533" text-anchor="middle" fill="#5c6bc0" font-size="9">R55 Synkope m.fl.</text>
 
   <!-- Nettleser -->
-  <rect x="340" y="545" width="200" height="55" rx="5" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
-  <text x="440" y="565" text-anchor="middle" fill="white" font-weight="bold">Nettleser (bruker)</text>
-  <text x="440" y="580" text-anchor="middle" fill="#cfd8dc" font-size="9">http://local.altinn.cloud:8000</text>
-  <text x="440" y="593" text-anchor="middle" fill="#b0bec5" font-size="9">→ hosts-fil → localhost → nginx</text>
+  <rect x="340" y="580" width="220" height="60" rx="5" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
+  <text x="450" y="600" text-anchor="middle" fill="white" font-weight="bold">Nettleser / EPJ-simulator</text>
+  <text x="450" y="614" text-anchor="middle" fill="#cfd8dc" font-size="9">http://local.altinn.cloud:8000</text>
+  <text x="450" y="628" text-anchor="middle" fill="#b0bec5" font-size="9">http://localhost:9090/epj</text>
+  <text x="450" y="642" text-anchor="middle" fill="#90a4ae" font-size="9">→ hosts-fil → localhost → nginx</text>
 
   <!-- Arrows -->
   <defs>
     <marker id="ar" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker>
     <marker id="ar2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#e65100"/></marker>
     <marker id="ar3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1976d2"/></marker>
+    <marker id="ar4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#388e3c"/></marker>
   </defs>
 
   <!-- Nettleser → nginx -->
-  <line x1="380" y1="545" x2="155" y2="390" stroke="#546e7a" stroke-width="1.5" marker-end="url(#ar)"/>
-  <text x="240" y="475" fill="#546e7a" font-size="9" text-anchor="middle">:8000</text>
+  <line x1="390" y1="580" x2="155" y2="413" stroke="#546e7a" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="250" y="503" fill="#546e7a" font-size="9" text-anchor="middle">:8000</text>
 
   <!-- nginx → .NET App -->
-  <line x1="117" y1="308" x2="115" y2="147" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ar)"/>
-  <text x="75" y="230" fill="#f57c00" font-size="9">172.30.80.1:5005</text>
+  <line x1="117" y1="333" x2="117" y2="158" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="75" y="255" fill="#f57c00" font-size="9">172.30.80.1:5005</text>
 
   <!-- nginx → LocalTest -->
-  <line x1="210" y1="348" x2="235" y2="348" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ar3)"/>
-  <text x="222" y="342" fill="#1976d2" font-size="8">:5101</text>
+  <line x1="210" y1="373" x2="230" y2="373" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ar3)"/>
+  <text x="220" y="367" fill="#1976d2" font-size="8">:5101</text>
 
   <!-- .NET App → HAPI (localhost:8080) -->
-  <line x1="205" y1="112" x2="445" y2="112" stroke="#e65100" stroke-width="2" marker-end="url(#ar2)"/>
-  <text x="325" y="106" text-anchor="middle" fill="#e65100" font-size="9">localhost:8080/fhir  ← FHIR prefill</text>
+  <line x1="210" y1="118" x2="435" y2="118" stroke="#e65100" stroke-width="2" marker-end="url(#ar2)"/>
+  <text x="322" y="111" text-anchor="middle" fill="#e65100" font-size="9">localhost:8080/fhir  ← FHIR-prefill (server-side)</text>
 
-  <!-- .NET App → LocalTest -->
-  <line x1="115" y1="147" x2="280" y2="308" stroke="#1976d2" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ar3)"/>
-  <text x="170" y="240" fill="#1976d2" font-size="9">localhost:5101</text>
+  <!-- dev-login: .NET App → LocalTest server-to-server -->
+  <line x1="117" y1="158" x2="280" y2="333" stroke="#1976d2" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ar3)"/>
+  <text x="170" y="258" fill="#1976d2" font-size="9">GetTestUserToken</text>
+  <text x="170" y="270" fill="#1976d2" font-size="9">localhost:5101</text>
+
+  <!-- EPJ-simulator → dev-login -->
+  <line x1="322" y1="158" x2="210" y2="140" stroke="#388e3c" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ar4)"/>
+  <text x="265" y="143" text-anchor="middle" fill="#388e3c" font-size="8">/smart/dev-login</text>
 
   <!-- HAPI host ↔ HAPI container -->
-  <line x1="645" y1="112" x2="720" y2="308" stroke="#bf360c" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ar)"/>
-  <text x="720" y="215" fill="#bf360c" font-size="9">port-forward</text>
-  <text x="720" y="227" fill="#bf360c" font-size="9">:8080</text>
+  <line x1="640" y1="118" x2="700" y2="333" stroke="#bf360c" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ar)"/>
+  <text x="710" y="225" fill="#bf360c" font-size="9">port-forward</text>
+  <text x="710" y="237" fill="#bf360c" font-size="9">:8080</text>
 </svg>
