@@ -14,6 +14,7 @@
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const crypto = require("crypto");
+const path = require("path");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -37,6 +38,13 @@ const LAUNCH_CONTEXTS = {
 
 // Midlertidig lagring av auth-koder
 const authCodes = new Map();
+
+// -----------------------------------------------------------------------
+// EPJ Simulator — demo-grensesnitt for å starte SMART EHR Launch
+// -----------------------------------------------------------------------
+app.get(["/", "/epj"], (req, res) => {
+  res.sendFile(path.join(__dirname, "epj-simulator.html"));
+});
 
 // -----------------------------------------------------------------------
 // SMART metadata discovery
@@ -154,13 +162,16 @@ app.listen(MOCK_PORT, () => {
   console.log(`
 SMART Auth Mock kjorer pa ${MOCK_BASE}
 
+EPJ Simulator (anbefalt startpunkt):
+  ${MOCK_BASE}/epj
+
 Endepunkter:
   GET  ${MOCK_BASE}/.well-known/smart-configuration
   GET  ${MOCK_BASE}/auth
   POST ${MOCK_BASE}/token
   *    ${MOCK_BASE}/fhir/* -> HAPI FHIR (${HAPI_FHIR})
 
-SMART launch URL (lim inn i nettleser etter innlogging i Local Test):
+Manuell SMART launch URL:
   http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch?iss=http://localhost:9090&launch=enc-sophie-001
   `);
 });

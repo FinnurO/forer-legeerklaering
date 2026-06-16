@@ -107,14 +107,16 @@ dotnet run
 # Lytter på http://localhost:5005
 ```
 
-### 5. Test FHIR-prefill
+### 5. Åpne EPJ-simulatoren
 
 Åpne i nettleser:
 ```
-http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/test-prefill
+http://localhost:9090/epj
 ```
 
-Dette bypasser full OAuth-flyt og seeder session med testdata direkte. Skjemaet åpnes med forhåndsutfylte pasient- og legeopplysninger.
+En enkel EPJ-lignende GUI åpnes. Velg pasient (Sophie Salt) og dokumenttype (Helseattest IS-2569), trykk **Start i Altinn** for full SMART EHR Launch, eller **Hurtigstart** for å bypasse OAuth.
+
+> **Hosts-fil:** Legg til `127.0.0.1  local.altinn.cloud` i `C:\Windows\System32\drivers\etc\hosts`
 
 > **Hosts-fil:** Legg til `127.0.0.1  local.altinn.cloud` i `C:\Windows\System32\drivers\etc\hosts`
 
