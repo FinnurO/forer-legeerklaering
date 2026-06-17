@@ -1,4 +1,4 @@
-# Legeerklæring for førerrett — SMART on FHIR + Altinn Studio
+# SMART on FHIR for Altinn Studio — demonstrert gjennom legeerklæring for førerrett
 
 **Status:** PoC gjennomført og verifisert — FHIR-prefill, auto-innlogging og signering fungerer i lokalt testmiljø  
 **Eier:** Digitaliseringsdirektoratet  
@@ -8,9 +8,15 @@
 
 ## Hva er dette?
 
-Et proof of concept som viser at Altinn Studio kan brukes som skjema-plattform for helsefaglig dokumentasjon med automatisk prefill fra EPJ (elektronisk pasientjournal) via FHIR.
+Dette prosjektet viser at **Altinn Studio kan fungere som en generisk SMART on FHIR-plattform for offentlig sektor** — der helsefaglige skjemaer fylles ut automatisk fra EPJ (elektronisk pasientjournal) uten dobbeltregistrering.
 
-Legen er innlogget i sitt EPJ-system (f.eks. DIPS Arena). EPJ-et starter en **SMART EHR Launch** som åpner Altinn-appen med pasient- og konsultasjonskontekst. Altinn-appen henter relevante data fra FHIR-APIet og forhåndsutfyller legeerklæringen. Legen kontrollerer, supplerer og signerer/sender inn.
+**Demonstrasjonscaset er legeerklæring for førerrett (IS-2569)**, men arkitekturen er generisk og kan gjenbrukes direkte for sykmelding, henvisninger, attester, refusjonskrav og andre helseskjemaer der legen allerede har dataene i EPJ-et.
+
+Se [STRATEGI.md](docs/STRATEGI.md) for produktvisjon, samarbeidsmodell og nasjonal roadmap.
+
+### Slik fungerer flyten
+
+Legen er innlogget i sitt EPJ-system (f.eks. DIPS Arena). EPJ-et starter en **SMART EHR Launch** som åpner Altinn-appen med pasient- og konsultasjonskontekst. Altinn-appen henter relevante data fra FHIR-APIet og forhåndsutfyller skjemaet. Legen kontrollerer, supplerer og signerer/sender inn.
 
 ```
 EPJ-system ──SMART EHR Launch──► Altinn App (BFF)
@@ -21,8 +27,6 @@ EPJ-system ──SMART EHR Launch──► Altinn App (BFF)
                                       │
                                       └─► Altinn Platform (signering, arkiv, PDF)
 ```
-
-Etablerer et mønster som kan gjenbrukes for andre helseskjemaer: sykmelding, henvisninger, attester.
 
 ---
 
@@ -60,6 +64,7 @@ Etablerer et mønster som kan gjenbrukes for andre helseskjemaer: sykmelding, he
 | [SAMMENLIGNING-syk-inn.md](docs/SAMMENLIGNING-syk-inn.md) | Arkitektursammenligning mot NAV `syk-inn` og NHN Førerrett-App (begge i produksjon) — gap-analyse og læringspunkter |
 | [NHN-DOKUMENTASJON.md](docs/NHN-DOKUMENTASJON.md) | Oppsummering av NHNs implementasjonsguide for SMART App Launch og NHNs produksjons-Førerrett-App på Helsenorge-plattformen |
 | [KARTLEGGING-kandidater.md](docs/KARTLEGGING-kandidater.md) | Kartlegging av EPJ-systemer, eksisterende SMART-apper og kandidater for nye SMART on FHIR-implementasjoner i norsk helsesektor |
+| [STRATEGI.md](docs/STRATEGI.md) | Produktvisjon, to spor (Førerrett PoC / Altinn Health Integration Framework), samarbeidsmodell, gevinsthypotese og nasjonal roadmap |
 
 ---
 

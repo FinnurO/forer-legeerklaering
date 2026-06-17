@@ -1,17 +1,22 @@
 # Veikart — `forer-legeerklaering` og SMART on FHIR på Altinn
 
-**Sist oppdatert:** 2026-06-16  
+**Sist oppdatert:** 2026-06-18  
 **Utgangspunkt:** PoC gjennomført og verifisert lokalt. Sammenligningsanalyse mot NAV `syk-inn` (prod) identifiserer fem konkrete gap før løsningen kan betraktes som produksjonsklar referansearkitektur.
+
+Dette veikart dekker **Spor A (Førerrett PoC)** og **Spor B (generisk platform)**. Se [STRATEGI.md](STRATEGI.md) for nasjonal roadmap og samarbeidsmodell.
 
 ---
 
 ## Overordnet retning
 
-Målet er ikke å reimplementere sykmelding. Målet er å løfte `forer-legeerklaering` fra «velbeskrevet idé-validering» til **reproduserbar referansearkitektur for SMART on FHIR på Altinn Studio** — slik at andre etater og skjemaeiere kan bruke den som mal.
+Målet er ikke å reimplementere sykmelding. Målet er to ting:
+
+1. Løfte `forer-legeerklaering` til **produksjonsklar referansearkitektur** (Spor A — fase 1–3)
+2. Ekstrahere det generiske laget slik at andre etater og skjemaeiere kan bruke det som mal (Spor B — fase 4)
 
 Strategien følger det NAV har bevist med `syk-inn`:
-1. Få én app til å virke skikkelig i produksjon (fase 1–3)
-2. Ekstraher det generiske laget til et bibliotek andre kan bruke (fase 4)
+- Få én app til å virke skikkelig i produksjon
+- Ekstraher det generiske laget til et bibliotek andre kan bruke
 
 ---
 
@@ -123,3 +128,19 @@ Fase 5: Full IS-2569, HelseID, mottaksarkitektur (etter menneskelige avklaringer
 Fase 1–3 er uavhengige av menneskelige beslutninger og kan startes nå.  
 Fase 4 er avhengig av at fase 1 er stabil — ikke av fase 2–3.  
 Fase 5 er avhengig av avklaringene i `BESLUTNINGER.md`.
+
+---
+
+## Nasjonal satsing (etter fase 4)
+
+Den tekniske fasene 1–5 ovenfor er Spor A (Førerrett PoC). Nasjonal satsing er Spor B — se [STRATEGI.md](STRATEGI.md) for fullstendig beskrivelse.
+
+```
+Fase 1–3: Produksjonsklar PoC (Spor A)
+    ↓
+Fase 4: NuGet-pakke Digdir.SmartOnFhir (Spor B initiell)
+    ↓
+Nasjonal fase 3: Pilot med NAV / Helfo / Helsedirektoratet
+    ↓
+Nasjonal fase 4: SMART som standard integrasjonsmønster i Altinn
+```
