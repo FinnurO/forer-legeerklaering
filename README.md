@@ -57,7 +57,8 @@ Etablerer et mønster som kan gjenbrukes for andre helseskjemaer: sykmelding, he
 | [PASIENTFLYT.md](docs/PASIENTFLYT.md) | Arkitekturforslag for digital egenerklæring (NA-0201) med Dialogporten og helsenorge.no — pasientens del av flyten |
 | [BESLUTNINGER.md](docs/BESLUTNINGER.md) | Åpne beslutninger som krever menneskelig avklaring: autorisasjonsmodell, HelseID-validering, mottaksarkitektur, DPIA, full IS-2569 |
 | [VEIKART.md](docs/VEIKART.md) | Prioritert veikart mot produksjonsklar referansearkitektur: fase 1–5 inkl. NuGet-pakke `Digdir.SmartOnFhir` |
-| [SAMMENLIGNING-syk-inn.md](docs/SAMMENLIGNING-syk-inn.md) | Arkitektursammenligning mot NAV `syk-inn` (SMART on FHIR i produksjon) — gap-analyse og læringspunkter |
+| [SAMMENLIGNING-syk-inn.md](docs/SAMMENLIGNING-syk-inn.md) | Arkitektursammenligning mot NAV `syk-inn` og NHN Førerrett-App (begge i produksjon) — gap-analyse og læringspunkter |
+| [NHN-DOKUMENTASJON.md](docs/NHN-DOKUMENTASJON.md) | Oppsummering av NHNs implementasjonsguide for SMART App Launch og NHNs produksjons-Førerrett-App på Helsenorge-plattformen |
 
 ---
 

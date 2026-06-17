@@ -121,12 +121,36 @@ Nåværende datamodell (`ForerLegeerklaeringModel`) dekker kun en liten del av b
 
 ---
 
+---
+
+## C-6: Altinn Studio vs. Helsenorge — plattformvalg for IS-2569
+
+**Problemstilling:**  
+NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget på Helsenorge-plattformen (se [NHN-DOKUMENTASJON.md](NHN-DOKUMENTASJON.md) og [SAMMENLIGNING-syk-inn.md](SAMMENLIGNING-syk-inn.md)). Digdir PoC-en viser at det *også* er mulig på Altinn Studio. Spørsmålet er hvilken plattform som er riktig for en eventuell produksjonssetting.
+
+| Alternativ | Fordeler | Ulemper |
+|---|---|---|
+| **A — Altinn Studio (nåværende kurs)** | Signering, arkiv, XACML, ID-porten gratis; Digdir eier plattformen | Mottaksarkitektur til SVV uavklart; HelseID krever ekstraarbeid; NHN har gjort det samme |
+| **B — Helsenorge-plattformen** | HelseID nativt; NA-0201 tilgjengelig; SVV-integrasjon eksisterer; NHN allerede i prod | Digdir er ikke eier; krever samarbeid med NHN; annen teknologistack |
+| **C — Hybridmodell** | Altinn for signering/arkiv, Helsenorge for innbyggerflyt (NA-0201) | To integrasjoner, mer kompleksitet |
+
+**Avhengigheter:** C-3 (mottaksarkitektur SVV), C-4 (behandlingsansvar).
+
+**Ny innsikt (2026-06-17):** NHNs Slack-kanal `ext-utv-hn-forerrett` tilbyr samarbeid med NHN-teamet. Kontakt bør tas for å avklare om PoC-funnene kan bidra inn i eksisterende løsning fremfor å parallelt-utvikle en Altinn-variant.
+
+**Beslutter:** Programleder + NHN + Statens vegvesen.
+
+**Status:** Ny åpen beslutning — uavklart.
+
+---
+
 ## Beslutningslogg
 
 | Dato | Beslutning | Besluttet av | Status |
 |---|---|---|---|
 | 2026-06-16 | PoC bruker legen som part (C-1 alt. A) | JSF | Midlertidig |
-| 2026-06-16 | HelseID-validering utsettes til post-PoC (C-2) | JSF | Utsatt |
+| 2026-06-16 | HelseID-validering utsettes til post-PoC (C-2) | JSF | Unblokket 2026-06-17 (klient registrert) |
 | 2026-06-16 | Digdir som tjenesteeier-placeholder (C-3 alt. A) | JSF | Midlertidig |
 | 2026-06-16 | DPIA-avklaring krever juridisk ressurs (C-4) | JSF | Åpen |
 | 2026-06-16 | Full IS-2569 utsettes til v1.0 (C-5) | JSF | Planlagt |
+| 2026-06-17 | Altinn Studio vs. Helsenorge — plattformvalg (C-6) | JSF | Ny åpen beslutning |
