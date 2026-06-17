@@ -144,6 +144,32 @@ NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget p
 
 ---
 
+---
+
+## C-7: DSOP + SMART on FHIR mot privat sektor (forsikring)
+
+**Problemstilling:**  
+Forsikringsbransjen er en stor og manuell konsument av legeerklæringer (ved tegning, skadesak og sakkyndig-oppdrag). Det finnes allerede en kanal mot Finans Norge via Helsenettet. DSOP-rammeverket (Digital Samhandling Offentlig–Privat) er brukt for bank/NAV-dataflyt. Spørsmålet er om Digdir bør initiere eller støtte arbeid med en SMART on FHIR-flyt mot forsikring innenfor dette rammeverket.
+
+| Alternativ | Beskrivelse | Konsekvens |
+|---|---|---|
+| **A — Avvent** | Vent til offentlig sektor-pilotene er modne og tillitsankeret hos NHN er operasjonelt | Lavere risiko, ingen ny governance nå |
+| **B — Utred** | Initier dialog med Finans Norge/Bits og NHN om DSOP-flyt for legeerklæringer | Kan sette Digdir i drivesetet for privatsektor-digitalisering |
+| **C — Bidra inn** | Lever referansearkitektur fra `forer`-PoC som grunnlag for et privat-sektor-spor | Gjenbruk uten å eie løpet selv |
+
+**Forutsetninger som må avklares uansett:**
+- Samtykke og taushetsplikt: innbygger-/pasientstyrt flyt, dataminimering (GDPR art. 9)
+- Legens sakkyndig-rolle: forsvarlighet, habilitet, objektivitet — SoF prefiller, legen vurderer
+- Governance: hvem godkjenner apper mot privat mottaker (EPJ-leverandør, NHN tillitsanker)
+
+**Avhengigheter:** C-6 (plattformvalg), NHN tillitsanker-modenhet, DSOP syke-/uføreforsikring-prosjekt.
+
+**Beslutter:** Programleder + juridisk avdeling + Finans Norge / Bits.
+
+**Status:** Ny åpen beslutning — uavklart. Se [KARTLEGGING-kandidater.md](KARTLEGGING-kandidater.md) G1/G2 for grunnlag.
+
+---
+
 ## Beslutningslogg
 
 | Dato | Beslutning | Besluttet av | Status |
@@ -154,3 +180,4 @@ NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget p
 | 2026-06-16 | DPIA-avklaring krever juridisk ressurs (C-4) | JSF | Åpen |
 | 2026-06-16 | Full IS-2569 utsettes til v1.0 (C-5) | JSF | Planlagt |
 | 2026-06-17 | Altinn Studio vs. Helsenorge — plattformvalg (C-6) | JSF | Ny åpen beslutning |
+| 2026-06-17 | DSOP + SMART on FHIR mot forsikring/privat sektor (C-7) | JSF | Ny åpen beslutning |

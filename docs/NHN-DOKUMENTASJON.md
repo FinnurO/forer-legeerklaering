@@ -121,6 +121,14 @@ Legen bruker appen til å fylle ut IS-2569 (helseattest for førerrett) med besl
 - Slack-kanal for utviklere: `ext-utv-hn-forerrett` på Helsenorge Slack
 - Demo-tilgang krever direkte kontakt med Helsenorge-organisasjonen
 
+### Merknad — Interaktor
+
+**Interaktor** er nevnt i bransjedokumentasjon som en norsk app-plattform for å kjøre SMART on FHIR-apper integrert i
+EPJ-systemer. Dette er en annen tilnærming enn Helsenorge-plattformen og Altinn Studio — en «shell» som EPJ-leverandør
+integrerer én gang, og som deretter kan lansere godkjente SMART-apper for legens regning. Relevansen for
+`forer`-prosjektet: Interaktor kan være et alternativt distribusjonskanal som reduserer avhengigheten av at hver
+EPJ-leverandør selv implementerer full SMART App Launch-støtte. Bør undersøkes videre.
+
 ---
 
 ## 3. Nøkkelobservasjoner for `forer-legeerklaering`-prosjektet

@@ -1,222 +1,230 @@
-# Kartlegging — SMART on FHIR kandidater i norsk helsesektor
+# Kartlegging av rapporteringsplikter for helsepersonell
 
-**Utarbeidet:** 2026-06-17  
-**Kilder:** Direktoratet for e-helse HITR 1225:2019, NHN implementasjonsguide (2025), HL7 Norge, NAV GitHub, offentlig tilgjengelig dokumentasjon
+Grunnlag for vurdering av forenklingspotensial – primær- og spesialisthelsetjenesten, offentlig og privat.
+Versjon per juni 2026.
 
----
+Tabellene dekker lovpålagte og avtalebaserte meldinger, rapporteringer og attester som helsepersonell og
+virksomheter har overfor det offentlige **og** privat sektor. Hver rad er vurdert for om en
+**SMART on FHIR**-applikasjon (app som startes i journalen, leser/skriver strukturerte data via FHIR) gir verdi.
 
-## 1. Nasjonalt rammeverk og styringsgrunnlag
+> **Forbehold:** Listen er ikke uttømmende, og begreper/organisering endres jevnlig. Statens legemiddelverk er nå
+> Direktoratet for medisinske produkter (DMP); Fylkesmannen heter Statsforvalteren; Reseptregisteret er erstattet av
+> Legemiddelregisteret (LMR); Direktoratet for e-helse ble innlemmet i Helsedirektoratet i 2024. Rettslige grunnlag er
+> forenklet – kontrollér mot gjeldende lov/forskrift før konkrete tiltak.
 
-### Direktoratet for e-helse — Anbefaling SMART on FHIR (HITR 1225:2019)
+## Forklaring
 
-Utgitt januar 2019, oppdatert merknad september 2024. Klassifisert som **Veiledning** (laveste normative nivå — under retningslinjer, anbefalte standarder og obligatoriske standarder).
-
-> "Direktoratet for e-helse anser SMART on FHIR som et av de mest lovende nye rammeverkene for applikasjonsintegrasjon i EPJ som er tilgjengelig i dag, og anbefaler leverandører og andre aktører å ta i bruk dette rammeverket."
-
-Dokumentet nevner eksplisitt to pilotprosjekter som grunnlag for anbefalingen:
-- **Velferdsteknologiprogrammet**
-- **Førerrettsprosjektet** — nøyaktig det domenet `forer-legeerklaering` PoC-en dekker
-
-Sju betraktninger/forbehold i anbefalingen er fortsatt relevante for alle nye prosjekter:
-
-| Nr | Betraktning | Status for `forer` |
-|---|---|---|
-| 1 | Fokuser på noen sentrale FHIR-ressurser først | ✔ Patient, Practitioner, Encounter, Condition |
-| 2 | Godkjenning/sertifisering av apper er uavklart for norsk marked | Åpen (BESLUTNINGER.md C-6) |
-| 3 | Tilpass til norske/nordiske FHIR-profiler (ikke bare US Argonaut) | Delvis — norske OID-er, men ikke no-basis-profiler fullt ut |
-| 4 | Gjenbruk FHIR-grensesnitt utover SMART | Potensial via HelseAPI |
-| 5 | Tilpass SMART til norsk grunnmur inkl. HelseID | HelseID-klient nå registrert (2026-06-17) |
-| 6 | Del dokumentasjon og retningslinjer med andre prosjekter | ✔ Åpen kildekode, åpen dokumentasjon |
-| 7 | Direktoratet vil vurdere nasjonale retningslinjer høyere i normskalaen | Under utarbeidelse (2024-merknad) |
-
-### NHN Implementasjonsguide SMART App Launch Framework (2025)
-
-Operasjonaliserer punktene over med konkrete krav: TLS, minimum 122-bit state-entropi, HTTP Basic auth for konfidensielle klienter, audit-logging, formell risikovurdering. Se [NHN-DOKUMENTASJON.md](NHN-DOKUMENTASJON.md).
-
-### HL7 Norge
-
-Peker til Direktorat-anbefalingen. Identifiserer behov for norsk arkitektur for SMART on FHIR, med Førerrettsprosjektet som piloten som skal produsere implementasjonsveiledning med nivå-inndeling (FHIR-ressurser/profiler).
-
----
-
-## 2. EPJ-systemer som SMART App Launch-vertskap
-
-For at SMART-apper skal fungere i klinisk hverdag, må EPJ-systemet støtte SMART App Launch som **launch host** — dvs. starte apper, overføre pasientkontekst og eksponere FHIR-API.
-
-| EPJ-system | Markedssegment | SMART-støtte | Merknad |
-|---|---|---|---|
-| **DIPS Arena** | Sykehus (dominerende) | Ukjent / under utvikling | Brukes av de fleste norske helseforetak. FHIR-grensesnitt under utvikling. Høy strategisk prioritet. |
-| **WebMed EPJ** | Fastleger / spesialister | Bekreftet pilotdeltaker | Navngitt i `syk-inn`-kodebasen som kjent FHIR-server (`client_secret_basic`). Deltok i Førerrettsprosjektet. |
-| **CGM Journey** | Fastleger / spesialister | Ukjent | CGM er stor EPJ-leverandør for norske fastleger. |
-| **Infodoc Plenario** | Fastleger | Ukjent | Betydelig markedsandel blant fastleger. |
-| **Visma Flyt Helse** | Kommunal helse/omsorg | Ukjent | Brukes i kommunale tjenester — relevant for velferdsteknologi. |
-| **Acos EPJ** | Kommunal pleie og omsorg | Ukjent | — |
-
-**Nøkkelutfordring:** SMART-støtte i norske EPJ-systemer er fragmentert og drives av enkeltprosjekter (slik HITR 1225:2019 forutsier). Syk-inn og Førerrettsprosjektet er de to prosjektene som har drevet faktisk EPJ-integrasjon. Det finnes ingen nasjonal sertifiseringsordning eller app-butikk for norske EPJ-er.
-
----
-
-## 3. Eksisterende SMART on FHIR-apper i Norge
-
-### Produksjon
-
-| App | Domene | Eier | Plattform | EPJ-integrasjon |
-|---|---|---|---|---|
-| **NHN Førerrett-App** | Legeerklæring IS-2569 → SVV | NHN | Helsenorge | WebMed (bekreftet), DIPS (antatt) |
-| **NAV `syk-inn`** | Sykmelding → NAV | NAV | NAIS (egenutviklet) | WebMed (bekreftet), DIPS (under arbeid) |
-
-### PoC / pilot
-
-| App | Domene | Eier | Status |
-|---|---|---|---|
-| **Digdir `forer-legeerklaering`** | Legeerklæring IS-2569 → Altinn | Digdir | Funksjonell lokal PoC |
-
-### Infrastruktur og biblioteker
-
-| Komponent | Eier | Formål |
-|---|---|---|
-| `@navikt/smart-on-fhir` | NAV | Gjenbrukbar SMART-klient for Next.js/TypeScript |
-| NAV SMART on FHIR validator | NAV | Samsvarskontroll for EPJ-leverandører |
-| NAV SMART on FHIR example | NAV | Referanseimplementasjon for EPJ-leverandører |
-| NHN SMART App Launch implementasjonsguide | NHN | Krav og veiledning for EPJ-leverandører og app-utviklere |
-
----
-
-## 4. Kandidater for nye SMART on FHIR-apper
-
-Kriteriene for en god SMART on FHIR-kandidat (fra HITR 1225:2019 og erfaring):
-1. **Datakilde i EPJ** — legen trenger pasientdata fra journalen for å fylle ut
-2. **Mottaker utenfor EPJ** — skjemaet sendes til en offentlig etat eller annen aktør
-3. **Komplekst skjema** — tilstrekkelig kompleksitet til at prefill gir reell verdi
-4. **Eksisterende papir/manuell flyt** — tydelig effektiviseringsgevinst
-
-### Kategori A: Legeerklæringer og attester til offentlige etater
-
-| Skjema | Mottaker | Hjemmel | FHIR-ressurser | SMART-status |
-|---|---|---|---|---|
-| **Helseattest førerrett IS-2569** | Statens vegvesen | Vegtrafikkloven | Patient, Condition, Encounter | ✔ I produksjon (NHN) / PoC (Digdir) |
-| **Sykmelding (NAV 08-07.04)** | NAV | Folketrygdloven | Patient, Condition, Encounter, Practitioner | ✔ I produksjon (syk-inn) |
-| **Helseattest for sjøfolk** | Sjøfartsdirektoratet (NMA) | Skipssikkerhetsloven | Patient, Condition | Kandidat — høy prioritet |
-| **Helseattest for flymannskap (JAR-FCL)** | Luftfartstilsynet (CAA) | Luftfartsloven | Patient, Condition | Kandidat — EU-regulert (EASA) |
-| **Helseattest for dykkere** | Arbeidstilsynet | Dykkerforskriften | Patient, Condition | Kandidat |
-| **Legeerklæring arbeidsavklaringspenger (AAP)** | NAV | Folketrygdloven kap. 11 | Patient, Condition, Encounter | Kandidat — volum |
-| **Legeerklæring uføretrygd** | NAV | Folketrygdloven kap. 12 | Patient, Condition | Kandidat — volum |
-| **Legeerklæring yrkesskade** | NAV | Yrkesskadeforsikringsloven | Patient, Condition, Procedure | Kandidat |
-| **Legeattest for tvangsinnleggelse** | Kommunen / domstol | Psykisk helsevernloven | Patient, Condition | Sensitiv — høy kompleksitet |
-
-### Kategori B: Henvisninger og epikriser
-
-| Skjema | Mottaker | FHIR-ressurser | SMART-status |
-|---|---|---|---|
-| **Elektronisk henvisning** | Spesialisthelsetjenesten | Patient, ServiceRequest, Condition | Delvis — eksisterer via Helsenettet/EDI men ikke SMART |
-| **Epikrise** | Fastlege / annen behandler | Patient, Encounter, Condition, Procedure | FHIR-profil finnes (no-basis-Epikrise) — ingen SMART-app kjent |
-| **Røntgen-/lab-rekvisisjon** | Røntgen / laboratorium | Patient, ServiceRequest | Vurdert — eksisterende e-rekvisisjon dekker behovet |
-
-### Kategori C: Klinisk beslutningsstøtte
-
-Nevnt eksplisitt i HITR 1225:2019 som en av de mest naturlige bruks­casene:
-
-| App-type | Eksempel | FHIR-ressurser | Merknad |
-|---|---|---|---|
-| **Vekstkurver** | Visualisering av barnets vekst mot normkurver | Observation, Patient | Nevnt i Direktoratets anbefaling |
-| **Risikokalkulatorer** | Kardiovaskulær risiko (NORRISK), CHA₂DS₂-VASc, FRAX | Observation, Condition, MedicationStatement | Høy verdi, relativt enkelt å implementere |
-| **Diagnoseverktøy** | KOLS-staging, Wells-skår, GFR-kalkulatorer | Observation, Condition | Read-only — ingen writeback nødvendig |
-| **KOLS/astma miljødataintegrasjon** | Korrelasjon pollenmålinger/luftkvalitet mot symptomer | Observation + ekstern API | Nevnt i Direktoratets anbefaling |
-
-### Kategori D: Velferdsteknologi og kommunal helse
-
-Nevnt i Direktoratets anbefaling (Velferdsteknologiprogrammet som pilotprosjekt):
-
-| Brukstilfelle | FHIR-ressurser | Status |
-|---|---|---|
-| Trygghetspakke-monitorering i EPJ | Observation, Device | Under utredning — kommunale EPJ-er mangler SMART-støtte |
-| Koordineringsplan (individuell plan) | CarePlan, Patient | Kompleks aktørstruktur |
-| Hjemmetjeneste-dokumentasjon | Encounter, Observation | Kommunalt EPJ-marked fragmentert |
-
-### Kategori E: Forskning og registre
-
-| Brukstilfelle | Aktør | SMART-støtte |
-|---|---|---|
-| Kreftregisteret — innmelding direkte fra EPJ | Kreftregisteret | Ingen kjent SMART-implementasjon |
-| Norsk pasientregister (NPR) — aktivitetsdata | Helsedirektoratet | Eksisterende EDI/XML-flyt |
-| Medisinske kvalitetsregistre | Varierer (NorCAN, NorGast, etc.) | Ingen kjent SMART-tilnærming |
-| Kliniske studier — eCRF-integrasjon | Forskningsmiljøer | Internasjonalt: ResearchKit, REDCap — ingen norsk standard |
-
----
-
-## 5. Prioriteringsvurdering
-
-Basert på kombinasjonen av: **datakilde i EPJ** × **klar mottaker** × **eksisterende papirflyt** × **volum/frekvens** × **ingen eksisterende digital løsning**:
-
-### Høy prioritet (anbefalt neste kandidat)
-
-| App | Begrunnelse |
+| Begrep | Betydning |
 |---|---|
-| **Helseattest for sjøfolk** | ~60 000 norske sjøfolk, obligatorisk annen hvert år, mottaker er Sjøfartsdirektoratet med etablert API (NMA). Lignende domene som IS-2569 — minimal ny arkitektur. |
-| **Helseattest for flymannskap** | Regulert av EASA (EU), potensielt pan-europeisk gjenbruk. Mottaker er Luftfartstilsynet. |
-| **Kliniske risikokalkulatorer** | Lavest implementasjonskompleksitet — read-only FHIR, ingen writeback, ingen mottaker-integrasjon. Rask vei til synlig verdi i EPJ (jf. betraktning 1 i HITR 1225:2019). |
-
-### Middels prioritet
-
-| App | Blokkerende avhengigheter |
-|---|---|
-| **AAP-legeerklæring** | Avhenger av NAV API-tilgang og databehandleravtale |
-| **Elektronisk henvisning** | Konkurrerer med eksisterende Helsenettet-infrastruktur |
-| **Uføretrygd-legeerklæring** | NAV har allerede ressurser til å bygge dette (jf. syk-inn) |
-
-### Lavere prioritet (høy kompleksitet eller blokkert)
-
-| App | Årsak |
-|---|---|
-| **Epikrise** | Eksisterer via Helsenettet EDI — SMART ville kreve full EPJ-omlegging |
-| **Tvangsinnleggelse** | Juridisk/etisk kompleksitet, sensitiv data, domstolsinvolvering |
-| **Kreftregisteret** | Egen infrastruktur, ikke erstattet av SMART |
+| **Sektor** | Primær = fastlege/kommunal; Sekundær = spesialist/sykehus; Begge = gjelder begge |
+| **Innsamling** | *Automatisk* = batch-uttrekk fra fagsystem; *Delvis* = noe manuelt; *Manuell* = skjema/portal/papir |
+| **SoF-verdi** | Antatt verdi av en SMART on FHIR-app: **Høy** / Middels / Lav (begrunnet i eget kapittel) |
 
 ---
 
-## 6. EPJ-leverandørstrategi — hva som trengs
+## A. Sentrale / nasjonale helseregistre
 
-For at kandidatappene i avsnitt 4 skal realiseres, kreves:
+Disse er i hovedsak *register-leveranser* – data høstes som batch fra fagsystem. SMART on FHIR (en interaktiv app i
+behandlerens flyt) gir derfor mest verdi der kliniker fortsatt fyller ut en strukturert melding manuelt.
 
-1. **FHIR-endepunkt i EPJ** — minst Patient, Practitioner, Organization, Encounter, Condition
-2. **SMART App Launch-støtte** — `.well-known/smart-configuration`, autorisasjonsendepunkt, token-endepunkt
-3. **Avtaleverk** — EPJ-leverandør ↔ app-leverandør ↔ helsevirksomhet (ingen nasjonal standard for dette per 2026)
-4. **Norske FHIR-profiler** — HL7 Norge no-basis-profiler (Patient, Practitioner, Organization, Encounter)
-5. **HelseID-integrasjon** — NHN tillitsrammeverk-claims for behandlingsformål
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| A1 | Norsk pasientregister (NPR) | Sekundær | Helsedirektoratet | Uttrekk fra EPJ/PAS | NPR-forskriften | Automatisk | Lav |
+| A2 | Kommunalt pasient- og brukerregister (KPR), inkl. IPLOS | Primær | FHI | Fagsystem-uttrekk; KUHR daglig; IPLOS-registrering | KPR-forskriften | Delvis | Middels |
+| A3 | Medisinsk fødselsregister (MFR) | Sekundær | FHI | Elektronisk melding | hpl §35; MFR-forskriften | Automatisk | Lav |
+| A4 | Dødsmelding / Dødsårsaksregisteret (eDÅR) | Begge | FHI | Elektronisk dødsmelding | hpl §36; DÅR-forskriften | Automatisk | Lav |
+| A5 | MSIS – smittsom sykdom (klinikermelding) | Begge | FHI + kommunelege | MSIS-skjema / elektronisk | smittevernloven §2-3; hpl §37 | Delvis | Middels |
+| A6 | MSIS-labdatabasen | Sekundær | FHI | Elektronisk | MSIS-forskriften | Automatisk | Lav |
+| A7 | Tuberkuloseregister | Begge | FHI + TB-koordinator | Skjema | Tuberkuloseforskriften | Manuell | Middels |
+| A8 | SYSVAK – vaksinasjonsregister | Begge | FHI | Elektronisk fra EPJ/vaksinemodul | SYSVAK-forskriften | Automatisk | Lav |
+| A9 | Legemiddelregisteret (LMR) | Begge | FHI | Elektronisk fra apotek | LMR-forskriften | Automatisk | Lav (plikt på apotek) |
+| A10 | Kreftregisteret (klinisk melding) | Begge | Kreftregisteret | Elektronisk melding / KREMT | Kreftregisterforskriften | Delvis | **Høy** |
+| A11 | Hjerte- og karregisteret (HKR) | Sekundær | FHI | Elektronisk / kvalitetsregistre | HKR-forskriften | Delvis | Middels |
+| A12 | Abortregisteret | Sekundær | FHI (MFR) | Skjema / elektronisk | abortloven | Delvis | Lav |
+| A13 | NOIS / NORM / RAVN (infeksjon/resistens) | Sekundær | FHI | Elektronisk / uttrekk | resp. forskrifter | Automatisk | Lav |
+| A14 | Helsearkivregisteret | Begge | Norsk helsearkiv | Avlevering | helsearkivforskriften | Manuell | Lav |
 
-**Manglende ledd:** Det finnes ingen norsk «app store» eller sertifiseringsordning for SMART-apper på norske EPJ-er. Dette er eksplisitt uavklart i HITR 1225:2019 (betraktning 2) og er fortsatt åpent i 2026.
+## B. Medisinske kvalitetsregistre
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| B1 | Nasjonale medisinske kvalitetsregistre (~50+) | Begge | Det enkelte registeret | Egne innregistreringsportaler | forskrift om medisinske kvalitetsregistre §2-3 | Delvis | **Høy** |
+| B2 | Årlig statusrapport (registernivå) | Begge | SKDE | Rapport | forskrift om nasjonale kvalitetsregistre | Manuell | Lav |
+
+## C. Hendelser, skader og svikt
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| C1 | Varsel om alvorlig hendelse | Begge | Statens helsetilsyn + Ukom | melde.no / varselordning | sphlsl. §3-3a; helsetilsynsloven | Manuell | Middels |
+| C2 | Bivirkningsmelding legemiddel | Begge | DMP / RELIS | melde.no | legemiddelforskriften; hpl | Manuell | **Høy** |
+| C3 | Hendelse med medisinsk utstyr | Begge | DMP | melde.no | forskrift om medisinsk utstyr / MDR | Manuell | Middels |
+| C4 | Pasientskade – tilleggsinfo til sak | Begge | Norsk pasientskadeerstatning (NPE) | NPE-portal / skjema | pasientskadeloven | Manuell | Middels |
+
+## D. Meldeplikt til andre myndigheter
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| D1 | Melding/opplysninger til barnevernet | Begge | Kommunal barneverntjeneste | Skjema/brev/portal (varierer) | hpl §33; barnevernsloven | Manuell | Middels |
+| D2 | Opplysninger til kommunal helse-/sosialtjeneste | Begge | Kommunen / NAV | Brev / skjema | hpl §32 | Manuell | Lav |
+| D3 | Melding til politiet om unaturlig dødsfall | Begge | Politiet (+ Statsforvalter) | Telefon/personlig + skjema | hpl §36; forskrift om leges melding | Manuell | Lav |
+| D4 | Førerkort: helseattest | Begge | Statens vegvesen (Statsforvalter ved tvil) | Papir/PDF båret av pasient | førerkortforskriften vedlegg 1 | Manuell | **Høy** (er pilot) |
+| D5 | Førerkort: melding om manglende helsekrav (>6 mnd) | Begge | Statsforvalteren | Skjema/brev | hpl §34; førerkortforskriften | Manuell | **Høy** |
+| D6 | Melding om arbeidsrelatert sykdom (skjema 154B) | Begge | Arbeidstilsynet (Havtil/Luftfartstilsynet) | PDF-skjema per post / eDialog / Altinn | arbeidsmiljøloven §5-3 | Manuell | **Høy** |
+| D7 | Helseerklæring arbeidsdykking | Begge | Arbeidstilsynet | Egen attest | dykkeforskrift | Manuell | Middels |
+| D8 | Tilrettelegging ved graviditet (arbeid) | Begge | Arbeidstilsynet / arbeidsgiver | Erklæring | aml. | Manuell | Middels |
+| D9 | Sertifikatattester (sjøfart, dykk, luftfart, jernbane) | Begge | Sjøfartsdir., Luftfartstilsynet, SJT, Havtil | Egne ordninger per sektor | sektorlovgivning | Manuell | Middels |
+
+## E. NAV / trygd / refusjon
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| E1 | Sykmelding | Begge | NAV | Elektronisk fra EPJ (lovpålagt) | folketrygdloven | Automatisk | Middels |
+| E2 | Legeerklæringer/uttalelser (L-takster) | Begge | NAV | Elektronisk (lovpålagt) | folketrygdloven §21-4 vedlegg 1 | Delvis | **Høy** |
+| E3 | Oppgjørskrav L-takster | Begge | Helfo / NAV økonomi | Elektronisk regning (EHF) | folketrygdloven kap. 22 | Automatisk | Lav |
+| E4 | Refusjonskrav / direkteoppgjør (KUHR) | Begge | Helfo (→ KUHR → KPR) | Elektronisk fra EPJ | folketrygdloven; oppgjørsavtale | Automatisk | Lav |
+| E5 | Praksisinformasjon / direkteoppgjørsavtale | Begge | Helfo | Praksisinformasjon-portal | folketrygdloven | Manuell | Lav |
+| E6 | Oppfølgingsplan / dialogmeldinger | Primær | NAV / arbeidsgiver | Dialogmelding i EPJ | – | Automatisk | Lav |
+| E7 | Blåreseptsøknad / individuell stønad + vedtak | Begge | Helfo | Tjenesteportalen / EPJ | blåreseptforskriften | Delvis | Middels |
+
+## F. Attester til kommune, fylke, utdanning og dagligliv
+
+Disse er stort sett **strukturerte attester kliniker fyller ut manuelt**, sendt via varierende kanaler – et tydelig
+forenklingsområde.
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| F1 | TT-kort (tilrettelagt transport) | Primær | Fylkeskommune/kommune | Attest/skjema | Manuell | **Høy** |
+| F2 | HC-kort (parkering for forflytningshemmede) | Primær | Kommune | Attest/skjema | Manuell | **Høy** |
+| F3 | Legeerklæring ved skolefravær | Primær | Skole/kommune | Attest | Manuell | Middels |
+| F4 | Sykmelding / nedsatt funksjonsevne for studenter | Primær | Lånekassen | Sykmelding/erklæring | Manuell | **Høy** |
+| F5 | Helsekort for gravide | Primær | Helsetjenesten (deles) | Digitalt helsekort (innføres 2026–27) | Delvis | Lav (løses via NHN) |
+| F6 | Div. attester (ammende mødre, treningssenter, legemidler til utenlandsreise m.m.) | Primær | Private/diverse aktører | Fritekst-attest | Manuell | Middels |
+
+## G. Privat sektor – forsikring og andre
+
+Privat sektor er en stor og i dag svært manuell konsument av legeerklæringer. Se eget kapittel om DSOP + SMART on FHIR.
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Grunnlag/rolle | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| G1 | Erklæring ved forsikringstegning | Begge | Forsikringsselskap | Via Helsenett (Finans Norge-flyt) / brev | samtykke; sakkyndig | Manuell | **Høy** |
+| G2 | Erklæring til erstatnings-/skadesak | Begge | Forsikringsselskap | Via Helsenett / brev | samtykke; sakkyndig | Manuell | **Høy** |
+| G3 | Sakkyndig-/behandlererklæring | Begge | Forsikring/justis | Brev / portal | habilitet, objektivitet, honorar per avtale | Manuell | Middels |
+| G4 | Erklæring/attest til justissektoren (forfall, soningsdyktighet, prøveløslatelse m.m.) | Begge | Domstol / kriminalomsorg | Brev / attest | pasientens anmodning / pålegg | Manuell | Lav |
+
+## H. Styring, statistikk og tilskudd
+
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| H1 | KOSTRA / kommunal aktivitetsrapportering | Primær | SSB | Altinn / SSB | Delvis | Lav |
+| H2 | Helsestatistikk | Begge | SSB | SSB / Altinn | Delvis | Lav |
+| H3 | Tilskudds-/aktivitetsrapportering (ALIS m.m.) | Begge | Helsedir / Statsforvalter | Altinn / ulike portaler | Manuell | Lav |
+| H4 | Strålebruk / strålevern | Begge | DSA | DSA-ordninger | Manuell | Lav |
 
 ---
 
-## 7. Internasjonale referanser
+## Kanaler og plattformer (referanse)
 
-| Ressurs | Relevans |
-|---|---|
-| **SMART Health IT App Gallery** (smarthealthit.org) | Internasjonal katalog over SMART-apper — referanseimplementasjoner |
-| **Epic App Orchard** | USAs største EPJ har ~1 000+ SMART-apper. Viser hva som er mulig når plattformen er moden. |
-| **HL7 SMART App Launch IG v2.2.0** | Gjeldende standard — det vi implementerer |
-| **IPA (International Patient Access)** | HL7 FHIR-profil for internasjonal pasienttilgang — relevant for norsk e-helse grunnmur |
-| **Cerner/Oracle Health** og **Azure Health Data Services** | Tilbyr SMART-kompatible FHIR-endepunkter — potensielt relevant for norske sykehus |
-
----
-
-## 8. Konklusjon
-
-Norge er i en tidlig, men strategisk viktig fase for SMART on FHIR-adopsjonen:
-
-- **To produksjonsapper** er i drift (syk-inn og NHN Førerrett-App), begge i legens EPJ-kontekst
-- **Direktoratet for e-helse har anbefalt** rammeverket siden 2019, med Førerrettsprosjektet som eksplisitt pilot
-- **EPJ-leverandørstøtte er den kritiske flaskehalsen** — uten FHIR-API og SMART App Launch-støtte i EPJ-ene kan ingen av kandidatappene realiseres
-- **De mest modne kandidatene** for neste implementasjon er helseattest for sjøfolk og flymannskap (samme domene og arkitektur som IS-2569, klare mottakere) og kliniske risikokalkulatorer (read-only, minimal kompleksitet)
-- **Digdir `forer-legeerklaering`** sin viktigste strategiske verdi fremover er å bidra til referansearkitektur og åpen dokumentasjon som hjelper EPJ-leverandørene med å bygge SMART-støtte — i tråd med betraktning 6 i HITR 1225:2019
+| Kanal/plattform | Brukes til | Eier/leverandør |
+|---|---|---|
+| Melde.no | Bivirkninger, medisinsk utstyr, uønskede hendelser | DMP / Helsedir |
+| Praksisinformasjon | Direkteoppgjør, praksisopplysninger | Helfo |
+| KREMT | Klinisk melding til Kreftregisteret | Kreftregisteret |
+| NISSY | Rekvirering av pasientreiser | Pasientreiser |
+| Altinn | Arbeidstilsyn, SSB, tilskudd | Digdir |
+| Kjernejournal | Oppslag/deling, ikke rapportering i seg selv | NHN / Helsedir |
+| Interaktor | App-plattform for å kjøre SMART on FHIR-apper i EPJ | (leverandør) |
+| Fiks-plattformen | Kommunal samhandling | KS |
+| Norsk helsenett | Felles infrastruktur, meldingsutveksling, forsikringsflyt | NHN |
 
 ---
 
-## Referanser
+## SMART on FHIR – hvor gir det verdi?
 
-- [HITR 1225:2019 — Anbefaling om bruk av SMART on FHIR](https://www.helsedirektoratet.no/faglige-rad/anbefaling-om-bruk-av-smart-on-fhir) (Helsedirektoratet, jan 2019, merknad sep 2024)
-- [NHN Implementasjonsguide SMART App Launch Framework](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/67469415/) (NHN, mai 2025)
-- [NHN Smart-On-Fhir Førerrett-App](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/2846392337/) (NHN)
-- [HL7 Norge — SMART on FHIR best practice](https://hl7norway.github.io/best-practice/docs/IG-og-dokumentasjon/smart.html)
-- [NAV `syk-inn`](https://github.com/navikt/syk-inn) (NAV, produksjon)
-- [HL7 FHIR SMART App Launch IG v2.2.0](https://hl7.org/fhir/smart-app-launch/)
+**SMART on FHIR** lar en webapp startes inni journalsystemet (felles pålogging, delt pasientkontekst via OAuth2/OpenID
+Connect), lese strukturerte data fra EPJ (`read`-scope) og skrive resultatet tilbake (`write`-scope), typisk som FHIR
+`Questionnaire` → `QuestionnaireResponse`. I Norge er dette ikke teoretisk: **førerkort-attesten (D4) er den første
+SMART on FHIR-piloten** – prosjekt «Digital førerrett» mellom Vegdirektoratet, Helsedirektoratet og Politiet,
+realisert via EPJ-løftet, med nasjonal anbefaling i HITR 1225:2019.
+
+**Verdien er størst når alle disse er oppfylt:**
+
+1. Kliniker fyller i dag ut en **strukturert erklæring/attest manuelt** (ikke et rent register-uttrekk).
+2. Mottaker er **ekstern** og kan motta et strukturert svar.
+3. Mye av innholdet kan **forhåndsutfylles fra EPJ** (diagnoser, legemidler, funksjon) – sparer tasting og hever kvalitet.
+4. **Høyt volum eller høy friksjon** i dag (egen portal, fritekst, papir).
+
+**Lav verdi** der data allerede høstes automatisk som batch (NPR, KPR/KUHR, LMR, SYSVAK, MFR, NOIS/NORM/RAVN) eller
+der oppgaven er sjelden/akutt (helsearkiv, politimelding ved unaturlig død).
+
+### Rader med høyest SMART on FHIR-verdi
+
+| ID | Oppgave | Hvorfor høy verdi |
+|---|---|---|
+| D4/D5 | Førerkort-attest og -melding | Allerede SoF-pilot; mal for resten |
+| D6 | Arbeidsrelatert sykdom (154B) | Papir/post i dag; kan forhåndsutfylles fra journal |
+| B1 | Medisinske kvalitetsregistre | Største kilde til dobbeltregistrering vs. journal |
+| A10 | Kreftregisteret (klinisk melding) | Strukturert melding, ekstern mottaker, dobbeltarbeid |
+| C2 | Bivirkningsmelding | Kan forhåndsutfylles fra legemiddelliste; fritekst i dag |
+| E2 | NAV-legeerklæringer | Strukturert `Questionnaire`-flyt; prototype mot NAV finnes |
+| F1/F2/F4 | TT-kort, HC-kort, Lånekassen | Strukturerte attester, manuelle og spredt i dag |
+| G1/G2 | Forsikringserklæringer | Stort privat volum; krever samtykke og sakkyndig-rolle |
+
+---
+
+## DSOP + SMART on FHIR mot privat sektor
+
+**Kort svar: ja, det bør med, og DSOP er et passende rammeverk.** Begrunnelse:
+
+- **DSOP (Digital Samhandling Offentlig–Privat)** er en etablert modell der finansnæringen (Finans Norge/Bits) og
+  offentlige etater digitaliserer dataflyt – f.eks. samtykkebasert lånesøknad og DSOP «Syke- og uføreforsikring», der
+  forsikring og NAV utveksler opplysninger som i dag i stor grad går på papir/post.
+- Forsikringsbransjen er allerede en **stor mottaker av legeerklæringer** (ved tegning, ved erstatning, og legen som
+  sakkyndig). Det finnes allerede en kanal mot Finans Norge via Helsenettet.
+- **Den tekniske brikken finnes:** SMART on FHIR i EPJ + felles tillitstjenester / tillitsanker hos Norsk helsenett.
+  En forsikringsspesifikk (eller nasjonal) attest-app kan startes i journalen, hente **samtykkebaserte** opplysninger
+  fra EPJ, og returnere en strukturert, signert `QuestionnaireResponse` til selskapet – samme mønster som Førerrett,
+  men med privat mottaker.
+
+**Forutsetninger og forbehold:**
+
+- **Samtykke og taushetsplikt:** helseopplysninger er særlige kategorier (GDPR). Flyten må være innbygger-/
+  pasientstyrt og dataminimerende – bare det erklæringen krever.
+- **Legens sakkyndig-rolle:** krav til faglig forsvarlighet, habilitet og objektivitet. SoF kan *forhåndsutfylle*,
+  men legen må fortsatt utøve selvstendig vurdering; honorar avtales per time med selskapet.
+- **Governance:** hvem godkjenner appen (EPJ-leverandør, virksomhet, NHN), og hvordan sikres at bare rettmessige
+  mottakere får tilgang. Tillitsankeret hos NHN er ment å løse dette.
+
+**Anbefalt rekkefølge:** gjenbruk Førerrett-mønsteret (D4) → offentlige strukturerte attester (D6, E2, F1/F2/F4)
+→ deretter DSOP-basert privat flyt for forsikring (G1/G2) når samtykke- og tillitstjenestene er modne.
+
+Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
+
+---
+
+## Tverrgående forenklingstemaer
+
+| Tema | Hva vi ser | Mulig grep | Berører |
+|---|---|---|---|
+| Dobbeltregistrering vs. journal | Samme opplysning i EPJ og deretter manuelt i registre | Automatisk høsting fra strukturert EPJ; «registrer én gang» | B1, A2, A10, A11 |
+| Mange portaler og innlogginger | melde.no, KREMT, Praksisinformasjon, NAV, Altinn, kommunale skjema | Felles inngang / SMART-apper i EPJ | C1–C3, D1–D9, F-rader |
+| Flere mottakere for samme melding | MSIS til FHI + kommunelege; død → dødsmelding + politi | Meld én gang, distribuér automatisk | A5, A4+D3 |
+| Manuelt der digitalt finnes | 154B på papir/post; attester båret av pasient | Strukturert digital innsending (SMART on FHIR) | D4, D6, F1–F4 |
+| NAV-erklæringer – volum og fritekst | Stort volum, lite gjenbruk av journaldata | Strukturerte `Questionnaire`-felt og forhåndsutfylling | E1, E2 |
+| Privat sektor utenfor digital flyt | Forsikringserklæringer i stor grad manuelle | DSOP + SMART on FHIR med samtykke | G1, G2 |
+| Variabelutvalg revideres sjelden | Det som legges inn tas sjelden ut | Jevnlig kritisk revisjon av datasettene | Alle registre |
+
+---
+
+## Kilder
+
+- FHI – Sentrale helseregistre; Helsedirektoratet – Helsedata og helseregistre
+- FHI – MSIS-håndbok; KPR; Legemiddelregisteret
+- Den norske legeforening – «Lovbestemte meldinger» og «Praktisk veileder for legers attestarbeid»
+- NAV – samarbeidspartner (sykmelding, legeerklæringer); folketrygdloven §21-4 vedlegg 1
+- Helfo – Lege; Helsedirektoratet – KUHR
+- Helsedirektoratet – Førerkortveileder; Statsforvalteren – førerkort og helsekrav
+- Arbeidstilsynet – Meldeplikta til legane (skjema 154B; aml. §5-3)
+- Helsedirektoratet – «Anbefaling om bruk av SMART on FHIR» (HITR 1225:2019); EPJ-løftet; prosjekt Digital førerrett
+- Bits/Finans Norge – DSOP; DSOP «Syke- og uføreforsikring»
+- Norsk helsenett – tjenester, felles tillitstjenester / tillitsanker
+- Helsedatastrategi 2025–2027 (FHI); rapporten «Nå snakker vi» (Helsedir/NAV/Dir. e-helse)
