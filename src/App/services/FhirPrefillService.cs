@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Altinn.App.Core.Features;
+using Altinn.App.Core.Internal.Data;
 using Altinn.App.Core.Models;
 using Altinn.App.Models;
 using Altinn.Platform.Storage.Interface.Models;
@@ -24,22 +27,57 @@ namespace Altinn.App.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger<FhirPrefillService> _logger;
+        private readonly IDataClient _dataClient;
 
         public const string TokenSessionKey = "smart_token";
         public const string FhirContextSessionKey = "smart_fhir_context";
         public const string CacheKeyPrefix = "smart_fhir_";
 
+        // Kjøretøygrupper som tilhører gruppe 1 (lette kjøretøy)
+        private static readonly HashSet<string> Gruppe1Koder = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "A",
+            "A1",
+            "A2",
+            "AM",
+            "B",
+            "B1",
+            "BE",
+            "S",
+            "T",
+        };
+
+        // Kjøretøygrupper som tilhører gruppe 2 (tunge kjøretøy)
+        private static readonly HashSet<string> Gruppe2Koder = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "C",
+            "C1",
+            "CE",
+            "C1E",
+        };
+
+        // Kjøretøygrupper som tilhører gruppe 3 (persontransport/utrykking)
+        private static readonly HashSet<string> Gruppe3Koder = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "D",
+            "D1",
+            "DE",
+            "D1E",
+        };
+
         public FhirPrefillService(
             IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
             IMemoryCache memoryCache,
-            ILogger<FhirPrefillService> logger
+            ILogger<FhirPrefillService> logger,
+            IDataClient dataClient
         )
         {
             _httpClientFactory = httpClientFactory;
             _httpContextAccessor = httpContextAccessor;
             _memoryCache = memoryCache;
             _logger = logger;
+            _dataClient = dataClient;
         }
 
         public async Task ProcessDataRead(Instance instance, Guid? dataId, object data, string? language = null)
@@ -296,13 +334,85 @@ namespace Altinn.App.Services
             return null;
         }
 
-        public Task ProcessDataWrite(
+        public async Task ProcessDataWrite(
             Instance instance,
             Guid? dataId,
             object data,
             object? previousData,
             string? language = null
-        ) => Task.CompletedTask;
+        )
+        {
+            if (data is not ForerLegeerklaeringModel src)
+                return;
+
+            var konklusjon = DeriveKonklusjon(src);
+
+            // Parse instance owner and id from instance.Id ("owner/instanceGuid")
+            var parts = instance.Id?.Split('/');
+            if (
+                parts == null
+                || parts.Length != 2
+                || !int.TryParse(parts[0], out var instanceOwnerPartyId)
+                || !Guid.TryParse(parts[1], out var instanceGuid)
+            )
+            {
+                _logger.LogWarning("ProcessDataWrite: could not parse instance id '{InstanceId}'", instance.Id);
+                return;
+            }
+
+            // Check if a ForerKonklusjon data element already exists on this instance
+            var existingElements = instance.Data ?? new List<DataElement>();
+            var existing = existingElements.Find(d =>
+                d.DataType.Equals("ForerKonklusjon", StringComparison.OrdinalIgnoreCase)
+            );
+
+            if (existing != null && Guid.TryParse(existing.Id, out var existingDataGuid))
+            {
+                _logger.LogInformation("ProcessDataWrite: updating existing ForerKonklusjon element {Id}", existing.Id);
+                await _dataClient.UpdateData(
+                    konklusjon,
+                    instanceGuid,
+                    typeof(ForerKonklusjonModel),
+                    instance.Org,
+                    instance.AppId.Split('/').Last(),
+                    instanceOwnerPartyId,
+                    existingDataGuid
+                );
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "ProcessDataWrite: creating new ForerKonklusjon element on instance {Id}",
+                    instance.Id
+                );
+                await _dataClient.InsertFormData(
+                    konklusjon,
+                    instanceGuid,
+                    typeof(ForerKonklusjonModel),
+                    instance.Org,
+                    instance.AppId.Split('/').Last(),
+                    instanceOwnerPartyId,
+                    "ForerKonklusjon"
+                );
+            }
+        }
+
+        private static ForerKonklusjonModel DeriveKonklusjon(ForerLegeerklaeringModel src)
+        {
+            var resultat = src.Forer_ErSkikket == true ? "skikket" : "ikke_skikket";
+            var gruppe = src.Forer_Kjoretoygruppe ?? "";
+
+            return new ForerKonklusjonModel
+            {
+                Pasient_Fnr = src.Pasient_Fnr,
+                Lege_HPR = src.Lege_HPR,
+                Gruppe1_Resultat = Gruppe1Koder.Contains(gruppe) ? resultat : "",
+                Gruppe2_Resultat = Gruppe2Koder.Contains(gruppe) ? resultat : "",
+                Gruppe3_Resultat = Gruppe3Koder.Contains(gruppe) ? resultat : "",
+                Vilkar = src.Forer_Vilkar,
+                Merknad = src.Forer_Merknad,
+            };
+        }
 
         private class TokenData
         {

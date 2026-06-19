@@ -38,6 +38,24 @@
       "enabledFileValidators": []
     },
     {
+      "id": "ForerKonklusjon",
+      "allowedContentTypes": ["application/xml"],
+      "appLogic": {
+        "autoCreate": false,
+        "classRef": "Altinn.App.Models.ForerKonklusjonModel",
+        "allowAnonymousOnStateless": false,
+        "autoDeleteOnProcessEnd": false
+      },
+      "taskId": "Task_1",
+      "maxCount": 1,
+      "minCount": 0,
+      "enablePdfCreation": false,
+      "enableFileScan": false,
+      "validationErrorOnPendingFileScan": false,
+      "enabledFileAnalysers": [],
+      "enabledFileValidators": []
+    },
+    {
       "id": "signatur",
       "allowedContentTypes": ["application/json"],
       "taskId": "Task_1",
