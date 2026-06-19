@@ -20,7 +20,20 @@ virksomheter har overfor det offentlige **og** privat sektor. Hver rad er vurder
 | **Innsamling** | *Automatisk* = batch-uttrekk fra fagsystem; *Delvis* = noe manuelt; *Manuell* = skjema/portal/papir |
 | **SoF-verdi** | Antatt verdi av en SMART on FHIR-app: **Høy** / Middels / Lav (begrunnet i eget kapittel) |
 
+## Bærende prinsipp: generelt vs. profesjonsspesifikt
+
+To typer plikter må skilles:
+
+- **Generelle helsepersonell-plikter** (helsepersonelloven §§ 32–38) gjelder *alle* autoriserte yrkesgrupper likt –
+  uavhengig av profesjon, sektor og offentlig/privat. Det er rad **D1** (barnevern), **D2** (sosial-/kommunal
+  tjeneste), opplysningsplikt ved vold/kjønnslemlestelse, **C1** (varsel alvorlig hendelse) og **C4** (pasientskade).
+  Disse gjentas derfor ikke per yrkesgruppe i del 2 – de ligger «over» tabellen.
+- **Profesjonsspesifikke plikter** følger av hva slags helsehjelp som ytes (refusjonsordninger, attester, fagregistre,
+  tvangslovgivning). Det er disse som skiller yrkesgruppene, og som dekkes i del 2 nedenfor.
+
 ---
+
+# Del 1 — Alle helsepersonell og leger/virksomheter
 
 ## A. Sentrale / nasjonale helseregistre
 
@@ -122,7 +135,120 @@ Privat sektor er en stor og i dag svært manuell konsument av legeerklæringer. 
 
 ---
 
-## Kanaler og plattformer (referanse)
+# Del 2 — Profesjonsspesifikke plikter
+
+Utvidelse til tannleger/tannpleiere, fysioterapeuter, manuellterapeuter, kiropraktorer, psykologer,
+psykiatere/psykisk helsevern, apotek/farmasøyter, jordmødre/helsesykepleiere, optikere, ergoterapeuter,
+bioingeniører/laboratorier og radiografer. Mange av disse bruker EPJ og en stor andel er private.
+
+> ID-er som starter med bokstav (A–H) viser til del 1 over. Nye rader her har profesjonsprefiks
+> (TANN, FYS, KIR, PSY, PHV, APO, JOR, OPT, ERG, LAB, RAD).
+
+## Oversikt per yrkesgruppe
+
+| Yrkesgruppe | Sektor | Off./privat | EPJ | Tyngste profesjonsspesifikke plikter |
+|---|---|---|---|---|
+| Tannlege / tannpleier | Primær (fylkeskom. + privat) | Begge | Ja | Helfo-stønad, bivirkning dentale materialer, KPR tannhelse |
+| Fysioterapeut | Primær | Begge | Ja | Helfo direkteoppgjør (KUHR), KPR, NAV-erklæring på bestilling |
+| Manuellterapeut | Primær | Mest privat | Ja | Sykmelding, henvisning, Helfo |
+| Kiropraktor | Primær | Mest privat | Ja | Sykmelding, henvisning, Helfo |
+| Psykolog | Begge | Begge | Ja | NAV-erklæring, førerkort-meldeplikt, sakkyndigerklæring, NPR/BUP |
+| Psykiater / psykisk helsevern | Sekundær | Mest offentlig | Ja | Tvangsvedtak til kontrollkommisjon, tvangsdata til NPR |
+| Apotek / farmasøyt | – | Mest privat | Eget fagsystem | Blåresept-oppgjør, LMR, e-resept, SYSVAK |
+| Jordmor / helsesykepleier | Primær | Mest offentlig | Ja | MFR, helsekort gravide, KPR helsestasjon, SYSVAK |
+| Optiker | Primær | Privat | Ja | Førerkort syns-/helseattest og meldeplikt |
+| Ergoterapeut | Primær | Mest offentlig | Ja | Hjelpemiddelsøknad til NAV, KPR |
+| Bioingeniør / laboratorium | Sekundær | Begge | LIS | MSIS-lab, NOIS/NORM/RAVN, patologi til Kreftreg. |
+| Radiograf / bildediagnostikk | Sekundær | Begge | RIS/PACS | Strålevern (DSA), privatfinansiert mammografi |
+
+## Tannlege / tannpleier
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| TANN1 | Stønad til tannbehandling / direkteoppgjør | Helfo | Elektronisk refusjonskrav fra EPJ | ftrl §5-6, §5-6a, §5-25 | Automatisk | Lav |
+| TANN2 | Egenandel / frikort | Helfo | Elektronisk (med oppgjør) | frikortordningen | Automatisk | Lav |
+| TANN3 | Bivirkning av odontologiske materialer | Bivirkningsgruppen for odontologiske biomaterialer (NIOM/UiB) | Eget skjema (takst 6/10) | stønadsforskrift/hpl | Manuell | **Høy** |
+| TANN4 | KPR – tannhelsetjeneste | FHI | Fagsystem-uttrekk (fra 2026) | KPR-forskriften | Delvis | Lav |
+
+Delte plikter: NPR ved kjevekirurgi i sykehus (A1), forsikringsattester (G1–G2), generelle §§32–38-plikter.
+
+## Fysioterapeut, manuellterapeut og kiropraktor
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| FYS1 | Direkteoppgjør / refusjonskrav (KUHR) | Helfo (→ KUHR → KPR) | Elektronisk fra EPJ | ftrl; oppgjørsavtale | Automatisk | Lav |
+| FYS2 | KPR KUHR – fysioterapi | FHI | Via KUHR | KPR-forskriften | Automatisk | Lav |
+| KIR1 | Sykmelding (kiropraktor/manuellterapeut, avgrenset varighet) | NAV | Elektronisk fra EPJ | folketrygdloven | Delvis | Middels |
+| KIR2 | Henvisning til spesialist/bildediagnostikk | Spesialisthelsetjeneste | Henvisningsmelding i EPJ | – | Automatisk | Lav |
+
+Delt plikt: «Legeerklæring ved arbeidsuførhet» kan skrives av psykolog, fysioterapeut, manuellterapeut og kiropraktor
+når NAV særskilt ber om det (utvidelse av rad **E2**).
+
+## Psykolog
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| PSY1 | NAV-erklæring på bestilling | NAV | Elektronisk / skjema | ftrl §21-4 | Delvis | **Høy** |
+| PSY2 | Førerkort: melding om manglende helsekrav (bl.a. kognitiv funksjon) | Statsforvalteren | Skjema/brev | hpl §34; førerkortforskriften | Manuell | **Høy** |
+| PSY3 | Sakkyndig-/behandlererklæring (forsikring, barnevern, justis) | Privat/offentlig | Brev / portal | samtykke; habilitet/objektivitet | Manuell | Middels |
+| PSY4 | Aktivitetsdata psykisk helsevern / BUP | NPR (spesialist) / KPR (kommunal) | Uttrekk fra EPJ | NPR-/KPR-forskriften | Automatisk | Lav |
+
+Delte plikter: barnevern (D1) er særlig sentral; varsel alvorlig hendelse (C1), pasientskade (C4).
+
+## Psykiater / psykisk helsevern
+
+Tvangslovgivningen gir et eget rapporteringslag som ikke finnes for andre grupper.
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| PHV1 | Vedtak om tvang (kap. 4/4A): registrering for samlet oversikt | Kontrollkommisjonen | Registrering i EPJ | psykisk helsevernforskriften | Delvis | Middels |
+| PHV2 | Melding om vedtak om tvangsmidler / skjerming | Kontrollkommisjonen | Melding (snarest) | psykisk helsevernforskriften | Manuell | Middels |
+| PHV3 | Tvangsdata nasjonalt | NPR (eget tvangsdatasett) | Uttrekk fra EPJ | NPR-forskriften | Automatisk | Lav |
+| PHV4 | Melding om overføring / dom til tvungent vern | Pasient/pårørende; påtalemyndighet | Melding (forvaltningsloven §27) | phvl §§4-10, 5-4 | Manuell | Lav |
+
+Delte plikter: alle legeplikter (MSIS A5, dødsmelding A4, bivirkning C2, m.fl.).
+
+## Apotek / farmasøyt
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| APO1 | Blåresept – direkteoppgjør / refusjonskrav | Helfo | Elektronisk fra apoteksystem | ftrl §5-14; blåreseptforskriften | Automatisk | Lav |
+| APO2 | Utleverte legemidler til Legemiddelregisteret | FHI | Elektronisk | LMR-forskriften | Automatisk | Lav |
+| APO3 | E-resept / Reseptformidleren (ekspedering, oppslag) | NHN (Reseptformidleren) | Apoteksystem | reseptformidlerforskriften | Automatisk | Lav |
+| APO4 | Vaksinering i apotek | FHI (SYSVAK) | Elektronisk | SYSVAK-forskriften | Delvis | Middels |
+| APO5 | Bivirkningsmelding (farmasøyt kan melde) | DMP / RELIS | melde.no | legemiddelforskriften | Manuell | **Høy** |
+| APO6 | Bransjestatistikk + medvirkning ved tilsyn | DMP / Statsforvalter | Diverse | apotekloven | Manuell | Lav |
+
+Merknad: SoF-verdien er gjennomgående lav for apotek fordi de fleste pliktene er automatiserte oppgjør/uttrekk fra
+apotekenes fagsystem (ikke EPJ med SMART-apper). Unntaket er bivirkningsmelding (APO5).
+
+## Jordmor / helsesykepleier
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| JOR1 | Fødselsmelding (MFR) | FHI | Elektronisk | hpl §35; MFR-forskriften | Automatisk | Lav |
+| JOR2 | Helsekort for gravide | Helsetjenesten (deles) | Digitalt helsekort (innføres 2026–27) | – | Delvis | Lav |
+| JOR3 | KPR – helsestasjon og skolehelsetjeneste | FHI | Fagsystem-uttrekk (fra 09/2025) | KPR-forskriften | Delvis | Middels |
+| JOR4 | Vaksinasjon (SYSVAK) | FHI | Elektronisk | SYSVAK-forskriften | Automatisk | Lav |
+
+Delte plikter: abortmelding (A12), barnevern (D1).
+
+## Optiker, ergoterapeut, laboratorium og radiograf
+
+| ID | Oppgave / melding | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|
+| OPT1 | Førerkort: syns-/helseattest og meldeplikt | Statens vegvesen / Statsforvalter | Attest / melding | førerkortforskriften; hpl §34 | Manuell | **Høy** |
+| ERG1 | Søknad om hjelpemidler / funksjonsvurdering | NAV Hjelpemiddelsentral | Skjema / portal | folketrygdloven kap. 10 | Manuell | Middels |
+| ERG2 | KPR – kommunal ergoterapi | FHI | Fagsystem-uttrekk | KPR-forskriften | Delvis | Lav |
+| LAB1 | Mikrobiologiske prøvesvar (MSIS-lab) | FHI | Elektronisk | MSIS-forskriften | Automatisk | Lav |
+| LAB2 | NOIS / NORM / RAVN | FHI | Elektronisk / uttrekk | resp. forskrifter | Automatisk | Lav |
+| LAB3 | Patologi-/celleprøvesvar til Kreftregisteret | Kreftregisteret | Elektronisk melding | Kreftregisterforskriften | Delvis | Middels |
+| RAD1 | Strålebruk / strålevern | DSA | DSA-ordninger | strålevernforskriften | Manuell | Lav |
+| RAD2 | Privatfinansiert bildediagnostikk (bl.a. mammografi) | DSA / Kreftreg. | Under utredning | (foreslått) | Manuell | Lav |
+
+---
+
+# Kanaler og plattformer (referanse)
 
 | Kanal/plattform | Brukes til | Eier/leverandør |
 |---|---|---|
@@ -138,7 +264,7 @@ Privat sektor er en stor og i dag svært manuell konsument av legeerklæringer. 
 
 ---
 
-## SMART on FHIR – hvor gir det verdi?
+# SMART on FHIR – hvor gir det verdi?
 
 **SMART on FHIR** lar en webapp startes inni journalsystemet (felles pålogging, delt pasientkontekst via OAuth2/OpenID
 Connect), lese strukturerte data fra EPJ (`read`-scope) og skrive resultatet tilbake (`write`-scope), typisk som FHIR
@@ -154,9 +280,12 @@ realisert via EPJ-løftet, med nasjonal anbefaling i HITR 1225:2019.
 4. **Høyt volum eller høy friksjon** i dag (egen portal, fritekst, papir).
 
 **Lav verdi** der data allerede høstes automatisk som batch (NPR, KPR/KUHR, LMR, SYSVAK, MFR, NOIS/NORM/RAVN) eller
-der oppgaven er sjelden/akutt (helsearkiv, politimelding ved unaturlig død).
+der oppgaven er sjelden/akutt (helsearkiv, politimelding ved unaturlig død). Apotek faller i tillegg utenfor
+EPJ-/SMART-økosystemet (eget fagsystem) — forenkling der handler om oppgjørs- og e-reseptkjeden, ikke SMART-apper.
 
-### Rader med høyest SMART on FHIR-verdi
+## Rader med høyest SMART on FHIR-verdi
+
+### Fra del 1 (leger og alle helsepersonell)
 
 | ID | Oppgave | Hvorfor høy verdi |
 |---|---|---|
@@ -169,9 +298,18 @@ der oppgaven er sjelden/akutt (helsearkiv, politimelding ved unaturlig død).
 | F1/F2/F4 | TT-kort, HC-kort, Lånekassen | Strukturerte attester, manuelle og spredt i dag |
 | G1/G2 | Forsikringserklæringer | Stort privat volum; krever samtykke og sakkyndig-rolle |
 
+### Fra del 2 (profesjonsspesifikke)
+
+| ID | Oppgave | Hvorfor høy verdi |
+|---|---|---|
+| TANN3 | Bivirkning dentale materialer | Eget papir-/PDF-skjema; kan forhåndsutfylles fra tannlege-EPJ |
+| PSY1 | NAV-erklæring (psykolog) | Strukturert erklæringsflyt, samme mønster som leger (E2) |
+| PSY2 / OPT1 | Førerkort-meldeplikt (psykolog/optiker) | Utvider den eksisterende Førerrett-piloten til flere profesjoner — én app, flere brukergrupper |
+| APO5 | Bivirkningsmelding fra apotek | Kan forhåndsutfylles fra utleverings-/legemiddeldata |
+
 ---
 
-## DSOP + SMART on FHIR mot privat sektor
+# DSOP + SMART on FHIR mot privat sektor
 
 **Kort svar: ja, det bør med, og DSOP er et passende rammeverk.** Begrunnelse:
 
@@ -201,7 +339,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 
 ---
 
-## Tverrgående forenklingstemaer
+# Tverrgående forenklingstemaer
 
 | Tema | Hva vi ser | Mulig grep | Berører |
 |---|---|---|---|
@@ -209,13 +347,17 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 | Mange portaler og innlogginger | melde.no, KREMT, Praksisinformasjon, NAV, Altinn, kommunale skjema | Felles inngang / SMART-apper i EPJ | C1–C3, D1–D9, F-rader |
 | Flere mottakere for samme melding | MSIS til FHI + kommunelege; død → dødsmelding + politi | Meld én gang, distribuér automatisk | A5, A4+D3 |
 | Manuelt der digitalt finnes | 154B på papir/post; attester båret av pasient | Strukturert digital innsending (SMART on FHIR) | D4, D6, F1–F4 |
-| NAV-erklæringer – volum og fritekst | Stort volum, lite gjenbruk av journaldata | Strukturerte `Questionnaire`-felt og forhåndsutfylling | E1, E2 |
+| NAV-erklæringer – volum og fritekst | Stort volum, lite gjenbruk av journaldata — gjelder lege, psykolog, fysio | Strukturerte `Questionnaire`-felt og forhåndsutfylling | E1, E2, PSY1 |
 | Privat sektor utenfor digital flyt | Forsikringserklæringer i stor grad manuelle | DSOP + SMART on FHIR med samtykke | G1, G2 |
+| Én attest-app, mange profesjoner | Førerkort-meldeplikten gjelder lege, psykolog og optiker | Felles app, ulike brukergrupper — ikke tre separate apper | D4/D5, PSY2, OPT1 |
+| Bivirkningsmeldinger er fragmentert | Legemiddel (C2/APO5) og dentale materialer (TANN3) går til ulike mottakere på ulike skjema | Felles strukturert bivirkningsflyt i melde.no | C2, APO5, TANN3 |
+| Tvangsrapportering er lite digitalisert | Data skal allerede ligge i EPJ for kontrollkommisjonen | Automatisert uttrekk fremfor manuell melding | PHV1–PHV4 |
+| Helfo-oppgjør er automatisert på tvers | Lege, tannlege, fysio og apotek bruker KUHR/blåresept | Gjenbruk fremfor parallell innsamling | E4, TANN1, FYS1, APO1 |
 | Variabelutvalg revideres sjelden | Det som legges inn tas sjelden ut | Jevnlig kritisk revisjon av datasettene | Alle registre |
 
 ---
 
-## Kilder
+# Kilder
 
 - FHI – Sentrale helseregistre; Helsedirektoratet – Helsedata og helseregistre
 - FHI – MSIS-håndbok; KPR; Legemiddelregisteret
@@ -228,3 +370,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 - Bits/Finans Norge – DSOP; DSOP «Syke- og uføreforsikring»
 - Norsk helsenett – tjenester, felles tillitstjenester / tillitsanker
 - Helsedatastrategi 2025–2027 (FHI); rapporten «Nå snakker vi» (Helsedir/NAV/Dir. e-helse)
+- Norsk Tannlegeforenings veileder; Den norske tannlegeforenings retningslinjer for bivirkningsmelding
+- Norsk Psykologforening – fagetiske retningslinjer; NAV-samarbeidsveileder
+- Norsk Fysioterapeutforbund; Norske Kiropraktorers Forening
+- Apotekloven med forskrifter; NHN – Reseptformidleren og e-resept
