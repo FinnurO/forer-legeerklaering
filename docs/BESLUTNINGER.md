@@ -51,22 +51,62 @@ I dag stoler BFF-en (ASP.NET Core) på access token fra SMART-mock uten å valid
 ## C-3: Mottaksarkitektur — hvem er tjenesteeier?
 
 **Problemstilling:**  
-Når legen sender inn erklæringen, hvor skal den ende opp?
+Når legen sender inn erklæringen, hva sendes hvor — og hvem eier tjenesten?
+
+### Altinn Events — slik mottaksarkitektur faktisk fungerer
+
+Altinn 3 varsler mottakere via **Altinn Events** når noe sendes inn. Det er ikke Altinn som pusher data til SVV, men SVV som abonnerer på events og henter instansen selv. Hvert mottakssystem:
+1. Abonnerer på events av typen `app.instance.process.completed` for riktig app/org
+2. Henter instansdata via Altinn Storage API med Maskinporten-token
+3. Distribuerer til riktig fagsystem eller sak/arkiv-system
+
+**FINT Arkiv-mønsteret** (brukt bl.a. av Helsedirektoratet) viser en etablert tilnærming der et felles mottakslag router innkommende Altinn-instanser til riktig fagsystem basert på tjenestenøkkel/ressurstype. Dette er relevant som mal for et eventuelt felles mottakssystem for helseattester.
+
+### To-lags mottaksmodell — konklusjon til SVV, full attest til EPJ
+
+Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rødt per gruppe + vilkår) til SVV/førerkortregisteret — ikke hele IS-2569. Full attest skrives tilbake til EPJ. Dette er det realistiske målbildet:
+
+| Lag | Innhold | Mottaker | Kanal |
+|---|---|---|---|
+| **Konklusjon** | Gruppe 1/2/3: skikket/ikke skikket + begrenset varighet + vilkår | Statens vegvesen (førerkortregisteret) | Altinn Events → SVVs mottakssystem |
+| **Full attest** | Komplett IS-2569 + legens vurderinger | EPJ-journal | FHIR `DocumentReference` writeback med SMART access token |
+
+**Teknisk løsning i PoC — to separate datatyper:**
+
+```json
+{
+  "dataTypes": [
+    {
+      "id": "forer-legeerklaering",
+      "description": "Komplett IS-2569 — skrives tilbake til EPJ via DocumentReference",
+      "appLogic": { "classRef": "ForerLegeerklaeringModel" },
+      "taskId": "Task_1"
+    },
+    {
+      "id": "forer-konklusjon",
+      "description": "Konklusjon til SVV — grønt/rødt per gruppe + vilkår",
+      "appLogic": { "classRef": "ForerKonklusjonModel" },
+      "taskId": "Task_1"
+    }
+  ]
+}
+```
+
+`ForerKonklusjonModel` populeres automatisk i `IDataProcessor.ProcessDataWrite` ved innsending, avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference`.
+
+### Tjenesteeieralternativer
 
 | Alternativ | Beskrivelse | Avhengigheter |
 |---|---|---|
-| **A — Digdir (nåværende)** | Digdir eier tjenesten, tar imot via Altinn storage | Ingen nye avtaler. Men Digdir er ikke naturlig mottaker av helseerklæringer. |
-| **B — Statens vegvesen** | SVV som tjenesteeier og mottaker | Krever avtale med SVV, integrasjon mot SVVs systemer. Riktig juridisk mottaker. |
-| **C — Helsedirektoratet** | Hdir som nasjonal koordinator | Krever avtale og API-integrasjon. |
-| **D — EPJ (DocumentReference)** | Erklæringen skrives tilbake til pasientjournalen | Krever FHIR `DocumentReference` writeback til EPJ etter innsending. |
+| **A — Digdir (nåværende)** | Digdir eier tjenesten, placeholder for PoC | Ingen nye avtaler. Men Digdir er ikke naturlig mottaker. |
+| **B — Statens vegvesen** | SVV som tjenesteeier; abonnerer på Altinn Events | Krever avtale om Events-abonnement og mottakssystem hos SVV. |
+| **C — Helsedirektoratet** | Hdir som nasjonal koordinator med FINT Arkiv-routing | Mulig felles mottakslag for helseattester på tvers av fagsystemer. |
 
-**Avhengigheter:** Valget påvirker `applicationmetadata.json` (`org`-felt), `policy.xml` (tjenesteeier-regel), og evt. Maskinporten-scope for system-til-system-integrasjon.
-
-**Merk:** Alternativ D (DocumentReference writeback) er en viktig funksjon for helhetlig arbeidsflyt — legen får erklæringen dokumentert i journalen. Dette er teknisk mulig via FHIR `PUT /DocumentReference` med SMART access token, men er ikke implementert i PoC.
+**Avhengigheter:** Valget påvirker `applicationmetadata.json` (`org`-felt), `policy.xml` (tjenesteeier-regel), og Maskinporten-scope for mottakssystemets henting av instansdata.
 
 **Beslutter:** Programleder + juridisk avdeling + Statens vegvesen.
 
-**Status:** Uavklart — PoC bruker Digdir som placeholder.
+**Status:** Teknisk retning avklart (to-lags modell: konklusjon til SVV via Events, full attest til EPJ). Tjenesteeier og SVVs mottakssystem gjenstår som avklaring.
 
 ---
 

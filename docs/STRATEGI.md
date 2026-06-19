@@ -8,7 +8,7 @@
 ## Tre nøkkelbudskap
 
 ### 1 — SMART on FHIR fungerer i Altinn Studio
-Bevist gjennom legeerklæring for førerrett: FHIR-prefill, SMART EHR Launch, BFF-mønster, Altinn-signering — alt fungerer i et lokalt testmiljø.
+Demonstrert gjennom legeerklæring for førerrett: FHIR-prefill, SMART EHR Launch, BFF-mønster, Altinn-signering — kjernearkitekturen er verifisert i lokalt testmiljø mot SMART-mock og HAPI FHIR. Sikkerhetshardening (tokenvalidering, audit-logging) og verifikasjon mot reell fastlege-EPJ gjenstår.
 
 ### 2 — Løsningen kan generaliseres til mange helseskjemaer
 Samme arkitektur kan brukes for sykmelding, attester, refusjonskrav, henvisninger og alle andre skjemaer der legen allerede har dataene i EPJ-et.
@@ -144,6 +144,16 @@ Felles nasjonal avklaring av mottaksarkitektur og juridisk grunnlag (C-3, C-4).
 > Vi bygger ikke en bedre førerrett-app. Vi bygger infrastrukturen som gjør at tjenesteeiere som ikke har Helsenorge-plattformen tilgjengelig, kan bruke Altinn Studio med FHIR-prefill — og at EPJ-leverandører bare trenger én standardintegrasjon.
 
 Se [SAMMENLIGNING-syk-inn.md](SAMMENLIGNING-syk-inn.md) og [NHN-DOKUMENTASJON.md](NHN-DOKUMENTASJON.md) for full sammenligning og læringspunkter.
+
+---
+
+## Europeisk medvind — EHDS
+
+**European Health Data Space** (forordning (EU) 2025/327) er i kraft og gjelder fra 2026, med gjennomføringsrettsakter innen mars 2027 og første primærbruk-utveksling fra 2029. FHIR er den sentrale tekniske standarden. Norge er EØS-bundet og vil bli omfattet.
+
+En åpen, gjenbrukbar SMART on FHIR-komponent i Altinn Studio treffer EHDS-retningen presist. Det gir strategisk forankring utover nasjonale behov, og kobler initiativet til det europeiske arbeidet med helsedata-interoperabilitet.
+
+**Altinn er allerede registrert som Digital Public Good (DPG).** En gjenbrukbar, åpen `Digdir.SmartOnFhir`-komponent kan forsterke denne posisjonen — særlig koblet mot norskutviklede DPG-er som **DHIS2** (UiO/HISP, flaggskip innen global helse). Forutsetning: helsedata-/Normen-spørsmålet (F2 i kvalitetssikringen) må lukkes.
 
 ---
 

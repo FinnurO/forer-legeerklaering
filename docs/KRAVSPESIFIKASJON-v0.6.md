@@ -69,11 +69,14 @@ PoC er vellykket når følgende er demonstrert ende-til-ende:
 
 | Aktør | Rolle | System |
 |---|---|---|
-| Lege | Fyller ut og sender inn skjema | EPJ + Altinn |
-| EPJ-system | Starter SMART-launch, tilbyr FHIR API | DIPS Arena / tilsvarende |
+| Lege (fastlege) | Fyller ut og sender inn skjema | EPJ + Altinn |
+| EPJ-system | Starter SMART-launch, tilbyr FHIR API | CGM, Infodoc, Pridok, WebMed, Aspit — *fastlege-EPJ-ene* (DIPS Arena er sykehus-EPJ og ikke relevant for denne bruksflyten) |
 | Altinn Platform | Infrastruktur for skjema, signering, arkiv | Altinn 3 |
 | Altinn-appen | Applikasjonslaget — SMART-integrasjon + skjema | .NET 8 / Altinn Studio |
-| Helsedirektoratet | Tjenesteeier, mottar innsending | — |
+| Statens vegvesen | Juridisk mottaker av konklusjonen | Altinn Events → SVVs mottakssystem |
+| EPJ (writeback) | Mottaker av full attest | FHIR DocumentReference |
+
+**Merk om EPJ-modenhet:** Fastlege-EPJ-er har varierende og til dels emergent FHIR-/SMART-modenhet. Modenheten drives nasjonalt gjennom **EPJ-løftet**. Påstandene om at «SMART on FHIR fungerer» gjelder mot lokal HAPI FHIR + SMART-mock — ikke mot reelle fastlege-EPJ-er. Verifikasjon mot minst én leverandørs FHIR-sandkasse gjenstår.
 
 ---
 
@@ -83,6 +86,11 @@ PoC er vellykket når følgende er demonstrert ende-til-ende:
 
 ```
 EPJ → SMART Launch → Altinn App → FHIR API → Prefill → Skjema → Innsending
+                                                                      │
+                                        ┌─────────────────────────────┤
+                                        │                             │
+                              Konklusjon (grønt/rødt)       Full attest
+                              → SVV via Altinn Events        → EPJ via DocumentReference
 ```
 
 **Nøkkelprinsipp:** FHIR brukes **utelukkende til forhåndsutfylling**. Altinns datamodell og innsendingsmekanisme er uendret. Access token lagres **aldri** i nettleseren — kun server-side i ASP.NET Core session.
@@ -151,12 +159,38 @@ Disse to er **ikke** koblet — Altinn vet ikke om SMART-tokenet, og EPJ vet ikk
 
 **Merknad om PractitionerRole:** NAV krever `no-basis-PractitionerRole` som obligatorisk ressurs for sin sykmeldingsapplikasjon (syk-inn). PractitionerRole kobler legen direkte til sin rolle og organisasjon, og er mer robust enn å hente organisasjon via `Encounter.serviceProvider`. PoC-en bruker Practitioner + Encounter-kjeden; for produksjon anbefales PractitionerRole som primærkilde.
 
-### 5.2 Klassereferanse
+### 5.2 To separate datamodeller — konklusjon og full attest
+
+Innsendingen bruker **to datatyper** i `applicationmetadata.json`:
+
+| Datatype | Klasse | Mottaker | Innhold |
+|---|---|---|---|
+| `forer-legeerklaering` | `ForerLegeerklaeringModel` | EPJ (DocumentReference writeback) | Alle felt — komplett IS-2569 |
+| `forer-konklusjon` | `ForerKonklusjonModel` | Statens vegvesen via Altinn Events | Gruppe 1/2/3: skikket/ikke skikket + begrenset varighet + vilkår |
+
+`ForerKonklusjonModel` populeres automatisk i `IDataProcessor.ProcessDataWrite` ved innsending, avledet fra `ForerLegeerklaeringModel`. SVVs mottakssystem henter kun `forer-konklusjon`-datatypen.
+
+```csharp
+// ForerKonklusjonModel.cs — minimalt
+public class ForerKonklusjonModel
+{
+    public string Gruppe1 { get; set; } = string.Empty; // "skikket" | "ikke_skikket" | "begrenset"
+    public int?   Gruppe1BegrensetAntallAar { get; set; }
+    public string Gruppe2 { get; set; } = string.Empty;
+    public int?   Gruppe2BegrensetAntallAar { get; set; }
+    public string Gruppe3 { get; set; } = string.Empty;
+    public int?   Gruppe3BegrensetAntallAar { get; set; }
+    public string Vilkar  { get; set; } = string.Empty;
+}
+```
+
+### 5.3 Klassereferanse
 
 ```
-Altinn.App.Models.ForerLegeerklaeringModel
+Altinn.App.Models.ForerLegeerklaeringModel   — komplett skjema
+Altinn.App.Models.ForerKonklusjonModel       — konklusjon til SVV
 Namespace: Altinn.App.Models
-XmlRoot: ForerLegeerklaering
+XmlRoot: ForerLegeerklaering / ForerKonklusjon
 ```
 
 ---
