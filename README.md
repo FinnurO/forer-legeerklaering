@@ -16,7 +16,7 @@ Se [STRATEGI.md](docs/STRATEGI.md) for produktvisjon, samarbeidsmodell og nasjon
 
 ### Slik fungerer flyten
 
-Legen er innlogget i sitt EPJ-system (f.eks. DIPS Arena). EPJ-et starter en **SMART EHR Launch** som åpner Altinn-appen med pasient- og konsultasjonskontekst. Altinn-appen henter relevante data fra FHIR-APIet og forhåndsutfyller skjemaet. Legen kontrollerer, supplerer og signerer/sender inn.
+Legen er innlogget i sitt fastlege-EPJ (f.eks. CGM Journal, Infodoc eller WebMed — DIPS Arena er sykehus-EPJ og ikke relevant for denne, fastlegebaserte, bruksflyten). EPJ-et starter en **SMART EHR Launch** som åpner Altinn-appen med pasient- og konsultasjonskontekst. Altinn-appen henter relevante data fra FHIR-APIet og forhåndsutfyller skjemaet. Legen kontrollerer, supplerer og signerer/sender inn.
 
 ```
 EPJ-system ──SMART EHR Launch──► Altinn App (BFF)
@@ -53,6 +53,8 @@ EPJ-system ──SMART EHR Launch──► Altinn App (BFF)
 
 ## Dokumentasjon
 
+Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJON-KOMPLETT.md) — generert av [docs/generate-samlet-dokumentasjon.ps1](docs/generate-samlet-dokumentasjon.ps1). Kjør skriptet på nytt etter endringer i `docs/*.md`; rediger ikke samledokumentet direkte.
+
 | Dokument | Beskrivelse |
 |---|---|
 | [KRAVSPESIFIKASJON-v0.6.md](docs/KRAVSPESIFIKASJON-v0.6.md) | Krav, arkitektur, datamodell, SMART-krav, kodeverk, referanser |
@@ -60,6 +62,7 @@ EPJ-system ──SMART EHR Launch──► Altinn App (BFF)
 | [SKJEMA-IS2569.md](docs/SKJEMA-IS2569.md) | Fullstendig feltstruktur for blankett IS-2569 (Helseattest førerett) med implementeringsstatus |
 | [PASIENTFLYT.md](docs/PASIENTFLYT.md) | Arkitekturforslag for digital egenerklæring (NA-0201) med Dialogporten og helsenorge.no — pasientens del av flyten |
 | [BESLUTNINGER.md](docs/BESLUTNINGER.md) | Åpne beslutninger som krever menneskelig avklaring: autorisasjonsmodell, HelseID-validering, mottaksarkitektur, DPIA, full IS-2569 |
+| [RISIKOREGISTER.md](docs/RISIKOREGISTER.md) | Konsolidert risikooversikt med eier, tiltak og prioritert lukkerekkefølge — samler risikoene fra BESLUTNINGER.md, VEIKART.md og STRATEGI.md |
 | [VEIKART.md](docs/VEIKART.md) | Prioritert veikart mot produksjonsklar referansearkitektur: fase 1–5 inkl. NuGet-pakke `Digdir.SmartOnFhir` |
 | [SAMMENLIGNING-syk-inn.md](docs/SAMMENLIGNING-syk-inn.md) | Arkitektursammenligning mot NAV `syk-inn` og NHN Førerrett-App (begge i produksjon) — gap-analyse og læringspunkter |
 | [NHN-DOKUMENTASJON.md](docs/NHN-DOKUMENTASJON.md) | Oppsummering av NHNs implementasjonsguide for SMART App Launch og NHNs produksjons-Førerrett-App på Helsenorge-plattformen |

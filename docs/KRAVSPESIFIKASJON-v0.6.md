@@ -163,26 +163,31 @@ Disse to er **ikke** koblet — Altinn vet ikke om SMART-tokenet, og EPJ vet ikk
 
 Innsendingen bruker **to datatyper** i `applicationmetadata.json`:
 
-| Datatype | Klasse | Mottaker | Innhold |
+| Datatype-id (`applicationmetadata.json`) | Klasse | Mottaker | Innhold |
 |---|---|---|---|
-| `forer-legeerklaering` | `ForerLegeerklaeringModel` | EPJ (DocumentReference writeback) | Alle felt — komplett IS-2569 |
-| `forer-konklusjon` | `ForerKonklusjonModel` | Statens vegvesen via Altinn Events | Gruppe 1/2/3: skikket/ikke skikket + begrenset varighet + vilkår |
+| `ForerLegeerklaering` | `Altinn.App.Models.ForerLegeerklaeringModel` | EPJ (DocumentReference writeback, ikke implementert ennå) | Alle felt — komplett IS-2569 |
+| `ForerKonklusjon` | `Altinn.App.Models.ForerKonklusjonModel` | Statens vegvesen via Altinn Events | Gruppe 1/2/3: skikket/ikke skikket + begrenset varighet + vilkår |
 
-`ForerKonklusjonModel` populeres automatisk i `IDataProcessor.ProcessDataWrite` ved innsending, avledet fra `ForerLegeerklaeringModel`. SVVs mottakssystem henter kun `forer-konklusjon`-datatypen.
+`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.ProcessDataWrite` ved innsending (upsert via `IDataClient`), avledet fra `ForerLegeerklaeringModel`. SVVs mottakssystem henter kun `ForerKonklusjon`-datatypen.
 
 ```csharp
-// ForerKonklusjonModel.cs — minimalt
+// ForerKonklusjonModel.cs — faktisk implementasjon (src/App/models/, commit 38057a4)
 public class ForerKonklusjonModel
 {
-    public string Gruppe1 { get; set; } = string.Empty; // "skikket" | "ikke_skikket" | "begrenset"
-    public int?   Gruppe1BegrensetAntallAar { get; set; }
-    public string Gruppe2 { get; set; } = string.Empty;
-    public int?   Gruppe2BegrensetAntallAar { get; set; }
-    public string Gruppe3 { get; set; } = string.Empty;
-    public int?   Gruppe3BegrensetAntallAar { get; set; }
-    public string Vilkar  { get; set; } = string.Empty;
+    public string Pasient_Fnr { get; set; }
+    public string Lege_HPR { get; set; }
+    public string Gruppe1_Resultat { get; set; } // "skikket" | "ikke_skikket" | "begrenset" | ""
+    public int?   Gruppe1_BegrensetAntallAar { get; set; }
+    public string Gruppe2_Resultat { get; set; }
+    public int?   Gruppe2_BegrensetAntallAar { get; set; }
+    public string Gruppe3_Resultat { get; set; }
+    public int?   Gruppe3_BegrensetAntallAar { get; set; }
+    public string Vilkar { get; set; }
+    public string Merknad { get; set; }
 }
 ```
+
+**Kjent forenkling:** `ForerLegeerklaeringModel` har i dag ett enkelt `Forer_Kjoretoygruppe`-felt og én `Forer_ErSkikket`-boolean. `DeriveKonklusjon()` mapper koden til riktig gruppe (gruppe 1: A/A1/A2/AM/B/B1/BE/S/T, gruppe 2: C/C1/CE/C1E, gruppe 3: D/D1/DE/D1E, se `FhirPrefillService.cs`) og setter *kun* den ene gruppens resultat — de to andre `GruppeX_Resultat`-feltene forblir tomme. Uavhengige per-gruppe-vurderinger (slik IS-2569 i prinsippet krever) er ikke støttet før `ForerLegeerklaeringModel` utvides — se [BESLUTNINGER.md C-5](BESLUTNINGER.md) (full IS-2569, planlagt v1.0).
 
 ### 5.3 Klassereferanse
 
@@ -243,6 +248,8 @@ SMART App Launch-spesifikasjonen standardiserer launch-flyt og autentisering —
 | CGM Allmennlegesystem | Ukjent | Ukjent | Ukjent | Ukjent | Ukjent |
 | Infodoc Plenario | Ukjent | Ukjent | Ukjent | Ukjent | Ukjent |
 | Pridok | Ukjent | Ukjent | Ukjent | Ukjent | Ukjent |
+
+> DIPS Arena er sykehus-EPJ og tatt med som teknisk referanse (mest dokumenterte SMART-lag i Norge) — ikke fordi det er relevant EPJ for denne, fastlegebaserte, bruksflyten. De tre øvrige er de aktuelle fastlege-EPJ-ene; SMART-modenheten deres er ikke kartlagt (jf. [KARTLEGGING-kandidater.md](KARTLEGGING-kandidater.md)).
 
 **Strategi for håndtering av variasjoner:**
 

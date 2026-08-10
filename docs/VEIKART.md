@@ -28,11 +28,11 @@ Strategien følger det NAV har bevist med `syk-inn`:
 |---|---|---|
 | **Tokenvalidering** | Valider access token-signatur server-side. I produksjon: sjekk mot EPJ-ens JWKS-endepunkt, verifiser `iss`, `aud`, `exp`. Bruk `Microsoft.IdentityModel.Tokens`. | `BESLUTNINGER.md` C-2 |
 | **Refresh-håndtering** | `offline_access` etterspørres allerede — men token byttes ikke ut. Implementer bakgrunns-refresh i `FhirPrefillService` (sjekk `ExpiresAt` før hvert FHIR-kall, exchang refresh token om nødvendig). | `syk-inn`: `autoRefresh` |
-| **Issuer-allowlist** | Fyll `SmartOnFhir:AllowedIssuerList` i appsettings og sett opp per-miljø konfigurasjon (dev/test/prod). Legg til kjente norske EPJ-er: DIPS Arena, WebMed, CGM Journey. | README «Konfig-gap» |
+| **Issuer-allowlist** | Fyll `SmartOnFhir:AllowedIssuerList` i appsettings og sett opp per-miljø konfigurasjon (dev/test/prod). Legg til kjente norske fastlege-EPJ-er: CGM Journal, Infodoc, WebMed, Pridok, Aspit System X. (DIPS Arena er sykehus-EPJ og ikke aktuell for denne bruksflyten — men relevant dersom Spor B generaliseres til spesialisthelsetjenesten.) | README «Konfig-gap» |
 | **Distribuert sesjon** | Bytt `AddDistributedMemoryCache()` med Redis/Valkey. Kreves for HA (flere pod-er). FHIR-kontekst og token lagres allerede i sesjon — ingen kodeendring utover DI-konfig. | `syk-inn`: Valkey med 30-dagers TTL |
 | **ERR_TOO_MANY_REDIRECTS** | Diagnostiser og løs redirect-loopen i full OAuth-flyt. `/dev-login`-workaround er kun lokalt. | README «Kjente begrensninger» |
 
-**Estimat:** 2–3 uker med tilgang til et ekte EPJ-testmiljø (DIPS/WebMed sandbox).
+**Estimat:** 2–3 uker med tilgang til et ekte fastlege-EPJ-testmiljø (f.eks. WebMed/CGM sandkasse).
 
 ---
 

@@ -62,6 +62,32 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 
 ---
 
+## Fire leveransemodeller for nasjonal utbredelse
+
+*Lagt til etter kvalitetssikring 2026-06-19.* Spørsmålet «hvem bygger, eier og drifter helseskjemaer nasjonalt» avgjøres ikke bare av Altinn vs. Helsenorge (C-6), men av fire realistiske leveransemodeller. De skiller seg langs fem dimensjoner: hvem **utvikler**, hvem **eier**, hvor **lages**, hvor **kjøres**, og hvor **lagres data**.
+
+| Dimensjon | NAV-modellen | NHN/Helsenorge-modellen | EPJ-modellen | Altinn-modellen |
+|---|---|---|---|---|
+| Utvikler | Virksomheten selv | NHN, på vegne av tjenesteeier | EPJ-leverandøren | Tjenesteeier selv |
+| Eier | Virksomheten | NHN drifter; tjenesteeier eier innhold | EPJ-leverandøren | Tjenesteeier |
+| Lages | Egen stack/repo | Helsenorge-plattformen | Inne i EPJ-produktet | Altinn Studio |
+| Kjøres | Egen infrastruktur | Helsenorge-plattformen | I/ved siden av EPJ | Altinn 3 |
+| Data lagres | Eget lager | Helsenorge/NHN (innen Normen) | EPJ/leverandørens sky | Altinn Storage (i denne PoC-en: FHIR-data kun i minne, ikke persistert) |
+| Levende eksempel | `syk-inn` (NAV) | NHN Førerrett-App | (varierer per leverandør) | `forer-legeerklaering` (denne PoC) |
+
+**Hva som faktisk avgjør fart og utbredelse:** ikke skjemaet i seg selv, men hvor mange ganger *integrasjonslaget* (SMART Launch + FHIR + HelseID + signering + audit) må bygges på nytt. NAV-modellen krever *N* reimplementasjoner (én per virksomhet). EPJ-modellen krever *N × M* (leverandører × skjemaer). NHN-modellen bygger laget én gang, men alt køer bak NHNs kapasitet og roadmap. Altinn-modellen bygger laget én gang som en delt komponent (`Digdir.SmartOnFhir`), og tjenesteeierne bygger skjemaene selv — selvbetjent.
+
+**Fordeler og ulemper, kort:**
+
+- **NAV-modellen** — full kontroll og egen domenelogikk (jf. `syk-inn`), men skalerer ikke nasjonalt: forutsetter tung egen utviklingskapasitet de fleste tjenesteeiere (kommuner, tilsyn, mindre direktorater) ikke har.
+- **NHN/Helsenorge-modellen** — HelseID nativt, i sektorens tillitsregime (Normen) og innbyggerkanal; men NHN blir en flaskehals, og tjenesteeiere utenfor helse (SVV, Lånekassen, Arbeidstilsynet) har ikke naturlig tilgang til Helsenorge.
+- **EPJ-modellen** — dypest kliniske arbeidsflyt-UX, prefill/writeback er trivielt siden FHIR-data finnes nativt; men leverandørlås og N×M-fragmentering, og regelendringer må pushes konsistent gjennom alle leverandører.
+- **Altinn-modellen** — selvbetjening for enhver tjenesteeier, tverrsektor, allerede DPG-registrert; men ikke nativt en helseplattform (Normen-spørsmålet må klareres, se [RISIKOREGISTER.md](RISIKOREGISTER.md)), HelseID er ikke innebygd, og legen bytter kontekst ut av EPJ.
+
+**Syntese — modellene utelukker ikke hverandre.** Det sterkeste grepet er å **standardisere integrasjonslaget** og la *hostingmodellen* velges per case, ut fra tre variabler: (1) hvem er mottaker — helsemottaker eller tverrsektor-mottaker, (2) trengs innbyggerkanal (→ vanskelig å unngå Helsenorge), (3) hvor høy er den kliniske UX-terskelen. Posisjoneringen blir da: **Altinn-modellen er selvbetjenings-, tverrsektor- og DPG-laget**; **NHN-modellen er det helse-native laget med innbyggerkanal**; **EPJ-modellen gir best klinisk UX der den finnes**; **NAV-modellen passer virksomheter med tung egen utviklingskapasitet**. Gevinsten for nasjonen ligger i at de deler samme integrasjonsstandard — ikke i at én modell vinner.
+
+---
+
 ## Samarbeidsmodell
 
 For at dette skal bli en nasjonal standard kreves fire aktørgrupper med klare ansvarsområder.

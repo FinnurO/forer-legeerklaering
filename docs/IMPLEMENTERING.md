@@ -59,7 +59,7 @@ Løsningen består av fire separate komponenter som kommuniserer over nettverk. 
 ### Hva det er
 [HAPI FHIR](https://hapifhir.io/) er en åpen kildekode Java-implementasjon av HL7 FHIR-standarden. Den fungerer som en fullstendig FHIR R4-server med RESTful API, søk, validering og persistens.
 
-**I dette prosjektet** brukes HAPI som en enkel testserver som simulerer EPJ-systemets FHIR API. I produksjon erstattes denne av det ekte FHIR-endepunktet i EPJ (f.eks. DIPS Arena FHIR API).
+**I dette prosjektet** brukes HAPI som en enkel testserver som simulerer EPJ-systemets FHIR API. I produksjon erstattes denne av det ekte FHIR-endepunktet i fastlege-EPJ-et (f.eks. CGM Journal, Infodoc eller WebMed — ikke DIPS Arena, som er sykehus-EPJ og ikke relevant for denne fastlegebaserte bruksflyten).
 
 ### Hvor det kjøres
 ```yaml
@@ -1039,5 +1039,5 @@ Produksjonsmiljøet krever DPoP (Demonstrating Proof-of-Possession) — et ekstr
 | Kilde | Beskrivelse |
 |---|---|
 | NAV syk-inn (ny sykmelding) | Autoritært norsk referansedokument for SMART on FHIR mot EPJ. Krever PractitionerRole, Encounter, no-basis-profiler. Sertifiseringsmodell for EPJ-leverandører. Krav: https://github.com/navikt/syk-inn/blob/main/docs/fhir/nav_requirements.md |
-| DIPS Arena SMART-dokumentasjon | Referanseimplementasjon for norsk EPJ SMART Auth Server; struktur på `/.well-known/smart-configuration` |
+| DIPS Arena SMART-dokumentasjon | Referanseimplementasjon for SMART Auth Server-struktur (`/.well-known/smart-configuration`) — sykehus-EPJ, brukt kun som teknisk arkitekturreferanse. Selve bruksflyten (førerkortattest) er fastlege-EPJ. |
 | SMARTHealthIT sandbox | Offentlig SMART-sandbox brukt for testing av OAuth-flyt og discovery |
