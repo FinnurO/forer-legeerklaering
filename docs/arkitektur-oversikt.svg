@@ -27,7 +27,7 @@
   <!-- EPJ zone -->
   <rect x="20" y="55" width="200" height="220" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
   <text x="120" y="75" text-anchor="middle" font-weight="bold" fill="#1565c0" font-size="12">EPJ-system</text>
-  <text x="120" y="89" text-anchor="middle" fill="#1565c0" font-size="9">(DIPS Arena / tilsvarende)</text>
+  <text x="120" y="89" text-anchor="middle" fill="#1565c0" font-size="9">(fastlege-EPJ, f.eks. CGM/WebMed)</text>
 
   <rect x="35" y="98" width="170" height="42" rx="4" fill="#1565c0"/>
   <text x="120" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="10">SMART Auth Server</text>

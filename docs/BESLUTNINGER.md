@@ -2,6 +2,8 @@
 
 Dette dokumentet parkerer beslutninger som krever menneskelig avklaring — juridisk, organisatorisk eller arkitektonisk — og som ikke kan løses med kode alene. Hvert punkt inneholder bakgrunn, alternativer og hvem som beslutter.
 
+Se [RISIKOREGISTER.md](RISIKOREGISTER.md) for en samlet, prioritert oversikt over hvilke av disse beslutningene som er mest tidskritiske, med forslag til eier og tiltak per punkt.
+
 ---
 
 ## C-1: Hvem er «parten» i Altinn-instansen?
@@ -77,22 +79,27 @@ Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rø
 {
   "dataTypes": [
     {
-      "id": "forer-legeerklaering",
-      "description": "Komplett IS-2569 — skrives tilbake til EPJ via DocumentReference",
-      "appLogic": { "classRef": "ForerLegeerklaeringModel" },
+      "id": "ForerLegeerklaering",
+      "appLogic": { "classRef": "Altinn.App.Models.ForerLegeerklaeringModel" },
       "taskId": "Task_1"
     },
     {
-      "id": "forer-konklusjon",
-      "description": "Konklusjon til SVV — grønt/rødt per gruppe + vilkår",
-      "appLogic": { "classRef": "ForerKonklusjonModel" },
-      "taskId": "Task_1"
+      "id": "ForerKonklusjon",
+      "appLogic": {
+        "autoCreate": false,
+        "classRef": "Altinn.App.Models.ForerKonklusjonModel"
+      },
+      "taskId": "Task_1",
+      "minCount": 0
     }
   ]
 }
 ```
+*(Faktiske id-er og namespace i `src/App/config/applicationmetadata.json` — implementert 2026-06-19, commit `38057a4`.)*
 
-`ForerKonklusjonModel` populeres automatisk i `IDataProcessor.ProcessDataWrite` ved innsending, avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference`.
+`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.ProcessDataWrite` ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (ikke implementert ennå, se VEIKART.md fase 2).
+
+**Kjent forenkling i PoC-implementasjonen:** `ForerLegeerklaeringModel` har i dag ett enkelt `Forer_Kjoretoygruppe`-felt og én `Forer_ErSkikket`-boolean — legen vurderer altså kun *én* kjøretøygruppe per legeerklæring. `DeriveKonklusjon()` i `FhirPrefillService.cs` setter derfor resultatet på den ene gruppen som matcher, og lar de to andre `GruppeX_Resultat`-feltene stå tomme. De tre uavhengige gruppefeltene i `ForerKonklusjonModel` er altså forberedt for, men ikke fylt av, reelle per-gruppe-vurderinger — det krever at `ForerLegeerklaeringModel` utvides til å holde skikkethet per gruppe (jf. full IS-2569, C-5).
 
 ### Tjenesteeieralternativer
 

@@ -104,20 +104,20 @@ behandlerens flyt) gir derfor mest verdi der kliniker fortsatt fyller ut en stru
 Disse er stort sett **strukturerte attester kliniker fyller ut manuelt**, sendt via varierende kanaler – et tydelig
 forenklingsområde.
 
-| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Innsamling | SoF-verdi |
-|---|---|---|---|---|---|---|
-| F1 | TT-kort (tilrettelagt transport) | Primær | Fylkeskommune/kommune | Attest/skjema | Manuell | **Høy** |
-| F2 | HC-kort (parkering for forflytningshemmede) | Primær | Kommune | Attest/skjema | Manuell | **Høy** |
-| F3 | Legeerklæring ved skolefravær | Primær | Skole/kommune | Attest | Manuell | Middels |
-| F4 | Sykmelding / nedsatt funksjonsevne for studenter | Primær | Lånekassen | Sykmelding/erklæring | Manuell | **Høy** |
-| F5 | Helsekort for gravide | Primær | Helsetjenesten (deles) | Digitalt helsekort (innføres 2026–27) | Delvis | Lav (løses via NHN) |
-| F6 | Div. attester (ammende mødre, treningssenter, legemidler til utenlandsreise m.m.) | Primær | Private/diverse aktører | Fritekst-attest | Manuell | Middels |
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| F1 | TT-kort (tilrettelagt transport) | Primær | Fylkeskommune/kommune | Attest/skjema | Ingen felles nasjonal forskrift — kommunalt/fylkeskommunalt regelverk (varierer) | Manuell | **Høy** |
+| F2 | HC-kort (parkering for forflytningshemmede) | Primær | Kommune | Attest/skjema | forskrift om parkering for forflytningshemmede | Manuell | **Høy** |
+| F3 | Legeerklæring ved skolefravær | Primær | Skole/kommune | Attest | Ingen særskilt lovkrav om legeattest — skolens/kommunens fraværsreglement (jf. opplæringsloven) | Manuell | Middels |
+| F4 | Sykmelding / nedsatt funksjonsevne for studenter | Primær | Lånekassen | Sykmelding/erklæring | forskrift om tildeling av utdanningsstøtte (sykdom/nedsatt funksjonsevne) | Manuell | **Høy** |
+| F5 | Helsekort for gravide | Primær | Helsetjenesten (deles) | Digitalt helsekort (innføres 2026–27) | Ikke kartlagt i detalj — Helsedirektoratets retningslinjer for svangerskapsomsorg | Delvis | Lav (løses via NHN) |
+| F6 | Div. attester (ammende mødre, treningssenter, legemidler til utenlandsreise m.m.) | Primær | Private/diverse aktører | Fritekst-attest | Ingen særskilt lovregulering — anmodning/avtale med mottaker | Manuell | Middels |
 
 ## G. Privat sektor – forsikring og andre
 
 Privat sektor er en stor og i dag svært manuell konsument av legeerklæringer. Se eget kapittel om DSOP + SMART on FHIR.
 
-| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Grunnlag/rolle | Innsamling | SoF-verdi |
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
 |---|---|---|---|---|---|---|---|
 | G1 | Erklæring ved forsikringstegning | Begge | Forsikringsselskap | Via Helsenett (Finans Norge-flyt) / brev | samtykke; sakkyndig | Manuell | **Høy** |
 | G2 | Erklæring til erstatnings-/skadesak | Begge | Forsikringsselskap | Via Helsenett / brev | samtykke; sakkyndig | Manuell | **Høy** |
@@ -126,12 +126,12 @@ Privat sektor er en stor og i dag svært manuell konsument av legeerklæringer. 
 
 ## H. Styring, statistikk og tilskudd
 
-| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Innsamling | SoF-verdi |
-|---|---|---|---|---|---|---|
-| H1 | KOSTRA / kommunal aktivitetsrapportering | Primær | SSB | Altinn / SSB | Delvis | Lav |
-| H2 | Helsestatistikk | Begge | SSB | SSB / Altinn | Delvis | Lav |
-| H3 | Tilskudds-/aktivitetsrapportering (ALIS m.m.) | Begge | Helsedir / Statsforvalter | Altinn / ulike portaler | Manuell | Lav |
-| H4 | Strålebruk / strålevern | Begge | DSA | DSA-ordninger | Manuell | Lav |
+| ID | Oppgave / melding | Sektor | Mottaker | Kanal i dag | Rettslig grunnlag | Innsamling | SoF-verdi |
+|---|---|---|---|---|---|---|---|
+| H1 | KOSTRA / kommunal aktivitetsrapportering | Primær | SSB | Altinn / SSB | forskrift om rapportering fra kommuner og fylkeskommuner (KOSTRA-forskriften) | Delvis | Lav |
+| H2 | Helsestatistikk | Begge | SSB | SSB / Altinn | statistikkloven | Delvis | Lav |
+| H3 | Tilskudds-/aktivitetsrapportering (ALIS m.m.) | Begge | Helsedir / Statsforvalter | Altinn / ulike portaler | Varierer per tilskuddsordning (Helsedir/Statsforvalter-regelverk) | Manuell | Lav |
+| H4 | Strålebruk / strålevern | Begge | DSA | DSA-ordninger | strålevernforskriften (strålevernloven) | Manuell | Lav |
 
 ---
 
