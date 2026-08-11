@@ -22,6 +22,7 @@
 12. [Proxy-sikkerhet og audit logging](#12-proxy-sikkerhet-og-audit-logging)
 13. [Teststrategi og testmiljøer](#13-teststrategi)
 14. [HelseID-integrasjon: kom i gang](#14-helseid-integrasjon-kom-i-gang)
+    - [14.1 HelseID EksternAPI (Oppgave/Skjema) — maskin-til-maskin, verifisert](#141-helseid-eksternapi-helsenorge-oppgaveskjema--maskin-til-maskin-verifisert)
 15. [Referanser og inspirasjonskilder](#15-referanser-og-inspirasjonskilder)
 
 ---
@@ -983,7 +984,60 @@ Se ferdigkonfigurerte eksempler: [NorskHelsenett/HelseID.Samples](https://github
 
 ### DPoP i produksjon
 
-Produksjonsmiljøet krever DPoP (Demonstrating Proof-of-Possession) — et ekstra lag som binder access token til nøkkelpar og forhindrer replay-angrep. HelseID.Samples-repoet viser implementasjon. DPoP er ikke nødvendig i testmiljøet.
+Produksjonsmiljøet krever DPoP (Demonstrating Proof-of-Possession) — et ekstra lag som binder access token til nøkkelpar og forhindrer replay-angrep. HelseID.Samples-repoet viser implementasjon. DPoP er ikke nødvendig i testmiljøet **for denne `authorization_code`-klienten** (SMART-launch, autentisering av legen).
+
+**Presisering (2026-08-10):** dette gjelder *kun* denne konkrete klienttypen. Den separate `client_credentials`-klienten for Helsenorge EksternAPI (§14.1 under) trigget DPoP nonce-challenge selv i testmiljø — DPoP-kravet varierer altså per klient/grant type, ikke bare per miljø. Ikke anta at "ikke nødvendig i test" gjelder generelt.
+
+---
+
+## 14.1 HelseID EksternAPI (Helsenorge Oppgave/Skjema) — maskin-til-maskin, verifisert
+
+**Status:** Autentisering verifisert 2026-08-10. Dette er en **separat integrasjon** fra §14 over — ikke SMART-launch/autentisering av legen, men maskin-til-maskin-kommunikasjon mot Helsenorges eksterne API for å sende oppgaver/skjema til *pasienten* (relevant for [PASIENTFLYT.md](PASIENTFLYT.md) alternativ B — digital NA-0201-egenerklæring via helsenorge.no).
+
+**Hva det er:** `nhn:helsenorge.eksternapi/oppgave` og `nhn:helsenorge.eksternapi/skjema` er HelseID-scopes for Helsenorge EksternAPI — ikke SMART on FHIR. Autentisering skjer med OAuth2 `client_credentials` (ingen brukerredirect), `private_key_jwt`-klientautentisering og DPoP-bundet access token. Ifølge [Helsenorge sin dokumentasjon](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/3262578689/Nye+IP+adresser+for+EksternAPI+og+F+rerrett) deler EksternAPI infrastruktur/IP-adresser med NHNs egen produksjons-Førerrett-App.
+
+**Registrert klient:** "Altinn Studio" i [selvbetjening.test.nhn.no](https://selvbetjening.test.nhn.no/), Client-ID `4f1fc480-72d9-4e31-b099-69b84fd5ba6b`, auth method `private_key_jwt` (RSA 4096).
+
+**Verifisert oppsett:** bruk NHNs offisielle [`HelseID.Library.ClientCredentials`](https://github.com/NorskHelsenett/HelseID.Library) NuGet-pakke (v1.1.3, støtter `net8.0`) — den håndterer JWT-client-assertion-signering og DPoP-proof automatisk, ingen egen implementasjon nødvendig:
+
+```csharp
+var helseIdConfiguration = new HelseIdConfiguration
+{
+    ClientId = "4f1fc480-72d9-4e31-b099-69b84fd5ba6b",
+    Scope = "nhn:helsenorge.eksternapi/oppgave nhn:helsenorge.eksternapi/skjema",
+    IssuerUri = "https://helseid-sts.test.nhn.no",
+};
+
+builder.Services
+    .AddHelseIdClientCredentials(helseIdConfiguration)
+    .AddJwkForClientAuthentication(privateKeyJwk); // fra lokal fil, ALDRI i kildekode/git
+
+var flow = host.Services.GetRequiredService<IHelseIdClientCredentialsFlow>();
+var tokenResponse = await flow.GetTokenResponseAsync();
+```
+
+Se [local-dev/helseid-token-test/](../local-dev/helseid-token-test/) for en kjørbar røyktest og full begrunnelse for pakkevalget.
+
+**Bekreftet i testmiljø:**
+- Begge scopene (`oppgave`, `skjema`) innvilges uten `RejectedScope` med dagens single-tenant-oppsett (ingen `.AddHelseIdMultiTenant()` eller organisasjonsnummer sendt i token-forespørselen).
+- Access token har svært kort levetid i test (60 sekunder) — hent nytt token rett før bruk.
+- DPoP nonce-challenge (`400` → retry → `200`) trigges av `helseid-sts.test.nhn.no` for denne klienten og håndteres automatisk av biblioteket.
+
+**Oppdatert 2026-08-11 — selve API-kallet er nå strukturelt verifisert:**
+
+Sendte en faktisk `POST https://eksternapi.hn2.test.nhn.no/oppgave/v1/Task` med FHIR `Task`-payload. Fem funn, i rekkefølge:
+
+1. Klienten «Altinn Studio» er registrert som **multi-tenant** i HelseID — token-forespørselen må bruke `.AddHelseIdMultiTenant()` og sende `OrganizationNumbers { ParentOrganization, ChildOrganization }` (`orgnr_parent` alene, uten multi-tenant-oppsett, ga en misvisende `401 EHSEC-110002` "token expired or invalid").
+2. `Task.focus` er reelt obligatorisk (dokumentasjonen markerer kun `focus.type` eksplisitt som "mandatory").
+3. For `focus.type = "Communication"` (informasjonsoppgave) er `Task.instantiatesUri` obligatorisk.
+4. Med disse på plass validerer API-et hele FHIR-strukturen korrekt.
+5. **Gjenstående blokker er ikke teknisk:** `400` — "Pasienten er ikke digitalt aktiv for tjeneste: OmradeHelsehjelp". Testet med to uavhengige, Tenor-verifiserte testpersoner (Høy Hai og Sart Maskin) — samme feil begge ganger, som utelukker at det er en enkeltpersonsfeil.
+
+**Konklusjon etter videre undersøkelse (2026-08-11):** Dette lar seg ikke løse ved å prøve flere testpersoner eller mer kode. Helsenorge sin citizen-vendte portal (`https://helsenorge.hn2.test.nhn.no` og «bakdør»-varianten `https://tjenester.hn2.test.nhn.no/?pnr=...`) er IP-sperret uavhengig av URL-variant, og ifølge [Hvordan komme i gang](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1348174733/Hvordan+komme+i+gang) gis testmiljøtilgang (portal + trolig provisjonering av «digitalt aktive» testpersoner) kun etter formell leverandørkontakt med NHN — ikke selvbetjent slik EksternAPI-autentiseringen er. Se [BESLUTNINGER.md C-6](BESLUTNINGER.md) for anbefalt neste steg (kontakt via `ext-utv-hn-forerrett`-kanalen eller `ide-ogbestillingsmottak@nhn.no`).
+
+Se [local-dev/helsenorge-oppgave-test/](../local-dev/helsenorge-oppgave-test/) for full feilsøkingslogg og kjørbar kode.
+
+**Fortsatt ikke utforsket:** skjemaoppgave (`focus.type = "Questionnaire"`) og `Bundle`-varianten (`POST .../oppgave/v1/Bundle`) — det er dette som faktisk trengs for NA-0201-egenerklæringen, se [PASIENTFLYT.md](PASIENTFLYT.md).
 
 ---
 

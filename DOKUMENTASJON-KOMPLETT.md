@@ -1,6 +1,6 @@
 ﻿# forer-legeerklaering — Samlet dokumentasjon
 
-**Generert:** 2026-08-10
+**Generert:** 2026-08-11
 **Kilde:** `docs/` — rekkefølge etter tabell i README.md. Generert av `docs/generate-samlet-dokumentasjon.ps1` — kjør skriptet på nytt etter endringer i docs/*.md, rediger ikke denne filen direkte.
 
 ---
@@ -677,6 +677,7 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 12. [Proxy-sikkerhet og audit logging](#12-proxy-sikkerhet-og-audit-logging)
 13. [Teststrategi og testmiljøer](#13-teststrategi)
 14. [HelseID-integrasjon: kom i gang](#14-helseid-integrasjon-kom-i-gang)
+    - [14.1 HelseID EksternAPI (Oppgave/Skjema) — maskin-til-maskin, verifisert](#141-helseid-eksternapi-helsenorge-oppgaveskjema--maskin-til-maskin-verifisert)
 15. [Referanser og inspirasjonskilder](#15-referanser-og-inspirasjonskilder)
 
 ---
@@ -1638,7 +1639,60 @@ Se ferdigkonfigurerte eksempler: [NorskHelsenett/HelseID.Samples](https://github
 
 ### DPoP i produksjon
 
-Produksjonsmiljøet krever DPoP (Demonstrating Proof-of-Possession) — et ekstra lag som binder access token til nøkkelpar og forhindrer replay-angrep. HelseID.Samples-repoet viser implementasjon. DPoP er ikke nødvendig i testmiljøet.
+Produksjonsmiljøet krever DPoP (Demonstrating Proof-of-Possession) — et ekstra lag som binder access token til nøkkelpar og forhindrer replay-angrep. HelseID.Samples-repoet viser implementasjon. DPoP er ikke nødvendig i testmiljøet **for denne `authorization_code`-klienten** (SMART-launch, autentisering av legen).
+
+**Presisering (2026-08-10):** dette gjelder *kun* denne konkrete klienttypen. Den separate `client_credentials`-klienten for Helsenorge EksternAPI (§14.1 under) trigget DPoP nonce-challenge selv i testmiljø — DPoP-kravet varierer altså per klient/grant type, ikke bare per miljø. Ikke anta at "ikke nødvendig i test" gjelder generelt.
+
+---
+
+## 14.1 HelseID EksternAPI (Helsenorge Oppgave/Skjema) — maskin-til-maskin, verifisert
+
+**Status:** Autentisering verifisert 2026-08-10. Dette er en **separat integrasjon** fra §14 over — ikke SMART-launch/autentisering av legen, men maskin-til-maskin-kommunikasjon mot Helsenorges eksterne API for å sende oppgaver/skjema til *pasienten* (relevant for [PASIENTFLYT.md](PASIENTFLYT.md) alternativ B — digital NA-0201-egenerklæring via helsenorge.no).
+
+**Hva det er:** `nhn:helsenorge.eksternapi/oppgave` og `nhn:helsenorge.eksternapi/skjema` er HelseID-scopes for Helsenorge EksternAPI — ikke SMART on FHIR. Autentisering skjer med OAuth2 `client_credentials` (ingen brukerredirect), `private_key_jwt`-klientautentisering og DPoP-bundet access token. Ifølge [Helsenorge sin dokumentasjon](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/3262578689/Nye+IP+adresser+for+EksternAPI+og+F+rerrett) deler EksternAPI infrastruktur/IP-adresser med NHNs egen produksjons-Førerrett-App.
+
+**Registrert klient:** "Altinn Studio" i [selvbetjening.test.nhn.no](https://selvbetjening.test.nhn.no/), Client-ID `4f1fc480-72d9-4e31-b099-69b84fd5ba6b`, auth method `private_key_jwt` (RSA 4096).
+
+**Verifisert oppsett:** bruk NHNs offisielle [`HelseID.Library.ClientCredentials`](https://github.com/NorskHelsenett/HelseID.Library) NuGet-pakke (v1.1.3, støtter `net8.0`) — den håndterer JWT-client-assertion-signering og DPoP-proof automatisk, ingen egen implementasjon nødvendig:
+
+```csharp
+var helseIdConfiguration = new HelseIdConfiguration
+{
+    ClientId = "4f1fc480-72d9-4e31-b099-69b84fd5ba6b",
+    Scope = "nhn:helsenorge.eksternapi/oppgave nhn:helsenorge.eksternapi/skjema",
+    IssuerUri = "https://helseid-sts.test.nhn.no",
+};
+
+builder.Services
+    .AddHelseIdClientCredentials(helseIdConfiguration)
+    .AddJwkForClientAuthentication(privateKeyJwk); // fra lokal fil, ALDRI i kildekode/git
+
+var flow = host.Services.GetRequiredService<IHelseIdClientCredentialsFlow>();
+var tokenResponse = await flow.GetTokenResponseAsync();
+```
+
+Se [local-dev/helseid-token-test/](../local-dev/helseid-token-test/) for en kjørbar røyktest og full begrunnelse for pakkevalget.
+
+**Bekreftet i testmiljø:**
+- Begge scopene (`oppgave`, `skjema`) innvilges uten `RejectedScope` med dagens single-tenant-oppsett (ingen `.AddHelseIdMultiTenant()` eller organisasjonsnummer sendt i token-forespørselen).
+- Access token har svært kort levetid i test (60 sekunder) — hent nytt token rett før bruk.
+- DPoP nonce-challenge (`400` → retry → `200`) trigges av `helseid-sts.test.nhn.no` for denne klienten og håndteres automatisk av biblioteket.
+
+**Oppdatert 2026-08-11 — selve API-kallet er nå strukturelt verifisert:**
+
+Sendte en faktisk `POST https://eksternapi.hn2.test.nhn.no/oppgave/v1/Task` med FHIR `Task`-payload. Fem funn, i rekkefølge:
+
+1. Klienten «Altinn Studio» er registrert som **multi-tenant** i HelseID — token-forespørselen må bruke `.AddHelseIdMultiTenant()` og sende `OrganizationNumbers { ParentOrganization, ChildOrganization }` (`orgnr_parent` alene, uten multi-tenant-oppsett, ga en misvisende `401 EHSEC-110002` "token expired or invalid").
+2. `Task.focus` er reelt obligatorisk (dokumentasjonen markerer kun `focus.type` eksplisitt som "mandatory").
+3. For `focus.type = "Communication"` (informasjonsoppgave) er `Task.instantiatesUri` obligatorisk.
+4. Med disse på plass validerer API-et hele FHIR-strukturen korrekt.
+5. **Gjenstående blokker er ikke teknisk:** `400` — "Pasienten er ikke digitalt aktiv for tjeneste: OmradeHelsehjelp". Testet med to uavhengige, Tenor-verifiserte testpersoner (Høy Hai og Sart Maskin) — samme feil begge ganger, som utelukker at det er en enkeltpersonsfeil.
+
+**Konklusjon etter videre undersøkelse (2026-08-11):** Dette lar seg ikke løse ved å prøve flere testpersoner eller mer kode. Helsenorge sin citizen-vendte portal (`https://helsenorge.hn2.test.nhn.no` og «bakdør»-varianten `https://tjenester.hn2.test.nhn.no/?pnr=...`) er IP-sperret uavhengig av URL-variant, og ifølge [Hvordan komme i gang](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1348174733/Hvordan+komme+i+gang) gis testmiljøtilgang (portal + trolig provisjonering av «digitalt aktive» testpersoner) kun etter formell leverandørkontakt med NHN — ikke selvbetjent slik EksternAPI-autentiseringen er. Se [BESLUTNINGER.md C-6](BESLUTNINGER.md) for anbefalt neste steg (kontakt via `ext-utv-hn-forerrett`-kanalen eller `ide-ogbestillingsmottak@nhn.no`).
+
+Se [local-dev/helsenorge-oppgave-test/](../local-dev/helsenorge-oppgave-test/) for full feilsøkingslogg og kjørbar kode.
+
+**Fortsatt ikke utforsket:** skjemaoppgave (`focus.type = "Questionnaire"`) og `Bundle`-varianten (`POST .../oppgave/v1/Bundle`) — det er dette som faktisk trengs for NA-0201-egenerklæringen, se [PASIENTFLYT.md](PASIENTFLYT.md).
 
 ---
 
@@ -2042,8 +2096,8 @@ Total estimert utvidelse: fra 18 til ~70 felt i datamodellen.
 
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
-**Dato:** 2026-06-16  
-**Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere
+**Dato:** 2026-06-16 (oppdatert 2026-08-10)  
+**Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere. Alternativ B sin autentisering er nå teknisk verifisert, se §4.
 
 ---
 
@@ -2228,16 +2282,26 @@ Relevante svar fra egenerklæringen kan:
 
 **Utfordringer:** Krever at Dialogporten er tilgjengelig og at helsenorge.no viser dialogen; krever Maskinporten-autentisering fra EPJ for dialogoppretting.
 
-### Alternativ B — Helsenorge.no native
+### Alternativ B — Helsenorge EksternAPI (Oppgave + Skjema) — nå konkretisert og delvis verifisert
 
-Helsenorge.no har egne skjematjenester. Egenerklæringen opprettes som en oppgave/tjeneste direkte i helsenorge.no, uten Altinn-appen.
+**Oppdatert 2026-08-10:** dette var tidligere en vag skisse ("Helsenorge.no har egne skjematjenester"). Nå vet vi konkret hvordan det fungerer og har verifisert autentiseringen. Se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) for full teknisk detalj.
 
-**Fordeler:** Integrert i pasientens vanlige helseportal.  
-**Utfordringer:** Krever samarbeid med NHN/helsenorge.no-forvaltning; mindre fleksibel for gjenbruk i andre skjemaflyter.
+Helsenorge tilbyr et **maskin-til-maskin API** (`eksternapi.helsenorge.no`) med to relevante tjenester, hver med eget HelseID-scope:
+- **Oppgave** (`nhn:helsenorge.eksternapi/oppgave`) — sender en oppgave (FHIR `Task`) til en innbygger, som varsles på helsenorge.no og må gjøre et aktivt valg for å åpne den.
+- **Skjema** (`nhn:helsenorge.eksternapi/skjema`) — knyttet til selve skjemaet innbyggeren fyller ut.
+
+Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App bruker for å nå pasienten — [Helsenorge sin egen dokumentasjon](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/3262578689/Nye+IP+adresser+for+EksternAPI+og+F+rerrett) bekrefter at EksternAPI og Førerrett-appen deler infrastruktur.
+
+**Autentisering (verifisert i test):** OAuth2 `client_credentials` + `private_key_jwt` + DPoP — ingen brukerredirect, siden det er systemet (Altinn-appen) som kaller Helsenorge, ikke pasienten som logger inn. Se [local-dev/helseid-token-test/](../local-dev/helseid-token-test/) for kjørbar bekreftelse.
+
+**Ikke verifisert ennå:** selve Oppgave/Skjema-kallet (FHIR `Task` via `POST .../oppgave/v1/Bundle`), og om `orgnr_parent` må sendes med i API-kallet.
+
+**Fordeler:** Integrert i pasientens vanlige helseportal; samme infrastruktur som NHNs egen løsning, altså sannsynligvis godt utprøvd og driftssikkert; unngår avhengighet av at Dialogporten viser dialogen på helsenorge.no (usikkert punkt i alternativ A).  
+**Utfordringer:** Egen integrasjon å vedlikeholde ved siden av SMART-launch-integrasjonen mot legen; skjemastruktur/payload-format for Oppgave/Skjema er ikke utforsket; uklart om NA-0201 kan modelleres direkte i Skjema-tjenesten eller om det krever en egen avtale med NHN om skjemainnhold.
 
 ### Anbefaling
 
-**Alternativ A med Dialogporten** er riktig langsiktig arkitektur. Det gjenbruker eksisterende infrastruktur og gir pasienten en naturlig opplevelse via helsenorge.no. For en første iterasjon kan dialogen opprettes manuelt (EPJ-resepsjonen sender link direkte), uten automatisk integrasjon mot timebestillingssystemet.
+**Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
 
 ---
 
@@ -2483,7 +2547,7 @@ Nåværende datamodell (`ForerLegeerklaeringModel`) dekker kun en liten del av b
 
 **Del B — Pasientens egenerklæring (NA-0201):**
 - 17 ja/nei-spørsmål om helsetilstand
-- Digital flyt via Dialogporten (se PASIENTFLYT.md for arkitekturforslag)
+- Digital flyt via Dialogporten, eller alternativt Helsenorge EksternAPI (Oppgave/Skjema) — se [PASIENTFLYT.md](PASIENTFLYT.md) for arkitekturforslag. HelseID-autentisering for EksternAPI-sporet er teknisk verifisert 2026-08-10 (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og [local-dev/helseid-token-test/](../local-dev/helseid-token-test/)) — selve API-kallet er fortsatt ikke utforsket.
 - Mapping mellom NA-0201-svar og IS-2569 helsekategorier
 - FHIR QuestionnaireResponse for å overføre svar til legen
 
@@ -2514,6 +2578,8 @@ NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget p
 **Avhengigheter:** C-3 (mottaksarkitektur SVV), C-4 (behandlingsansvar).
 
 **Ny innsikt (2026-06-17):** NHNs Slack-kanal `ext-utv-hn-forerrett` tilbyr samarbeid med NHN-teamet. Kontakt bør tas for å avklare om PoC-funnene kan bidra inn i eksisterende løsning fremfor å parallelt-utvikle en Altinn-variant.
+
+**Ny innsikt (2026-08-11):** Under teknisk verifisering av Helsenorge EksternAPI (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md)) ble det klart at videre fremdrift på dette sporet ikke lenger er et kodeproblem, men krever formell NHN-leverandørkontakt. Ifølge [Hvordan komme i gang](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1348174733/Hvordan+komme+i+gang) gis tilgang til Helsenorge sine testmiljøer (portal/nettsted, og trolig provisjonering av testpersoner som «digitalt aktive») kun etter at en leverandør har tatt kontakt (`ide-ogbestillingsmottak@nhn.no` eller etablert Slack-kanal) og fått veiledning — det er ikke selvbetjent slik EksternAPI sin token-basert autentisering er. Dette er trolig samme kontaktpunkt som `ext-utv-hn-forerrett`-kanalen nevnt over. **Konkret handling:** ta kontakt for å (a) få testpersoner provisjonert som digitalt aktive, og/eller (b) få formell testmiljøtilgang til portalen, som del av den bredere avklaringen om samarbeid vs. parallell utvikling.
 
 **Beslutter:** Programleder + NHN + Statens vegvesen.
 
@@ -2585,6 +2651,7 @@ Dette dokumentet samler risikoene som allerede er beskrevet andre steder i dokum
 | R6 | Initiativet oppfattes som konkurrerende med NHNs produksjonsløsning for IS-2569 på Helsenorge | Strategisk / posisjonering | Middels | Middels — politisk sårbarhet, dobbeltarbeid, samarbeidsvilje fra NHN | Programleder | Bruk firemodell-analysen (STRATEGI.md) som felles språk med NHN; kontakt NHN-teamet (Slack `ext-utv-hn-forerrett`) for skriftlig komplementaritet | Dialog ikke bekreftet gjennomført — se [BESLUTNINGER.md C-6](BESLUTNINGER.md) |
 | R7 | Ingen automatiserte tester — regresjon kan innføres uten å bli fanget opp | Teknisk kvalitet | Høy | Middels — hindrer trygg videreutvikling og bredding | Teknisk team | VEIKART.md fase 3: e2e-røyktest + unit-tester (jf. `syk-inn`: 23 unit + 24 e2e) | Ikke startet — se [VEIKART.md fase 3](VEIKART.md) |
 | R8 | Full OAuth-redirect-flyt (`ERR_TOO_MANY_REDIRECTS`) er ikke løst — kun `/smart/dev-login`-workaround er bevist | Teknisk | Middels | Middels — den reelle SMART-launch-flyten er ikke bevist ende-til-ende | Teknisk team | Diagnostiser redirect-loopen mot en ekte EPJ-testklient | Uløst — se [README.md «Kjente begrensninger»](../README.md) |
+| R9 | Helsenorge EksternAPI-autentisering er verifisert, men selve testmiljøtilgangen (portal + «digitalt aktive» testpersoner) krever formell NHN-leverandørkontakt — ikke selvbetjent | Organisatorisk / avhengighet | Lav (kjent prosess) | Middels — blokkerer videre verifisering av pasientsporet (PASIENTFLYT.md alt. B) inntil kontakt er tatt | Programleder | Ta kontakt via `ext-utv-hn-forerrett`-Slack eller `ide-ogbestillingsmottak@nhn.no` for testmiljøtilgang og provisjonering av testpersoner | Ikke startet — se [BESLUTNINGER.md C-6](BESLUTNINGER.md) og [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) |
 
 ---
 

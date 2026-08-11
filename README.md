@@ -119,6 +119,9 @@ Oppretter FHIR-ressurser for 5 pasienter (alle tilknyttet Dr. Ola Nordmann / San
 | Anne Johansen | `anne-johansen` | `enc-anne-001` |
 | Kari Larsen | `kari-larsen` | `enc-kari-001` |
 | Olav Berg | `olav-berg` | `enc-olav-001` |
+| Høy Hai | `hoy-hai` | `enc-hoyhai-001` |
+
+**Merk:** de fem første har oppdiktede fødselsnummer (kun gyldige i vår egen lokale HAPI FHIR-mock — består ikke MOD11-sjekk). Høy Hai (`21814497167`) er derimot en ekte Tenor-sjekket syntetisk person, og er den som brukes ved test mot eksterne NHN-/Helsenorge-testmiljøer der personen faktisk må eksistere i deres testdatasett (se [local-dev/helseid-token-test/](local-dev/helseid-token-test/) og [local-dev/helsenorge-oppgave-test/](local-dev/helsenorge-oppgave-test/)).
 
 Practitioner `lege-ola` (HPR: 1234567) og Organization `sandvika-legesenter` (orgnr: 987654321) opprettes én gang og deles av alle pasienter.
 

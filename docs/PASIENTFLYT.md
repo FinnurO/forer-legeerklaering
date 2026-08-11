@@ -1,7 +1,7 @@
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
-**Dato:** 2026-06-16  
-**Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere
+**Dato:** 2026-06-16 (oppdatert 2026-08-10)  
+**Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere. Alternativ B sin autentisering er nå teknisk verifisert, se §4.
 
 ---
 
@@ -186,16 +186,26 @@ Relevante svar fra egenerklæringen kan:
 
 **Utfordringer:** Krever at Dialogporten er tilgjengelig og at helsenorge.no viser dialogen; krever Maskinporten-autentisering fra EPJ for dialogoppretting.
 
-### Alternativ B — Helsenorge.no native
+### Alternativ B — Helsenorge EksternAPI (Oppgave + Skjema) — nå konkretisert og delvis verifisert
 
-Helsenorge.no har egne skjematjenester. Egenerklæringen opprettes som en oppgave/tjeneste direkte i helsenorge.no, uten Altinn-appen.
+**Oppdatert 2026-08-10:** dette var tidligere en vag skisse ("Helsenorge.no har egne skjematjenester"). Nå vet vi konkret hvordan det fungerer og har verifisert autentiseringen. Se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) for full teknisk detalj.
 
-**Fordeler:** Integrert i pasientens vanlige helseportal.  
-**Utfordringer:** Krever samarbeid med NHN/helsenorge.no-forvaltning; mindre fleksibel for gjenbruk i andre skjemaflyter.
+Helsenorge tilbyr et **maskin-til-maskin API** (`eksternapi.helsenorge.no`) med to relevante tjenester, hver med eget HelseID-scope:
+- **Oppgave** (`nhn:helsenorge.eksternapi/oppgave`) — sender en oppgave (FHIR `Task`) til en innbygger, som varsles på helsenorge.no og må gjøre et aktivt valg for å åpne den.
+- **Skjema** (`nhn:helsenorge.eksternapi/skjema`) — knyttet til selve skjemaet innbyggeren fyller ut.
+
+Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App bruker for å nå pasienten — [Helsenorge sin egen dokumentasjon](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/3262578689/Nye+IP+adresser+for+EksternAPI+og+F+rerrett) bekrefter at EksternAPI og Førerrett-appen deler infrastruktur.
+
+**Autentisering (verifisert i test):** OAuth2 `client_credentials` + `private_key_jwt` + DPoP — ingen brukerredirect, siden det er systemet (Altinn-appen) som kaller Helsenorge, ikke pasienten som logger inn. Se [local-dev/helseid-token-test/](../local-dev/helseid-token-test/) for kjørbar bekreftelse.
+
+**Ikke verifisert ennå:** selve Oppgave/Skjema-kallet (FHIR `Task` via `POST .../oppgave/v1/Bundle`), og om `orgnr_parent` må sendes med i API-kallet.
+
+**Fordeler:** Integrert i pasientens vanlige helseportal; samme infrastruktur som NHNs egen løsning, altså sannsynligvis godt utprøvd og driftssikkert; unngår avhengighet av at Dialogporten viser dialogen på helsenorge.no (usikkert punkt i alternativ A).  
+**Utfordringer:** Egen integrasjon å vedlikeholde ved siden av SMART-launch-integrasjonen mot legen; skjemastruktur/payload-format for Oppgave/Skjema er ikke utforsket; uklart om NA-0201 kan modelleres direkte i Skjema-tjenesten eller om det krever en egen avtale med NHN om skjemainnhold.
 
 ### Anbefaling
 
-**Alternativ A med Dialogporten** er riktig langsiktig arkitektur. Det gjenbruker eksisterende infrastruktur og gir pasienten en naturlig opplevelse via helsenorge.no. For en første iterasjon kan dialogen opprettes manuelt (EPJ-resepsjonen sender link direkte), uten automatisk integrasjon mot timebestillingssystemet.
+**Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
 
 ---
 

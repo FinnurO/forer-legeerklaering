@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Se local-dev/helseid-token-test/HelseIdTokenTest.csproj for kommentar om
+         Microsoft.Extensions.Hosting-versjonskonflikten — samme løsning her (ingen eksplisitt ref). -->
+    <PackageReference Include="HelseID.Library.ClientCredentials" Version="1.1.3" />
+  </ItemGroup>
+
+</Project>
