@@ -57,6 +57,7 @@ Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJ
 
 | Dokument | Beskrivelse |
 |---|---|
+| [HELHETLIG-FLYT.md](docs/HELHETLIG-FLYT.md) | Samlet steg-for-steg-flyt mellom Pasient/Helsenorge, EPJ, Altinn Studio-appen og SVV — hva er verifisert vs. planlagt, og hvordan spinne opp hele det lokale miljøet |
 | [KRAVSPESIFIKASJON-v0.6.md](docs/KRAVSPESIFIKASJON-v0.6.md) | Krav, arkitektur, datamodell, SMART-krav, kodeverk, referanser |
 | [IMPLEMENTERING.md](docs/IMPLEMENTERING.md) | Komponentguide, beste praksis, fallgruver, referanser |
 | [SKJEMA-IS2569.md](docs/SKJEMA-IS2569.md) | Fullstendig feltstruktur for blankett IS-2569 (Helseattest førerett) med implementeringsstatus |
