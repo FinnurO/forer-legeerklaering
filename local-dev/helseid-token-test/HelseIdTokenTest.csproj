@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- HelseID.Library.ClientCredentials 1.1.3 sitt net8.0-mål krever transitivt
+         Microsoft.Extensions.Hosting >= 10.0.5 (nyere enn appens egen 8.0.x) — det er trygt,
+         Microsoft.Extensions.*-pakker kjører fint på .NET 8-runtime uavhengig av versjonsnummer. -->
+    <PackageReference Include="HelseID.Library.ClientCredentials" Version="1.1.3" />
+  </ItemGroup>
+
+</Project>

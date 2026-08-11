@@ -164,10 +164,59 @@ Put-Resource "Encounter" "enc-olav-001" @{
     period = @{ start = "2026-06-16T13:00:00+02:00"; end = "2026-06-16T13:30:00+02:00" }
 }
 
+# --- Høy Hai: EKTE Tenor-sjekket syntetisk fnr (kontrollsiffer verifisert), i motsetning til de
+# --- fem over som er oppdiktede tall for lokal HAPI FHIR-testing. Brukes til å teste mot ekte
+# --- eksterne testmiljøer (f.eks. Helsenorge EksternAPI TEST02) der personen faktisk må eksistere.
+Put-Resource "Patient" "hoy-hai" @{
+    resourceType = "Patient"
+    id = "hoy-hai"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "21814497167" })
+    name = @(@{ family = "Hai"; given = @("Høy") })
+    birthDate = "1944-01-21"
+    gender = "male"
+    address = @(@{
+        line = @("Råtun 158 H0101")
+        postalCode = "5239"
+        city = "RÅDAL"
+    })
+}
+
+Put-Resource "Encounter" "enc-hoyhai-001" @{
+    resourceType = "Encounter"
+    id = "enc-hoyhai-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/hoy-hai" }
+    participant = @(@{ individual = @{ reference = "Practitioner/lege-ola" } })
+    serviceProvider = @{ reference = "Organization/sandvika-legesenter" }
+    period = @{ start = "2026-08-11T09:00:00+02:00"; end = "2026-08-11T09:30:00+02:00" }
+}
+
+# --- Sart Maskin: nok en Tenor-sjekket syntetisk fnr (kontrollsiffer verifisert), forsøkt som
+# --- Helsenorge-mottaker etter at Høy Hai viste seg ikke å være "digitalt aktiv" i TEST02.
+Put-Resource "Patient" "sart-maskin" @{
+    resourceType = "Patient"
+    id = "sart-maskin"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "26908896636" })
+    name = @(@{ family = "Maskin"; given = @("Sart") })
+}
+
+Put-Resource "Encounter" "enc-sartmaskin-001" @{
+    resourceType = "Encounter"
+    id = "enc-sartmaskin-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/sart-maskin" }
+    participant = @(@{ individual = @{ reference = "Practitioner/lege-ola" } })
+    serviceProvider = @{ reference = "Organization/sandvika-legesenter" }
+    period = @{ start = "2026-08-11T09:00:00+02:00"; end = "2026-08-11T09:30:00+02:00" }
+}
+
 Write-Host "`nFerdig! Pasienter seeded:" -ForegroundColor Green
 Write-Host "  sophie-salt  (enc-sophie-001)"
 Write-Host "  per-hansen   (enc-per-001)"
 Write-Host "  anne-johansen (enc-anne-001)"
 Write-Host "  kari-larsen  (enc-kari-001)"
 Write-Host "  olav-berg    (enc-olav-001)"
+Write-Host "  hoy-hai      (enc-hoyhai-001) - ekte Tenor-verifisert fnr, for test mot eksterne NHN-miljoer"
 Write-Host "  Practitioner: lege-ola | Org: sandvika-legesenter"

@@ -153,7 +153,7 @@ Nåværende datamodell (`ForerLegeerklaeringModel`) dekker kun en liten del av b
 
 **Del B — Pasientens egenerklæring (NA-0201):**
 - 17 ja/nei-spørsmål om helsetilstand
-- Digital flyt via Dialogporten (se PASIENTFLYT.md for arkitekturforslag)
+- Digital flyt via Dialogporten, eller alternativt Helsenorge EksternAPI (Oppgave/Skjema) — se [PASIENTFLYT.md](PASIENTFLYT.md) for arkitekturforslag. HelseID-autentisering for EksternAPI-sporet er teknisk verifisert 2026-08-10 (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og [local-dev/helseid-token-test/](../local-dev/helseid-token-test/)) — selve API-kallet er fortsatt ikke utforsket.
 - Mapping mellom NA-0201-svar og IS-2569 helsekategorier
 - FHIR QuestionnaireResponse for å overføre svar til legen
 
@@ -184,6 +184,8 @@ NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget p
 **Avhengigheter:** C-3 (mottaksarkitektur SVV), C-4 (behandlingsansvar).
 
 **Ny innsikt (2026-06-17):** NHNs Slack-kanal `ext-utv-hn-forerrett` tilbyr samarbeid med NHN-teamet. Kontakt bør tas for å avklare om PoC-funnene kan bidra inn i eksisterende løsning fremfor å parallelt-utvikle en Altinn-variant.
+
+**Ny innsikt (2026-08-11):** Under teknisk verifisering av Helsenorge EksternAPI (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md)) ble det klart at videre fremdrift på dette sporet ikke lenger er et kodeproblem, men krever formell NHN-leverandørkontakt. Ifølge [Hvordan komme i gang](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1348174733/Hvordan+komme+i+gang) gis tilgang til Helsenorge sine testmiljøer (portal/nettsted, og trolig provisjonering av testpersoner som «digitalt aktive») kun etter at en leverandør har tatt kontakt (`ide-ogbestillingsmottak@nhn.no` eller etablert Slack-kanal) og fått veiledning — det er ikke selvbetjent slik EksternAPI sin token-basert autentisering er. Dette er trolig samme kontaktpunkt som `ext-utv-hn-forerrett`-kanalen nevnt over. **Konkret handling:** ta kontakt for å (a) få testpersoner provisjonert som digitalt aktive, og/eller (b) få formell testmiljøtilgang til portalen, som del av den bredere avklaringen om samarbeid vs. parallell utvikling.
 
 **Beslutter:** Programleder + NHN + Statens vegvesen.
 
