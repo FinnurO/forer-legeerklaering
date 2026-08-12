@@ -47,12 +47,12 @@ Testmiljøet hackathon-sporet bruker er slående likt vårt eget:
 
 | Alternativ | Vår status |
 |---|---|
-| **Writeback til EPJ** (dokumenter eller målinger) | ❌ Ikke implementert. Eksplisitt planlagt som [VEIKART.md fase 2](VEIKART.md) — `DocumentReference`-writeback er beskrevet i detalj, men ikke kodet |
+| **Writeback til EPJ** (dokumenter eller målinger) | ✅ Skrivemekanikk bevist 2026-08-11 — `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created`. Gjenstår: ekte innhold (PDF), idempotens (PUT + klient-id), `QuestionnaireResponse`. Se [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | **`private_key_jwt` asymmetrisk klientautentisering ende-til-ende** | ❌ Ikke implementert for *denne* klienten (SMART EHR launch mot EPJ). **Men** vi har akkurat gjort nøyaktig dette for en annen klient (Helsenorge EksternAPI, se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og `local-dev/helseid-token-test/`) — samme mønster, samme `HelseID.Library`-erfaring, kan trolig gjenbrukes/tilpasses raskt |
 | **Backend services SMART-flyt** (system-til-system, ingen bruker til stede) | ❌ Ikke implementert for SMART EHR-domenet. **Men** `client_credentials`-flyten vi bygde for Helsenorge EksternAPI er konseptuelt identisk (maskin-til-maskin, ingen brukerinnlogging) — se `local-dev/helsenorge-oppgave-test/` |
 | **Sikkerhetstesting** (tukle med autorisasjonsparametere, gjenbruk koder, feil audience, utløpte tokens, be om ikke-autoriserte ressurser) | ❌ Ikke gjort systematisk. Dette ville trolig avdekke reelle hull — vi validerer i dag **ikke** token-signatur, issuer eller audience noe sted (jf. [RISIKOREGISTER.md R4](RISIKOREGISTER.md): tokenvalidering er ikke implementert) |
 
-**Anbefaling:** Ingen Gull-oppgave er triviell, men **`private_key_jwt`** og **backend services-flyt** er de vi har mest overførbar kompetanse på fra denne sesjonens Helsenorge-arbeid. **Sikkerhetstesting** er den mest verdifulle å faktisk gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
+**Anbefaling (oppdatert 2026-08-11):** **Writeback** er nå det Gull-alternativet vi står best til — mekanikken er allerede bevist, gjenstår er å gjøre det produksjonsklart (PDF-innhold, idempotens). **`private_key_jwt`** og **backend services-flyt** er de neste vi har mest overførbar kompetanse på fra Helsenorge-arbeidet. **Sikkerhetstesting** er fortsatt den mest verdifulle å gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
 
 ---
 

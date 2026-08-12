@@ -126,6 +126,13 @@ namespace Altinn.App.Controllers
                     "user/Practitioner.read",
                     "user/Organization.read",
                     "user/PractitionerRole.read",
+                    // VEIKART.md fase 2 (writeback til EPJ) — lagt til 2026-08-11 for å teste om
+                    // skriving faktisk er mulig mot en ekte SMART-server. v1-stil (.write) og
+                    // v2-stil (.c, create) sendt begge — se hvilken(e) som faktisk innvilges i
+                    // token-responsens "scope"-felt (jf. "Sølv: scope-detektivarbeid" i
+                    // HACKATHON-EHIN-2026.md).
+                    "patient/DocumentReference.write",
+                    "patient/DocumentReference.c",
                 }
             );
 
@@ -255,6 +262,90 @@ namespace Altinn.App.Controllers
             var org = RouteData.Values["org"]?.ToString();
             var app = RouteData.Values["app"]?.ToString();
             return Redirect($"/{org}/{app}");
+        }
+
+        /// <summary>
+        /// Dev-only: prøver et faktisk writeback-kall (POST DocumentReference) mot EPJ-en fra den
+        /// aktive SMART-sesjonen. VEIKART.md fase 2-utforskning — svarer på om skriving faktisk er
+        /// mulig, ikke en produksjonsimplementasjon (ingen PDF, ingen ekte innhold, ingen idempotens
+        /// via klient-tildelt id/PUT som VEIKART.md fase 2 spesifiserer for den ferdige løsningen).
+        /// Kjør etter en vanlig launch (test-prefill, dev-login eller ekte /smart/launch).
+        /// </summary>
+        [HttpGet("test-writeback")]
+        public async Task<IActionResult> TestWriteback()
+        {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
+            await HttpContext.Session.LoadAsync();
+            var tokenJson = HttpContext.Session.GetString(TokenSessionKey);
+            var contextJson = HttpContext.Session.GetString(FhirContextSessionKey);
+            if (string.IsNullOrEmpty(tokenJson) || string.IsNullOrEmpty(contextJson))
+                return BadRequest("Ingen SMART-sesjon funnet i session — gjennomfør en launch først.");
+
+            var token = JsonSerializer.Deserialize<TokenResponse>(tokenJson);
+            var context = JsonSerializer.Deserialize<FhirLaunchContext>(contextJson);
+            if (string.IsNullOrEmpty(token?.AccessToken) || string.IsNullOrEmpty(context?.PatientId))
+                return BadRequest("Token eller pasientkontekst mangler i sesjonen.");
+
+            var docRef = new Dictionary<string, object?>
+            {
+                ["resourceType"] = "DocumentReference",
+                ["status"] = "current",
+                ["type"] = new Dictionary<string, object?>
+                {
+                    ["coding"] = new object[]
+                    {
+                        new Dictionary<string, object?>
+                        {
+                            ["system"] = "http://loinc.org",
+                            ["code"] = "34108-1",
+                            ["display"] = "Outpatient Note",
+                        },
+                    },
+                },
+                ["subject"] = new Dictionary<string, object?> { ["reference"] = $"Patient/{context.PatientId}" },
+                ["content"] = new object[]
+                {
+                    new Dictionary<string, object?>
+                    {
+                        ["attachment"] = new Dictionary<string, object?>
+                        {
+                            ["contentType"] = "text/plain",
+                            ["data"] = Convert.ToBase64String(
+                                Encoding.UTF8.GetBytes(
+                                    $"TEST writeback fra forer-legeerklaering PoC — {DateTimeOffset.UtcNow:O}"
+                                )
+                            ),
+                            ["title"] = "Legeerklæring førerrett (TEST writeback — ikke ekte innhold)",
+                        },
+                    },
+                },
+            };
+
+            var requestJson = JsonSerializer.Serialize(docRef);
+            var writebackUrl = $"{context.FhirBaseUrl}/DocumentReference";
+            var request = new HttpRequestMessage(HttpMethod.Post, writebackUrl)
+            {
+                Content = new StringContent(requestJson, Encoding.UTF8, "application/fhir+json"),
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+
+            var client = _httpClientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            _logger.LogInformation(
+                "TestWriteback: POST {Url} -> HTTP {Status} (innvilget scope: {Scope})",
+                writebackUrl,
+                (int)response.StatusCode,
+                token.Scope
+            );
+
+            return Content(
+                $"POST {writebackUrl}\nInnvilget scope: {token.Scope}\n\nHTTP {(int)response.StatusCode}\n\n{responseBody}",
+                "text/plain"
+            );
         }
 
         /// <summary>
@@ -563,6 +654,12 @@ namespace Altinn.App.Controllers
 
             [JsonPropertyName("refresh_token")]
             public string RefreshToken { get; set; }
+
+            // Serveren kan innvilge et smalere scope enn det som ble forespurt — sammenlign alltid
+            // dette mot forespurt scope før man forutsetter en tilgang er innvilget (bl.a. relevant
+            // for skrivetilgang, se TestWriteback og HACKATHON-EHIN-2026.md "scope-detektivarbeid").
+            [JsonPropertyName("scope")]
+            public string Scope { get; set; }
 
             public string Patient { get; set; }
             public string Encounter { get; set; }

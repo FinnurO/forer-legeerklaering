@@ -107,7 +107,7 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | 3 | Altinn henter FHIR-data fra EPJ | ✅ Verifisert (mot lokal HAPI FHIR-mock, ikke reell fastlege-EPJ) | [FhirPrefillService.cs](../src/App/services/FhirPrefillService.cs), [RISIKOREGISTER.md R1](RISIKOREGISTER.md) |
 | 3b | Altinn henter pasientens egenerklæring (QuestionnaireResponse) | ❌ Ikke implementert — avhenger av steg 1 | [PASIENTFLYT.md §3](PASIENTFLYT.md) |
 | 4 | Lege fyller ut, signerer, sender inn | ✅ Verifisert («Signer og send inn», Task_1) | [process.bpmn](../src/App/config/process/process.bpmn) |
-| 5a | Full attest skrives tilbake til EPJ | ❌ Ikke implementert | [VEIKART.md fase 2](VEIKART.md) |
+| 5a | Full attest skrives tilbake til EPJ | ⚠️ Skrivemekanikk bevist 2026-08-11 (`POST DocumentReference` → `HTTP 201` mot launch.smarthealthit.org), men placeholder-innhold, ikke PDF/idempotens | [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | 5b | Konklusjon (grønt/rødt) → SVV via Altinn Events | ⚠️ Datamodell verifisert (`ForerKonklusjonModel`), selve Events-abonnementet hos SVV er ikke avtalt | [BESLUTNINGER.md C-3](BESLUTNINGER.md) |
 | — | Helsenorge EksternAPI-autentisering (Oppgave/Skjema) | ✅ Verifisert mot ekte NHN-testmiljø, men videre arbeid blokkert på NHN-kontakt | [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md), [RISIKOREGISTER.md R9](RISIKOREGISTER.md) |
 
@@ -1700,6 +1700,18 @@ For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://g
 
 **Funn #7 — `fhirUser` manglet som toppnivåfelt i token-responsen:** Selv med funn #4–6 rettet, forble legenavn tomt. `token.FhirUser` var tom fordi smarthealthit.org for denne launch-konfigurasjonen ikke inkluderte `fhirUser` som eget felt i token-svaret — kun som et `fhirUser`-claim inne i selve `access_token`-JWT-en. En kommentar i koden hadde allerede forutsett akkurat dette scenariet («noen EPJ-systemer returnerer det som JWT-claim i access_token i stedet») uten at fallbacken faktisk var implementert. Lagt til `TryExtractClaimFromJwt` — dekoder JWT-payloaden uten signaturvalidering (kun brukt til prefill, aldri til autorisasjonsbeslutninger) og henter ut `fhirUser`-claimet hvis toppnivåfeltet mangler.
 
+### Writeback til EPJ — første vellykkede skrivetest (2026-08-11)
+
+**Status: ✅ Writeback-mekanikken fungerer.** Lagt til skrivescope (`patient/DocumentReference.write` + `patient/DocumentReference.c`, både v1- og v2-stil) i `Launch()`, og et dev-only testendepunkt `GET /smart/test-writeback` som poster en minimal `DocumentReference` mot EPJ-ens FHIR-server med SMART-tokenet fra den aktive sesjonen.
+
+**Resultat mot launch.smarthealthit.org:** `HTTP 201 Created`, begge skrivescopene innvilget uten innsnevring. Dette besvarer to spørsmål samtidig:
+- **VEIKART.md fase 2 (writeback):** selve skrivemekanikken (Bearer-token + POST + FHIR-ressurs) fungerer beviselig mot en spec-compliant server. Gjenstår: PDF-generert innhold (ikke placeholder-tekst), idempotens via klient-tildelt id + PUT (VEIKART.md spesifiserer dette for den ferdige løsningen), og `QuestionnaireResponse` i tillegg til `DocumentReference`.
+- **HACKATHON-EHIN-2026.md «scope-detektivarbeid» (Sølv):** token-responsens `scope`-felt ble lest ut og sammenlignet mot det som ble forespurt — ingen innsnevring skjedde for dette testet.
+
+**Bifunn — mulig charset-problem, ikke undersøkt videre:** `DocumentReference.content[].attachment.title` (som inneholder norske tegn: «Legeerklæring førerrett») kom tilbake fra serveren som mojibake («LegeerklÃ¦ring fÃ¸rerrett»), mens `attachment.data` (base64, kun ASCII) var uendret. `StringContent` ble sendt med explicit UTF-8-encoding fra vår side, så dette tyder på at smarthealthit.org sin server mistolker charset ved mottak av request-body — ikke nødvendigvis representativt for en ekte fastlege-EPJ. **Bør verifiseres spesifikt** når writeback testes mot et ekte EPJ-system, siden norske tegn (æ/ø/å) er uunngåelige i skjemainnhold.
+
+Se [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) `TestWriteback()`-metoden for full implementasjon.
+
 ---
 
 ## 14. HelseID-integrasjon: kom i gang
@@ -2840,6 +2852,8 @@ Se også [BESLUTNINGER.md](BESLUTNINGER.md) for beslutningsdetaljer og [VEIKART.
 
 Dette veikart dekker **Spor A (Førerrett PoC)** og **Spor B (generisk platform)**. Se [STRATEGI.md](STRATEGI.md) for nasjonal roadmap og samarbeidsmodell.
 
+**Samkjøring med Norwegian FHIR Hackathon 2026 (9. nov, EHiN-pre-konferanse):** se [HACKATHON-EHIN-2026.md](HACKATHON-EHIN-2026.md) for full gap-analyse mot hackathonets SMART-spor. Kort versjon: fase 1 (SMART-klient) og fase 2 (writeback, se under) overlapper direkte med sporets Bronse/Gull-krav og er langt på vei allerede dekket av dette veikartet. Enkelte hackathon-spesifikke forberedelsespunkter (Observation-håndtering, D-nummer-støtte, scope-detektivarbeid, sikkerhetstesting) er *ikke* egne linjer i fasene under — de er kun listet i hackathon-dokumentet, siden de er motivert av sporets krav snarere enn PoC-ens eget veikart. Vurder å flytte dem inn i fase 1/3 her hvis de blir permanente mål uavhengig av hackathonet.
+
 ---
 
 ## Overordnet retning
@@ -2876,15 +2890,18 @@ Strategien følger det NAV har bevist med `syk-inn`:
 
 *Lukker den viktigste funksjonelle mangelen. NAVs ADR01 fra `syk-inn` er en direkte oppskrift.*
 
-| Tiltak | Beskrivelse |
-|---|---|
-| **DocumentReference** | Etter innsending: skriv en `DocumentReference` tilbake til EPJ-ens FHIR-server med PDF-referanse. Bruk SMART access token (BFF). |
-| **QuestionnaireResponse** | Skriv strukturert skjemadata som `QuestionnaireResponse` koblet til en kanonisk `Questionnaire`-definisjon (servert fra Altinn-appen, URL `/{org}/{app}/fhir/R4/Questionnaire/V1`). |
-| **Transaction Bundle med PUT** | Bruk klient-tildelt id (`DocumentReference.id = altinnInstanceId`) for idempotens. `GET`-sjekk før skriving for å unngå duplikater. |
-| **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. |
+**Skrivemekanikken er nå bevist 2026-08-11:** `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created` med skrivescope innvilget uten innsnevring, via et dev-only testendepunkt (`GET /smart/test-writeback`, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)). Det som gjenstår under er å gjøre dette til en ekte, produksjonsklar implementasjon (ekte innhold, idempotens, kanonisk skjema) — ikke å bevise at skriving er mulig i prinsippet.
+
+| Tiltak | Beskrivelse | Status |
+|---|---|---|
+| **DocumentReference** | Etter innsending: skriv en `DocumentReference` tilbake til EPJ-ens FHIR-server med PDF-referanse. Bruk SMART access token (BFF). | ⚠️ Mekanikk bevist (placeholder-tekst, ikke ekte PDF) |
+| **QuestionnaireResponse** | Skriv strukturert skjemadata som `QuestionnaireResponse` koblet til en kanonisk `Questionnaire`-definisjon (servert fra Altinn-appen, URL `/{org}/{app}/fhir/R4/Questionnaire/V1`). | ❌ Ikke testet |
+| **Transaction Bundle med PUT** | Bruk klient-tildelt id (`DocumentReference.id = altinnInstanceId`) for idempotens. `GET`-sjekk før skriving for å unngå duplikater. | ❌ Ikke implementert — testen brukte POST, ikke PUT med klient-id |
+| **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. | ❌ Ikke implementert |
+| **Charset-verifisering** | Norske tegn (æ/ø/å) i skjemainnhold — testen mot smarthealthit.org viste mulig charset-mistolkning av `attachment.title` server-side (se IMPLEMENTERING.md §13). Må verifiseres mot ekte EPJ. | 🔍 Nytt funn, ikke undersøkt videre |
 
 **Referanse:** `syk-inn/src/fhir-write-service.ts` + ADR01.  
-**Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope).
+**Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope — nå bevist mulig å få).
 
 ---
 
@@ -3969,12 +3986,12 @@ Testmiljøet hackathon-sporet bruker er slående likt vårt eget:
 
 | Alternativ | Vår status |
 |---|---|
-| **Writeback til EPJ** (dokumenter eller målinger) | ❌ Ikke implementert. Eksplisitt planlagt som [VEIKART.md fase 2](VEIKART.md) — `DocumentReference`-writeback er beskrevet i detalj, men ikke kodet |
+| **Writeback til EPJ** (dokumenter eller målinger) | ✅ Skrivemekanikk bevist 2026-08-11 — `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created`. Gjenstår: ekte innhold (PDF), idempotens (PUT + klient-id), `QuestionnaireResponse`. Se [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | **`private_key_jwt` asymmetrisk klientautentisering ende-til-ende** | ❌ Ikke implementert for *denne* klienten (SMART EHR launch mot EPJ). **Men** vi har akkurat gjort nøyaktig dette for en annen klient (Helsenorge EksternAPI, se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og `local-dev/helseid-token-test/`) — samme mønster, samme `HelseID.Library`-erfaring, kan trolig gjenbrukes/tilpasses raskt |
 | **Backend services SMART-flyt** (system-til-system, ingen bruker til stede) | ❌ Ikke implementert for SMART EHR-domenet. **Men** `client_credentials`-flyten vi bygde for Helsenorge EksternAPI er konseptuelt identisk (maskin-til-maskin, ingen brukerinnlogging) — se `local-dev/helsenorge-oppgave-test/` |
 | **Sikkerhetstesting** (tukle med autorisasjonsparametere, gjenbruk koder, feil audience, utløpte tokens, be om ikke-autoriserte ressurser) | ❌ Ikke gjort systematisk. Dette ville trolig avdekke reelle hull — vi validerer i dag **ikke** token-signatur, issuer eller audience noe sted (jf. [RISIKOREGISTER.md R4](RISIKOREGISTER.md): tokenvalidering er ikke implementert) |
 
-**Anbefaling:** Ingen Gull-oppgave er triviell, men **`private_key_jwt`** og **backend services-flyt** er de vi har mest overførbar kompetanse på fra denne sesjonens Helsenorge-arbeid. **Sikkerhetstesting** er den mest verdifulle å faktisk gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
+**Anbefaling (oppdatert 2026-08-11):** **Writeback** er nå det Gull-alternativet vi står best til — mekanikken er allerede bevist, gjenstår er å gjøre det produksjonsklart (PDF-innhold, idempotens). **`private_key_jwt`** og **backend services-flyt** er de neste vi har mest overførbar kompetanse på fra Helsenorge-arbeidet. **Sikkerhetstesting** er fortsatt den mest verdifulle å gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
 
 ---
 
