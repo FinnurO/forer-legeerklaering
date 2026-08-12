@@ -107,7 +107,7 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | 3 | Altinn henter FHIR-data fra EPJ | ✅ Verifisert (mot lokal HAPI FHIR-mock, ikke reell fastlege-EPJ) | [FhirPrefillService.cs](../src/App/services/FhirPrefillService.cs), [RISIKOREGISTER.md R1](RISIKOREGISTER.md) |
 | 3b | Altinn henter pasientens egenerklæring (QuestionnaireResponse) | ❌ Ikke implementert — avhenger av steg 1 | [PASIENTFLYT.md §3](PASIENTFLYT.md) |
 | 4 | Lege fyller ut, signerer, sender inn | ✅ Verifisert («Signer og send inn», Task_1) | [process.bpmn](../src/App/config/process/process.bpmn) |
-| 5a | Full attest skrives tilbake til EPJ | ❌ Ikke implementert | [VEIKART.md fase 2](VEIKART.md) |
+| 5a | Full attest skrives tilbake til EPJ | ⚠️ Skrivemekanikk bevist 2026-08-11 (`POST DocumentReference` → `HTTP 201` mot launch.smarthealthit.org), men placeholder-innhold, ikke PDF/idempotens | [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | 5b | Konklusjon (grønt/rødt) → SVV via Altinn Events | ⚠️ Datamodell verifisert (`ForerKonklusjonModel`), selve Events-abonnementet hos SVV er ikke avtalt | [BESLUTNINGER.md C-3](BESLUTNINGER.md) |
 | — | Helsenorge EksternAPI-autentisering (Oppgave/Skjema) | ✅ Verifisert mot ekte NHN-testmiljø, men videre arbeid blokkert på NHN-kontakt | [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md), [RISIKOREGISTER.md R9](RISIKOREGISTER.md) |
 
@@ -1700,6 +1700,42 @@ For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://g
 
 **Funn #7 — `fhirUser` manglet som toppnivåfelt i token-responsen:** Selv med funn #4–6 rettet, forble legenavn tomt. `token.FhirUser` var tom fordi smarthealthit.org for denne launch-konfigurasjonen ikke inkluderte `fhirUser` som eget felt i token-svaret — kun som et `fhirUser`-claim inne i selve `access_token`-JWT-en. En kommentar i koden hadde allerede forutsett akkurat dette scenariet («noen EPJ-systemer returnerer det som JWT-claim i access_token i stedet») uten at fallbacken faktisk var implementert. Lagt til `TryExtractClaimFromJwt` — dekoder JWT-payloaden uten signaturvalidering (kun brukt til prefill, aldri til autorisasjonsbeslutninger) og henter ut `fhirUser`-claimet hvis toppnivåfeltet mangler.
 
+### Writeback til EPJ — første vellykkede skrivetest (2026-08-11)
+
+**Status: ✅ Writeback-mekanikken fungerer.** Lagt til skrivescope (`patient/DocumentReference.write` + `patient/DocumentReference.c`, både v1- og v2-stil) i `Launch()`, og et dev-only testendepunkt `GET /smart/test-writeback` som poster en minimal `DocumentReference` mot EPJ-ens FHIR-server med SMART-tokenet fra den aktive sesjonen.
+
+**Resultat mot launch.smarthealthit.org:** `HTTP 201 Created`, begge skrivescopene innvilget uten innsnevring. Dette besvarer to spørsmål samtidig:
+- **VEIKART.md fase 2 (writeback):** selve skrivemekanikken (Bearer-token + POST + FHIR-ressurs) fungerer beviselig mot en spec-compliant server. Gjenstår: PDF-generert innhold (ikke placeholder-tekst), idempotens via klient-tildelt id + PUT (VEIKART.md spesifiserer dette for den ferdige løsningen), og `QuestionnaireResponse` i tillegg til `DocumentReference`.
+- **HACKATHON-EHIN-2026.md «scope-detektivarbeid» (Sølv):** token-responsens `scope`-felt ble lest ut og sammenlignet mot det som ble forespurt — ingen innsnevring skjedde for dette testet.
+
+**Bifunn — mulig charset-problem, ikke undersøkt videre:** `DocumentReference.content[].attachment.title` (som inneholder norske tegn: «Legeerklæring førerrett») kom tilbake fra serveren som mojibake («LegeerklÃ¦ring fÃ¸rerrett»), mens `attachment.data` (base64, kun ASCII) var uendret. `StringContent` ble sendt med explicit UTF-8-encoding fra vår side, så dette tyder på at smarthealthit.org sin server mistolker charset ved mottak av request-body — ikke nødvendigvis representativt for en ekte fastlege-EPJ. **Bør verifiseres spesifikt** når writeback testes mot et ekte EPJ-system, siden norske tegn (æ/ø/å) er uunngåelige i skjemainnhold.
+
+Se [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) `TestWriteback()`-metoden for full implementasjon.
+
+**Kan man se resultatet?** Ja — smarthealthit.org sin FHIR-server tillater ukryptert `GET` uten token. `curl https://launch.smarthealthit.org/v/r4/fhir/DocumentReference/<id>` (eller lim URL-en inn i en nettleser) viser ressursen som rå FHIR-JSON. Det finnes ikke noe klinisk visningsgrensesnitt på smarthealthit.org — det er et API-sandkasse, ikke en journal-UI — så «se resultatet» betyr i praksis å lese JSON-en direkte, ikke en visuell journalside.
+
+### Viktig presisering — to ulike aktører og oppgaver må ikke blandes
+
+Johann presiserte 2026-08-12: **innbyggers egenerklæring** (NA-0201) og **writeback til EPJ** er to helt forskjellige integrasjoner, ikke to varianter av samme ting:
+
+| | Innbyggers egenerklæring | Writeback til EPJ |
+|---|---|---|
+| **Aktør** | Innbygger/pasient | Behandler (lege) |
+| **Hvor fylles det ut** | Altinn (egen app, `forer-egenerklaring`) | — (data hentes/skrives via FHIR, ikke fylt ut på nytt) |
+| **Protokoll** | *Ikke* SMART on FHIR — vanlig Altinn-skjema | SMART on FHIR |
+| **Hvor havner resultatet** | Altinn innboks (alltid) + kvittering til Helsenorge (i tillegg) | EPJ-ens FHIR-server |
+| **Relevant API** | Trolig Helsenorge DokumentAPI (se PASIENTFLYT.md) — ikke bekreftet | `DocumentReference`/`QuestionnaireResponse` via SMART-token (denne seksjonen) |
+
+Dette skiller seg fra tidligere formuleringer i STRATEGI.md/PASIENTFLYT.md som til tider har omtalt begge som del av «SMART on FHIR-flyten» — kun writeback til EPJ er SMART on FHIR. Egenerklæringen er et rent Altinn-skjema med en kvitteringsmekanisme mot Helsenorge.
+
+### Timing-bug funnet og rettet: writeback må ikke skje før innsending (2026-08-12)
+
+Johann påpekte at writeback ikke bør skje før legen faktisk trykker «Send inn» — og det avdekket en **allerede eksisterende bug**, ikke bare et fremtidig hensyn for writeback-koden. `IDataProcessor.ProcessDataWrite` (som `ForerKonklusjonModel`-avledningen lå i, se BESLUTNINGER.md C-3) kjører på **hver autolagring** mens legen fyller ut skjemaet — ikke bare ved innsending. Det betyr SVV-konklusjonen ble skrevet/oppdatert gjentatte ganger under utfylling, potensielt med en halvferdig eller uferdig vurdering.
+
+**Riktig hook er `IProcessTaskEnd.End(taskId, instance)`** — kjører når en prosessoppgave *avsluttes* (for oss: Task_1, signering/innsending). Verifiserte den eksakte metodesignaturen direkte mot den installerte `Altinn.App.Core` 8.6.4-pakken via refleksjon (GitHub sin `main`-gren viste en annen, nyere signatur på `IDataClient.GetFormData` enn det som faktisk er installert — verdt å huske for senere).
+
+**Rettet:** `FhirPrefillService` implementerer nå `IProcessTaskEnd` i tillegg til `IDataProcessor`. `ProcessDataWrite` er en no-op. `End(taskId, instance)` sjekker `taskId == "Task_1"`, henter `ForerLegeerklaeringModel` via `IDataClient.GetFormData`, og avleder/lagrer `ForerKonklusjonModel` — først da. **Denne samme regelen gjelder for den fremtidige EPJ-writeback-implementasjonen** (VEIKART.md fase 2): den må også ligge i `End()`, ikke i `ProcessDataWrite` eller trigges av testendepunktet `test-writeback` (som er et manuelt, sesjonsbasert diagnoseverktøy — ikke koblet til prosesslivssyklusen, og skal aldri bli mønsteret for den ferdige implementasjonen).
+
 ---
 
 ## 14. HelseID-integrasjon: kom i gang
@@ -2258,8 +2294,10 @@ Total estimert utvidelse: fra 18 til ~70 felt i datamodellen.
 
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
-**Dato:** 2026-06-16 (oppdatert 2026-08-10)  
+**Dato:** 2026-06-16 (oppdatert 2026-08-12)  
 **Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere. Alternativ B sin autentisering er nå teknisk verifisert, se §4.
+
+**Viktig presisering (2026-08-12):** Dette dokumentet beskriver **innbyggerens** del av flyten — pasienten som fyller ut egenerklæring (NA-0201). Dette er et vanlig **Altinn-skjema**, **ikke SMART on FHIR**. Kvitteringen havner i Altinn innboks (standard) og skal *i tillegg* havne i Helsenorge (se «DokumentAPI»-avsnittet under §4). Dette er en helt annen integrasjon enn **legens writeback til EPJ** (som *er* SMART on FHIR, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)) — de to må ikke blandes, selv om begge til slutt handler om samme legeerklæring.
 
 ---
 
@@ -2465,6 +2503,16 @@ Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App b
 
 **Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
 
+### DokumentAPI — kvittering til Helsenorge (funn 2026-08-12)
+
+Presisert av Johann: når innbyggeren fyller ut egenerklæringen **i Altinn**, skal kvitteringen havne i Altinn innboks (standard) **og** i Helsenorge. Fant den relevante mekanismen: [Helsenorge DokumentAPI](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1820623169) (`POST <BaseUrl>/dokumenter/api/v1/SaveDokument`) — «lagre dokument i innbyggers helsearkiv på Helsenorge... som informasjon til innbygger, eventuelt innbyggers kopi».
+
+**To ting å være klar over før dette kan brukes:**
+1. **Innholdstype-begrensning:** dokumentasjonen sier eksplisitt at API-et «pr. i dag kun» tilbyr lagring av «resultat fra Verktøy der det utføres egenkartlegging» (`innholdType = Egenkartlegging`, kode 6, eneste definerte verdi for eksterne systemer). En egenerklæring (NA-0201, pasienten svarer selv på 17 ja/nei-spørsmål om egen helse) er i praksis nettopp en egenkartlegging — dette skiller seg fra **legens** legeerklæring (IS-2569, en klinisk vurdering), som ikke ville kvalifisert under denne kategorien. Bør bekreftes med NHN at NA-0201-kvitteringen faktisk faller innenfor definisjonen, men den språklige treffsikkerheten er lovende.
+2. **Autentisering er brukertilstedeværelse-basert:** DokumentAPI krever «en innlogget innbygger» med AksessToken via «sømløs pålogging» (Helsenorge som OpenID Connect-provider) — altså en helt annen autentiseringsmodell enn `client_credentials`-flyten vi allerede har verifisert for Oppgave/Skjema (IMPLEMENTERING.md §14.1). Å kalle DokumentAPI fra Altinn krever at Altinn-appen får en Helsenorge-OIDC-token for den *samme* innbyggeren som er innlogget i Altinn — en SSO/token-utvekslings-utfordring vi ikke har utforsket, analog til HelseID-pid-matchingen beskrevet for legen i §14.
+
+**Testmiljøtilgang:** samme begrensning som Oppgave-API-et — «oppsett av API-klient i test-miljø(er) avtales som en del av kundeoppkoplingen» (se [RISIKOREGISTER.md R9](RISIKOREGISTER.md)).
+
 ---
 
 ## 5. Mapping: Egenerklæring → IS-2569
@@ -2653,7 +2701,9 @@ Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rø
 ```
 *(Faktiske id-er og namespace i `src/App/config/applicationmetadata.json` — implementert 2026-06-19, commit `38057a4`.)*
 
-`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.ProcessDataWrite` ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (ikke implementert ennå, se VEIKART.md fase 2).
+`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.End()` (`IProcessTaskEnd`, kjører når Task_1/signering avsluttes — se nedenfor) ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (skrivemekanikken er nå bevist mot en ekte SMART-server, se IMPLEMENTERING.md §13, men selve produksjonsimplementasjonen gjenstår, se VEIKART.md fase 2).
+
+**Rettet 2026-08-12 — timing-bug:** avledningen lå tidligere i `IDataProcessor.ProcessDataWrite`, som kjører på *hver autolagring* under utfylling, ikke bare ved innsending. Flyttet til `IProcessTaskEnd.End(taskId, instance)`, som kun kjører når Task_1 faktisk avsluttes. Se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) for full forklaring — samme regel gjelder for den fremtidige EPJ-writeback-implementasjonen.
 
 **Kjent forenkling i PoC-implementasjonen:** `ForerLegeerklaeringModel` har i dag ett enkelt `Forer_Kjoretoygruppe`-felt og én `Forer_ErSkikket`-boolean — legen vurderer altså kun *én* kjøretøygruppe per legeerklæring. `DeriveKonklusjon()` i `FhirPrefillService.cs` setter derfor resultatet på den ene gruppen som matcher, og lar de to andre `GruppeX_Resultat`-feltene stå tomme. De tre uavhengige gruppefeltene i `ForerKonklusjonModel` er altså forberedt for, men ikke fylt av, reelle per-gruppe-vurderinger — det krever at `ForerLegeerklaeringModel` utvides til å holde skikkethet per gruppe (jf. full IS-2569, C-5).
 
@@ -2840,6 +2890,8 @@ Se også [BESLUTNINGER.md](BESLUTNINGER.md) for beslutningsdetaljer og [VEIKART.
 
 Dette veikart dekker **Spor A (Førerrett PoC)** og **Spor B (generisk platform)**. Se [STRATEGI.md](STRATEGI.md) for nasjonal roadmap og samarbeidsmodell.
 
+**Samkjøring med Norwegian FHIR Hackathon 2026 (9. nov, EHiN-pre-konferanse):** se [HACKATHON-EHIN-2026.md](HACKATHON-EHIN-2026.md) for full gap-analyse mot hackathonets SMART-spor. Kort versjon: fase 1 (SMART-klient) og fase 2 (writeback, se under) overlapper direkte med sporets Bronse/Gull-krav og er langt på vei allerede dekket av dette veikartet. Enkelte hackathon-spesifikke forberedelsespunkter (Observation-håndtering, D-nummer-støtte, scope-detektivarbeid, sikkerhetstesting) er *ikke* egne linjer i fasene under — de er kun listet i hackathon-dokumentet, siden de er motivert av sporets krav snarere enn PoC-ens eget veikart. Vurder å flytte dem inn i fase 1/3 her hvis de blir permanente mål uavhengig av hackathonet.
+
 ---
 
 ## Overordnet retning
@@ -2876,15 +2928,18 @@ Strategien følger det NAV har bevist med `syk-inn`:
 
 *Lukker den viktigste funksjonelle mangelen. NAVs ADR01 fra `syk-inn` er en direkte oppskrift.*
 
-| Tiltak | Beskrivelse |
-|---|---|
-| **DocumentReference** | Etter innsending: skriv en `DocumentReference` tilbake til EPJ-ens FHIR-server med PDF-referanse. Bruk SMART access token (BFF). |
-| **QuestionnaireResponse** | Skriv strukturert skjemadata som `QuestionnaireResponse` koblet til en kanonisk `Questionnaire`-definisjon (servert fra Altinn-appen, URL `/{org}/{app}/fhir/R4/Questionnaire/V1`). |
-| **Transaction Bundle med PUT** | Bruk klient-tildelt id (`DocumentReference.id = altinnInstanceId`) for idempotens. `GET`-sjekk før skriving for å unngå duplikater. |
-| **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. |
+**Skrivemekanikken er nå bevist 2026-08-11:** `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created` med skrivescope innvilget uten innsnevring, via et dev-only testendepunkt (`GET /smart/test-writeback`, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)). Det som gjenstår under er å gjøre dette til en ekte, produksjonsklar implementasjon (ekte innhold, idempotens, kanonisk skjema) — ikke å bevise at skriving er mulig i prinsippet.
+
+| Tiltak | Beskrivelse | Status |
+|---|---|---|
+| **DocumentReference** | Etter innsending: skriv en `DocumentReference` tilbake til EPJ-ens FHIR-server med PDF-referanse. Bruk SMART access token (BFF). | ⚠️ Mekanikk bevist (placeholder-tekst, ikke ekte PDF) |
+| **QuestionnaireResponse** | Skriv strukturert skjemadata som `QuestionnaireResponse` koblet til en kanonisk `Questionnaire`-definisjon (servert fra Altinn-appen, URL `/{org}/{app}/fhir/R4/Questionnaire/V1`). | ❌ Ikke testet |
+| **Transaction Bundle med PUT** | Bruk klient-tildelt id (`DocumentReference.id = altinnInstanceId`) for idempotens. `GET`-sjekk før skriving for å unngå duplikater. | ❌ Ikke implementert — testen brukte POST, ikke PUT med klient-id |
+| **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. | ❌ Ikke implementert |
+| **Charset-verifisering** | Norske tegn (æ/ø/å) i skjemainnhold — testen mot smarthealthit.org viste mulig charset-mistolkning av `attachment.title` server-side (se IMPLEMENTERING.md §13). Må verifiseres mot ekte EPJ. | 🔍 Nytt funn, ikke undersøkt videre |
 
 **Referanse:** `syk-inn/src/fhir-write-service.ts` + ADR01.  
-**Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope).
+**Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope — nå bevist mulig å få).
 
 ---
 
@@ -3940,6 +3995,8 @@ Testmiljøet hackathon-sporet bruker er slående likt vårt eget:
 
 **Vår posisjon er uvanlig sterk for dette arrangementet:** de fleste deltakere starter fra et skjelett-repo og bygger Bronse-nivå fra bunnen i løpet av dagen. Vi kommer med en **ekte, produksjonsformet Altinn Studio-app** som allerede er verifisert mot en ekte ekstern SMART-server. Det er en god historie å fortelle — og en mulighet til å teste PoC-en mot *enda et* uavhengig SMART-miljø.
 
+**Oppdatert 2026-08-12:** Bronse er i praksis oppnådd, og vi har allerede krysset av **minst ett alternativ på både Sølv- og Gull-nivå** (scope-detektivarbeid og writeback til EPJ, se §2) — mot et amerikansk testmiljø. Det gjenstår å bekrefte at det samme fungerer mot hackathonets norske EPJ-testmiljø på selve dagen, men det tekniske mønsteret er bevist. Vi går inn i dette arrangementet nærmere «alt bestått» enn «under utvikling».
+
 ---
 
 ## 2. Krav per nivå vs. vår status
@@ -3957,38 +4014,52 @@ Testmiljøet hackathon-sporet bruker er slående likt vårt eget:
 
 ### Sølv — velg én
 
+**Status (2026-08-12): ett alternativ er i praksis oppnådd.**
+
 | Alternativ | Vår status |
 |---|---|
 | **Klinisk mini-app** (diagnoser/målinger med klinisk verdi — trender, sammendrag, flagg) | ⚠️ Delvis. `FillCondition` henter siste aktive diagnose, men **`Observation` er ikke implementert i det hele tatt** — scope `patient/Observation.read` etterspørres, men brukes aldri. Ingen trend/sammendrag/flagging-logikk finnes |
-| **Scope-detektivarbeid** (be om smalere tilganger, dekod tokens, bevis hva som faktisk ble innvilget vs. forespurt) | ❌ Ikke gjort. Vi ber om ett fast, bredt scope-sett (14 scopes) og sjekker aldri hva som faktisk ble innvilget. Token-responsens `scope`-felt leses ikke ut og sammenlignes |
+| **Scope-detektivarbeid** (be om smalere tilganger, dekod tokens, bevis hva som faktisk ble innvilget vs. forespurt) | ✅ **2 av 3 deler gjort 2026-08-11–12.** «Dekod tokens»: `TryExtractClaimFromJwt` dekoder `access_token`-JWT-en for `fhirUser`-claimet (fant vi trengte dette da toppnivåfeltet manglet, se §13 funn #7). «Bevis innvilget vs. forespurt»: `TokenResponse.Scope` + `/smart/test-writeback` viser innvilget scope explisitt — bekreftet at begge skrivescopene ble innvilget uten innsnevring. **Gjenstår:** selve eksperimentet med å *be om* et smalere scope-sett og se hva som skjer |
 | **Redo launch med client_secret-autentisering** i stedet for public client | ⚠️ Delvis — `ExchangeCodeForToken` støtter allerede Basic-auth med client_secret hvis konfigurert (`if (!string.IsNullOrEmpty(clientSecret))`), men `ClientSecret` er tom streng i begge appsettings-filer i dag. Koden er der, men aldri faktisk testet med en ekte hemmelighet |
 
-**Anbefaling:** «Redo launch med client_secret» er billigst å få demonstrert — koden finnes allerede, bare sett en verdi og verifiser Basic-auth-headeren faktisk sendes og godtas.
+**Anbefaling (oppdatert 2026-08-12):** Scope-detektivarbeid kan trolig krysses av som løst — gjenstår kun å eksplisitt teste en smalere scope-forespørsel, som er en 10-minutters øvelse gitt at infrastrukturen allerede finnes. «Redo launch med client_secret» er det billigste alternativet om vi vil ha to Sølv-oppgaver demonstrert.
 
 ### Gull — velg én
 
+**Status (2026-08-12): ett alternativ er oppnådd (skrivemekanikk bevist).**
+
 | Alternativ | Vår status |
 |---|---|
-| **Writeback til EPJ** (dokumenter eller målinger) | ❌ Ikke implementert. Eksplisitt planlagt som [VEIKART.md fase 2](VEIKART.md) — `DocumentReference`-writeback er beskrevet i detalj, men ikke kodet |
+| **Writeback til EPJ** (dokumenter eller målinger) | ✅ Skrivemekanikk bevist 2026-08-11 — `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created`, ingen innsnevring av skrivescope. Timing-bug funnet og rettet 2026-08-12 (avledningslogikk flyttet fra `ProcessDataWrite` til `IProcessTaskEnd.End()`, se §13). Gjenstår: ekte innhold (PDF), idempotens (PUT + klient-id), `QuestionnaireResponse`. Se [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | **`private_key_jwt` asymmetrisk klientautentisering ende-til-ende** | ❌ Ikke implementert for *denne* klienten (SMART EHR launch mot EPJ). **Men** vi har akkurat gjort nøyaktig dette for en annen klient (Helsenorge EksternAPI, se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og `local-dev/helseid-token-test/`) — samme mønster, samme `HelseID.Library`-erfaring, kan trolig gjenbrukes/tilpasses raskt |
 | **Backend services SMART-flyt** (system-til-system, ingen bruker til stede) | ❌ Ikke implementert for SMART EHR-domenet. **Men** `client_credentials`-flyten vi bygde for Helsenorge EksternAPI er konseptuelt identisk (maskin-til-maskin, ingen brukerinnlogging) — se `local-dev/helsenorge-oppgave-test/` |
 | **Sikkerhetstesting** (tukle med autorisasjonsparametere, gjenbruk koder, feil audience, utløpte tokens, be om ikke-autoriserte ressurser) | ❌ Ikke gjort systematisk. Dette ville trolig avdekke reelle hull — vi validerer i dag **ikke** token-signatur, issuer eller audience noe sted (jf. [RISIKOREGISTER.md R4](RISIKOREGISTER.md): tokenvalidering er ikke implementert) |
 
-**Anbefaling:** Ingen Gull-oppgave er triviell, men **`private_key_jwt`** og **backend services-flyt** er de vi har mest overførbar kompetanse på fra denne sesjonens Helsenorge-arbeid. **Sikkerhetstesting** er den mest verdifulle å faktisk gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
+**Anbefaling (oppdatert 2026-08-12):** Writeback kan trolig krysses av som løst på mekanikk-nivå — det som gjenstår (PDF-innhold, idempotens) er polering, ikke et åpent spørsmål om hvorvidt det er mulig. **`private_key_jwt`** og **backend services-flyt** er de neste vi har mest overførbar kompetanse på fra Helsenorge-arbeidet, om vi vil demonstrere et andre Gull-alternativ. **Sikkerhetstesting** er fortsatt den mest verdifulle å gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
 
 ---
 
 ## 3. Konkret forberedelsesliste før 9. november
 
-Prioritert etter innsats vs. verdi:
+**Oppdatert 2026-08-12 — to punkter er allerede gjort:**
+
+| # | Punkt | Nivå | Status |
+|---|---|---|---|
+| 1 | Alder fra fødselsdato | Bronse | ❌ Gjenstår (trivielt) |
+| 2 | `Observation`-håndtering | Sølv | ❌ Gjenstår (moderat innsats) |
+| 3 | Test client_secret-autentisering | Sølv | ❌ Gjenstår (lite arbeid) |
+| 4 | ~~Scope-detektivarbeid~~ | Sølv | ✅ **Gjort 2026-08-11–12** — se §2 |
+| 5 | Sikkerhetstesting-runde | Gull | ❌ Gjenstår (moderat–høy verdi) |
+| 6 | `private_key_jwt` for SMART EHR-klienten | Gull | ❌ Gjenstår (høy innsats) |
+| 7 | ~~Writeback-prototype~~ | Gull | ✅ **Gjort 2026-08-11** — se §2 |
+
+**Gjenstående, prioritert etter innsats vs. verdi:**
 
 1. **Alder fra fødselsdato** (Bronse, trivielt) — vis beregnet alder i tillegg til fødselsdato.
 2. **`Observation`-håndtering** (Sølv, moderat) — implementer `FillObservation` i `FhirPrefillService.cs` etter samme mønster som `FillCondition`. Gir også reell verdi til PoC-en uavhengig av hackathon, siden IS-2569 har flere helsekategorier som naturlig kobles til målinger (syn, blodtrykk osv.).
 3. **Test client_secret-autentisering** (Sølv, lite) — sett en test-hemmelighet i `appsettings.Development.json` (via `dotnet user-secrets`, ikke i git — jf. tidligere sesjons funn om at `appsettings.Development.json` er sporet i git) og verifiser Basic-auth-flyten fungerer mot smarthealthit.org (som støtter både public og confidential clients).
-4. **Scope-detektivarbeid** (Sølv, moderat) — logg/vis differansen mellom forespurt og innvilget scope fra token-responsen. Nyttig diagnostikk uavhengig av hackathon.
-5. **Sikkerhetstesting-runde** (Gull, moderat–høy verdi) — bruk smarthealthit.org sin innebygde «Simulated Error»-funksjon (invalid client_id, invalid redirect_uri, expired token, osv. — se dropdown i launcheren) til å systematisk teste at appen feiler trygt. Direkte input til [RISIKOREGISTER.md R4](RISIKOREGISTER.md).
-6. **`private_key_jwt` for SMART EHR-klienten** (Gull, høy innsats) — vurder om dette er verdt å gjøre før eller *på* selve hackathon-dagen, gitt at vi har fersk erfaring fra Helsenorge-arbeidet.
-7. **Writeback-prototype** (Gull, høy innsats) — selv en minimal `DocumentReference`-POST mot smarthealthit.org sin FHIR-server (som støtter skriving) ville være et konkret første steg på [VEIKART.md fase 2](VEIKART.md).
+4. **Sikkerhetstesting-runde** (Gull, moderat–høy verdi) — bruk smarthealthit.org sin innebygde «Simulated Error»-funksjon (invalid client_id, invalid redirect_uri, expired token, osv. — se dropdown i launcheren) til å systematisk teste at appen feiler trygt. Direkte input til [RISIKOREGISTER.md R4](RISIKOREGISTER.md).
+5. **`private_key_jwt` for SMART EHR-klienten** (Gull, høy innsats) — vurder om dette er verdt å gjøre før eller *på* selve hackathon-dagen, gitt at vi har fersk erfaring fra Helsenorge-arbeidet.
 
 **Ikke gjør før hackathon:** Ikke bruk tid på ting som uansett krever ekte norsk EPJ-tilgang (R1) eller NHN-kontakt (R9) — dette miljøet er amerikansk/Synthea-basert og løser ikke de avhengighetene.
 

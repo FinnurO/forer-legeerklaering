@@ -5,6 +5,8 @@
 
 Dette veikart dekker **Spor A (Førerrett PoC)** og **Spor B (generisk platform)**. Se [STRATEGI.md](STRATEGI.md) for nasjonal roadmap og samarbeidsmodell.
 
+**Samkjøring med Norwegian FHIR Hackathon 2026 (9. nov, EHiN-pre-konferanse):** se [HACKATHON-EHIN-2026.md](HACKATHON-EHIN-2026.md) for full gap-analyse mot hackathonets SMART-spor. Kort versjon: fase 1 (SMART-klient) og fase 2 (writeback, se under) overlapper direkte med sporets Bronse/Gull-krav og er langt på vei allerede dekket av dette veikartet. Enkelte hackathon-spesifikke forberedelsespunkter (Observation-håndtering, D-nummer-støtte, scope-detektivarbeid, sikkerhetstesting) er *ikke* egne linjer i fasene under — de er kun listet i hackathon-dokumentet, siden de er motivert av sporets krav snarere enn PoC-ens eget veikart. Vurder å flytte dem inn i fase 1/3 her hvis de blir permanente mål uavhengig av hackathonet.
+
 ---
 
 ## Overordnet retning
@@ -41,15 +43,18 @@ Strategien følger det NAV har bevist med `syk-inn`:
 
 *Lukker den viktigste funksjonelle mangelen. NAVs ADR01 fra `syk-inn` er en direkte oppskrift.*
 
-| Tiltak | Beskrivelse |
-|---|---|
-| **DocumentReference** | Etter innsending: skriv en `DocumentReference` tilbake til EPJ-ens FHIR-server med PDF-referanse. Bruk SMART access token (BFF). |
-| **QuestionnaireResponse** | Skriv strukturert skjemadata som `QuestionnaireResponse` koblet til en kanonisk `Questionnaire`-definisjon (servert fra Altinn-appen, URL `/{org}/{app}/fhir/R4/Questionnaire/V1`). |
-| **Transaction Bundle med PUT** | Bruk klient-tildelt id (`DocumentReference.id = altinnInstanceId`) for idempotens. `GET`-sjekk før skriving for å unngå duplikater. |
-| **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. |
+**Skrivemekanikken er nå bevist 2026-08-11:** `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created` med skrivescope innvilget uten innsnevring, via et dev-only testendepunkt (`GET /smart/test-writeback`, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)). Det som gjenstår under er å gjøre dette til en ekte, produksjonsklar implementasjon (ekte innhold, idempotens, kanonisk skjema) — ikke å bevise at skriving er mulig i prinsippet.
+
+| Tiltak | Beskrivelse | Status |
+|---|---|---|
+| **DocumentReference** | Etter innsending: skriv en `DocumentReference` tilbake til EPJ-ens FHIR-server med PDF-referanse. Bruk SMART access token (BFF). | ⚠️ Mekanikk bevist (placeholder-tekst, ikke ekte PDF) |
+| **QuestionnaireResponse** | Skriv strukturert skjemadata som `QuestionnaireResponse` koblet til en kanonisk `Questionnaire`-definisjon (servert fra Altinn-appen, URL `/{org}/{app}/fhir/R4/Questionnaire/V1`). | ❌ Ikke testet |
+| **Transaction Bundle med PUT** | Bruk klient-tildelt id (`DocumentReference.id = altinnInstanceId`) for idempotens. `GET`-sjekk før skriving for å unngå duplikater. | ❌ Ikke implementert — testen brukte POST, ikke PUT med klient-id |
+| **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. | ❌ Ikke implementert |
+| **Charset-verifisering** | Norske tegn (æ/ø/å) i skjemainnhold — testen mot smarthealthit.org viste mulig charset-mistolkning av `attachment.title` server-side (se IMPLEMENTERING.md §13). Må verifiseres mot ekte EPJ. | 🔍 Nytt funn, ikke undersøkt videre |
 
 **Referanse:** `syk-inn/src/fhir-write-service.ts` + ADR01.  
-**Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope).
+**Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope — nå bevist mulig å få).
 
 ---
 

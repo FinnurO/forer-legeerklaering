@@ -97,7 +97,9 @@ Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rø
 ```
 *(Faktiske id-er og namespace i `src/App/config/applicationmetadata.json` — implementert 2026-06-19, commit `38057a4`.)*
 
-`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.ProcessDataWrite` ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (ikke implementert ennå, se VEIKART.md fase 2).
+`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.End()` (`IProcessTaskEnd`, kjører når Task_1/signering avsluttes — se nedenfor) ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (skrivemekanikken er nå bevist mot en ekte SMART-server, se IMPLEMENTERING.md §13, men selve produksjonsimplementasjonen gjenstår, se VEIKART.md fase 2).
+
+**Rettet 2026-08-12 — timing-bug:** avledningen lå tidligere i `IDataProcessor.ProcessDataWrite`, som kjører på *hver autolagring* under utfylling, ikke bare ved innsending. Flyttet til `IProcessTaskEnd.End(taskId, instance)`, som kun kjører når Task_1 faktisk avsluttes. Se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) for full forklaring — samme regel gjelder for den fremtidige EPJ-writeback-implementasjonen.
 
 **Kjent forenkling i PoC-implementasjonen:** `ForerLegeerklaeringModel` har i dag ett enkelt `Forer_Kjoretoygruppe`-felt og én `Forer_ErSkikket`-boolean — legen vurderer altså kun *én* kjøretøygruppe per legeerklæring. `DeriveKonklusjon()` i `FhirPrefillService.cs` setter derfor resultatet på den ene gruppen som matcher, og lar de to andre `GruppeX_Resultat`-feltene stå tomme. De tre uavhengige gruppefeltene i `ForerKonklusjonModel` er altså forberedt for, men ikke fylt av, reelle per-gruppe-vurderinger — det krever at `ForerLegeerklaeringModel` utvides til å holde skikkethet per gruppe (jf. full IS-2569, C-5).
 

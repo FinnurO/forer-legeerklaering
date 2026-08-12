@@ -914,6 +914,42 @@ For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://g
 
 **Funn #7 — `fhirUser` manglet som toppnivåfelt i token-responsen:** Selv med funn #4–6 rettet, forble legenavn tomt. `token.FhirUser` var tom fordi smarthealthit.org for denne launch-konfigurasjonen ikke inkluderte `fhirUser` som eget felt i token-svaret — kun som et `fhirUser`-claim inne i selve `access_token`-JWT-en. En kommentar i koden hadde allerede forutsett akkurat dette scenariet («noen EPJ-systemer returnerer det som JWT-claim i access_token i stedet») uten at fallbacken faktisk var implementert. Lagt til `TryExtractClaimFromJwt` — dekoder JWT-payloaden uten signaturvalidering (kun brukt til prefill, aldri til autorisasjonsbeslutninger) og henter ut `fhirUser`-claimet hvis toppnivåfeltet mangler.
 
+### Writeback til EPJ — første vellykkede skrivetest (2026-08-11)
+
+**Status: ✅ Writeback-mekanikken fungerer.** Lagt til skrivescope (`patient/DocumentReference.write` + `patient/DocumentReference.c`, både v1- og v2-stil) i `Launch()`, og et dev-only testendepunkt `GET /smart/test-writeback` som poster en minimal `DocumentReference` mot EPJ-ens FHIR-server med SMART-tokenet fra den aktive sesjonen.
+
+**Resultat mot launch.smarthealthit.org:** `HTTP 201 Created`, begge skrivescopene innvilget uten innsnevring. Dette besvarer to spørsmål samtidig:
+- **VEIKART.md fase 2 (writeback):** selve skrivemekanikken (Bearer-token + POST + FHIR-ressurs) fungerer beviselig mot en spec-compliant server. Gjenstår: PDF-generert innhold (ikke placeholder-tekst), idempotens via klient-tildelt id + PUT (VEIKART.md spesifiserer dette for den ferdige løsningen), og `QuestionnaireResponse` i tillegg til `DocumentReference`.
+- **HACKATHON-EHIN-2026.md «scope-detektivarbeid» (Sølv):** token-responsens `scope`-felt ble lest ut og sammenlignet mot det som ble forespurt — ingen innsnevring skjedde for dette testet.
+
+**Bifunn — mulig charset-problem, ikke undersøkt videre:** `DocumentReference.content[].attachment.title` (som inneholder norske tegn: «Legeerklæring førerrett») kom tilbake fra serveren som mojibake («LegeerklÃ¦ring fÃ¸rerrett»), mens `attachment.data` (base64, kun ASCII) var uendret. `StringContent` ble sendt med explicit UTF-8-encoding fra vår side, så dette tyder på at smarthealthit.org sin server mistolker charset ved mottak av request-body — ikke nødvendigvis representativt for en ekte fastlege-EPJ. **Bør verifiseres spesifikt** når writeback testes mot et ekte EPJ-system, siden norske tegn (æ/ø/å) er uunngåelige i skjemainnhold.
+
+Se [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) `TestWriteback()`-metoden for full implementasjon.
+
+**Kan man se resultatet?** Ja — smarthealthit.org sin FHIR-server tillater ukryptert `GET` uten token. `curl https://launch.smarthealthit.org/v/r4/fhir/DocumentReference/<id>` (eller lim URL-en inn i en nettleser) viser ressursen som rå FHIR-JSON. Det finnes ikke noe klinisk visningsgrensesnitt på smarthealthit.org — det er et API-sandkasse, ikke en journal-UI — så «se resultatet» betyr i praksis å lese JSON-en direkte, ikke en visuell journalside.
+
+### Viktig presisering — to ulike aktører og oppgaver må ikke blandes
+
+Johann presiserte 2026-08-12: **innbyggers egenerklæring** (NA-0201) og **writeback til EPJ** er to helt forskjellige integrasjoner, ikke to varianter av samme ting:
+
+| | Innbyggers egenerklæring | Writeback til EPJ |
+|---|---|---|
+| **Aktør** | Innbygger/pasient | Behandler (lege) |
+| **Hvor fylles det ut** | Altinn (egen app, `forer-egenerklaring`) | — (data hentes/skrives via FHIR, ikke fylt ut på nytt) |
+| **Protokoll** | *Ikke* SMART on FHIR — vanlig Altinn-skjema | SMART on FHIR |
+| **Hvor havner resultatet** | Altinn innboks (alltid) + kvittering til Helsenorge (i tillegg) | EPJ-ens FHIR-server |
+| **Relevant API** | Trolig Helsenorge DokumentAPI (se PASIENTFLYT.md) — ikke bekreftet | `DocumentReference`/`QuestionnaireResponse` via SMART-token (denne seksjonen) |
+
+Dette skiller seg fra tidligere formuleringer i STRATEGI.md/PASIENTFLYT.md som til tider har omtalt begge som del av «SMART on FHIR-flyten» — kun writeback til EPJ er SMART on FHIR. Egenerklæringen er et rent Altinn-skjema med en kvitteringsmekanisme mot Helsenorge.
+
+### Timing-bug funnet og rettet: writeback må ikke skje før innsending (2026-08-12)
+
+Johann påpekte at writeback ikke bør skje før legen faktisk trykker «Send inn» — og det avdekket en **allerede eksisterende bug**, ikke bare et fremtidig hensyn for writeback-koden. `IDataProcessor.ProcessDataWrite` (som `ForerKonklusjonModel`-avledningen lå i, se BESLUTNINGER.md C-3) kjører på **hver autolagring** mens legen fyller ut skjemaet — ikke bare ved innsending. Det betyr SVV-konklusjonen ble skrevet/oppdatert gjentatte ganger under utfylling, potensielt med en halvferdig eller uferdig vurdering.
+
+**Riktig hook er `IProcessTaskEnd.End(taskId, instance)`** — kjører når en prosessoppgave *avsluttes* (for oss: Task_1, signering/innsending). Verifiserte den eksakte metodesignaturen direkte mot den installerte `Altinn.App.Core` 8.6.4-pakken via refleksjon (GitHub sin `main`-gren viste en annen, nyere signatur på `IDataClient.GetFormData` enn det som faktisk er installert — verdt å huske for senere).
+
+**Rettet:** `FhirPrefillService` implementerer nå `IProcessTaskEnd` i tillegg til `IDataProcessor`. `ProcessDataWrite` er en no-op. `End(taskId, instance)` sjekker `taskId == "Task_1"`, henter `ForerLegeerklaeringModel` via `IDataClient.GetFormData`, og avleder/lagrer `ForerKonklusjonModel` — først da. **Denne samme regelen gjelder for den fremtidige EPJ-writeback-implementasjonen** (VEIKART.md fase 2): den må også ligge i `End()`, ikke i `ProcessDataWrite` eller trigges av testendepunktet `test-writeback` (som er et manuelt, sesjonsbasert diagnoseverktøy — ikke koblet til prosesslivssyklusen, og skal aldri bli mønsteret for den ferdige implementasjonen).
+
 ---
 
 ## 14. HelseID-integrasjon: kom i gang

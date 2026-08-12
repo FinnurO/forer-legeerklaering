@@ -22,7 +22,7 @@ namespace Altinn.App.Services
     /// fetched from the EPJ using the SMART access token stored in server session.
     /// Falls back to IMemoryCache if session is not available.
     /// </summary>
-    public class FhirPrefillService : IDataProcessor
+    public class FhirPrefillService : IDataProcessor, IProcessTaskEnd
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -340,7 +340,14 @@ namespace Altinn.App.Services
             return null;
         }
 
-        public async Task ProcessDataWrite(
+        // BUG (2026-08-12): avledningen av ForerKonklusjonModel lå tidligere her, i
+        // IDataProcessor.ProcessDataWrite. Den kjører på HVER autolagring mens legen fyller ut
+        // skjemaet — ikke bare når legen faktisk trykker "Signer og send inn". SVV-konklusjonen
+        // ble dermed skrevet/oppdatert gjentatte ganger under utfylling, ikke bare ved innsending.
+        // Flyttet til End() (IProcessTaskEnd) under, som kjører når Task_1 (signeringsoppgaven)
+        // faktisk avsluttes. ProcessDataWrite er nå en no-op, men må fortsatt implementeres siden
+        // IDataProcessor krever den.
+        public Task ProcessDataWrite(
             Instance instance,
             Guid? dataId,
             object data,
@@ -348,10 +355,29 @@ namespace Altinn.App.Services
             string? language = null
         )
         {
-            if (data is not ForerLegeerklaeringModel src)
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Kjører når en prosessoppgave avsluttes. For Task_1 (signering/innsending) avleder og
+        /// lagrer denne ForerKonklusjonModel — først NÅ, ikke ved hver autolagring under utfylling.
+        /// </summary>
+        public async Task End(string taskId, Instance instance)
+        {
+            if (!string.Equals(taskId, "Task_1", StringComparison.OrdinalIgnoreCase))
                 return;
 
-            var konklusjon = DeriveKonklusjon(src);
+            var dataElement = instance.Data?.Find(d =>
+                d.DataType.Equals("ForerLegeerklaering", StringComparison.OrdinalIgnoreCase)
+            );
+            if (dataElement == null || !Guid.TryParse(dataElement.Id, out var dataGuid))
+            {
+                _logger.LogWarning(
+                    "End: fant ikke ForerLegeerklaering-dataelement på instans {InstanceId}",
+                    instance.Id
+                );
+                return;
+            }
 
             // Parse instance owner and id from instance.Id ("owner/instanceGuid")
             var parts = instance.Id?.Split('/');
@@ -362,9 +388,26 @@ namespace Altinn.App.Services
                 || !Guid.TryParse(parts[1], out var instanceGuid)
             )
             {
-                _logger.LogWarning("ProcessDataWrite: could not parse instance id '{InstanceId}'", instance.Id);
+                _logger.LogWarning("End: could not parse instance id '{InstanceId}'", instance.Id);
                 return;
             }
+
+            var appName = instance.AppId.Split('/').Last();
+            var formDataObj = await _dataClient.GetFormData(
+                instanceGuid,
+                typeof(ForerLegeerklaeringModel),
+                instance.Org,
+                appName,
+                instanceOwnerPartyId,
+                dataGuid
+            );
+            if (formDataObj is not ForerLegeerklaeringModel src)
+            {
+                _logger.LogWarning("End: ForerLegeerklaering-dataelement kunne ikke deserialiseres");
+                return;
+            }
+
+            var konklusjon = DeriveKonklusjon(src);
 
             // Check if a ForerKonklusjon data element already exists on this instance
             var existingElements = instance.Data ?? new List<DataElement>();
@@ -374,29 +417,26 @@ namespace Altinn.App.Services
 
             if (existing != null && Guid.TryParse(existing.Id, out var existingDataGuid))
             {
-                _logger.LogInformation("ProcessDataWrite: updating existing ForerKonklusjon element {Id}", existing.Id);
+                _logger.LogInformation("End: updating existing ForerKonklusjon element {Id}", existing.Id);
                 await _dataClient.UpdateData(
                     konklusjon,
                     instanceGuid,
                     typeof(ForerKonklusjonModel),
                     instance.Org,
-                    instance.AppId.Split('/').Last(),
+                    appName,
                     instanceOwnerPartyId,
                     existingDataGuid
                 );
             }
             else
             {
-                _logger.LogInformation(
-                    "ProcessDataWrite: creating new ForerKonklusjon element on instance {Id}",
-                    instance.Id
-                );
+                _logger.LogInformation("End: creating new ForerKonklusjon element on instance {Id}", instance.Id);
                 await _dataClient.InsertFormData(
                     konklusjon,
                     instanceGuid,
                     typeof(ForerKonklusjonModel),
                     instance.Org,
-                    instance.AppId.Split('/').Last(),
+                    appName,
                     instanceOwnerPartyId,
                     "ForerKonklusjon"
                 );
