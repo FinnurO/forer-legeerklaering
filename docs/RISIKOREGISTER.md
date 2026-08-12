@@ -18,16 +18,18 @@ Dette dokumentet samler risikoene som allerede er beskrevet andre steder i dokum
 | R5 | Lav adopsjon hos fastleger — konteksbytte ut av EPJ til Altinn er svakere UX enn EPJ-native løsninger | Endringsledelse / brukeradopsjon | Middels | Middels-Høy — teknisk fungerende løsning som ingen tar i bruk i klinisk praksis | Digdir + fastlegeorganisasjoner (Legeforeningen) | Brukertest med reelle fastleger; vurder om «grønt» parallell-case (KARTLEGGING D6) er bedre første pilot enn førerrett | Ikke startet |
 | R6 | Initiativet oppfattes som konkurrerende med NHNs produksjonsløsning for IS-2569 på Helsenorge | Strategisk / posisjonering | Middels | Middels — politisk sårbarhet, dobbeltarbeid, samarbeidsvilje fra NHN | Programleder | Bruk firemodell-analysen (STRATEGI.md) som felles språk med NHN; kontakt NHN-teamet (Slack `ext-utv-hn-forerrett`) for skriftlig komplementaritet | Dialog ikke bekreftet gjennomført — se [BESLUTNINGER.md C-6](BESLUTNINGER.md) |
 | R7 | Ingen automatiserte tester — regresjon kan innføres uten å bli fanget opp | Teknisk kvalitet | Høy | Middels — hindrer trygg videreutvikling og bredding | Teknisk team | VEIKART.md fase 3: e2e-røyktest + unit-tester (jf. `syk-inn`: 23 unit + 24 e2e) | Ikke startet — se [VEIKART.md fase 3](VEIKART.md) |
-| R8 | Full OAuth-redirect-flyt (`ERR_TOO_MANY_REDIRECTS`) er ikke løst — kun `/smart/dev-login`-workaround er bevist | Teknisk | Middels | Middels — den reelle SMART-launch-flyten er ikke bevist ende-til-ende | Teknisk team | Diagnostiser redirect-loopen mot en ekte EPJ-testklient | Uløst — se [README.md «Kjente begrensninger»](../README.md) |
+| ~~R8~~ | ~~Full OAuth-redirect-flyt (`ERR_TOO_MANY_REDIRECTS`) er ikke løst~~ | Teknisk | — | — | Teknisk team | — | ✅ **Løst 2026-08-11** mot [launch.smarthealthit.org](https://launch.smarthealthit.org/) — to bugs funnet og rettet, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | R9 | Helsenorge EksternAPI-autentisering er verifisert, men selve testmiljøtilgangen (portal + «digitalt aktive» testpersoner) krever formell NHN-leverandørkontakt — ikke selvbetjent | Organisatorisk / avhengighet | Lav (kjent prosess) | Middels — blokkerer videre verifisering av pasientsporet (PASIENTFLYT.md alt. B) inntil kontakt er tatt | Programleder | Ta kontakt via `ext-utv-hn-forerrett`-Slack eller `ide-ogbestillingsmottak@nhn.no` for testmiljøtilgang og provisjonering av testpersoner | Ikke startet — se [BESLUTNINGER.md C-6](BESLUTNINGER.md) og [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) |
+| R10 | Etter vellykket SMART callback har appen FHIR/token-kontekst, men ingen Altinn-sesjon — Altinns generiske JWT-cookie-utfordring (`AltinnCore.Authentication.JwtCookie`) redirecter til et endepunkt som ikke finnes i `app-localtest` | Teknisk / arkitektur | Middels (mitigert i dev) | Høy for produksjon — uten en ekte løsning kan ikke SMART-launch fungere selvstendig i prod | Teknisk team | ✅ Dev-mitigering implementert 2026-08-11 (auto-innlogging via localtest-testbruker i `/smart/callback`). **Gjenstår:** ekte produksjonsdesign koblet til HelseID-identitet (§14) | Delvis løst — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md), [VEIKART.md fase 1](VEIKART.md) |
 
 ---
 
 ## Prioritert lukkerekkefølge
 
 1. **R2 (rettslig grunnlag) og R3 (mottaksarkitektur)** — begge er forutsetninger uavhengig av hvilken leveransemodell som velges (jf. [STRATEGI.md](STRATEGI.md) «Fire leveransemodeller»). Ingen dialog med helseaktører bør starte før disse har en navngitt eier og et konkret neste steg.
-2. **R1 (EPJ-modenhet) og R4 (sikkerhetsgap)** — tekniske forutsetninger for at PoC-en kan kalles produksjonsklar. Kan startes uten menneskelige avklaringer.
-3. **R7 og R8** — kvalitets- og robusthetsarbeid, gjøres parallelt med 1–2.
-4. **R5 og R6** — adopsjon og posisjonering. Krever at 1–2 er på plass først for å ha noe reelt å vise fastleger og NHN.
+2. **R10 (Altinn-sesjon mangler)** — blokkerer enhver ende-til-ende-demo uten `/dev-login`. Pågår.
+3. **R1 (EPJ-modenhet) og R4 (sikkerhetsgap)** — tekniske forutsetninger for at PoC-en kan kalles produksjonsklar. Kan startes uten menneskelige avklaringer.
+4. **R7** — kvalitets- og robusthetsarbeid, gjøres parallelt med 1–3. (R8 er løst.)
+5. **R5 og R6** — adopsjon og posisjonering. Krever at 1–3 er på plass først for å ha noe reelt å vise fastleger og NHN.
 
 Se også [BESLUTNINGER.md](BESLUTNINGER.md) for beslutningsdetaljer og [VEIKART.md](VEIKART.md) for tekniske tiltak per fase.

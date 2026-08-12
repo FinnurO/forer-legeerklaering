@@ -75,7 +75,8 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | # | Steg | Status | Kilde |
 |---|---|---|---|
 | 1 | Pasient fyller ut egenerklæring via Helsenorge | ❌ Ikke implementert — kun arkitekturforslag (to alternativer) | [PASIENTFLYT.md](PASIENTFLYT.md) |
-| 2 | EPJ → Altinn: SMART EHR Launch | ✅ Verifisert (mock lokalt; `/smart/dev-login`-workaround pga. `ERR_TOO_MANY_REDIRECTS` i full flyt) | [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs), [RISIKOREGISTER.md R8](RISIKOREGISTER.md) |
+| 2 | EPJ → Altinn: SMART EHR Launch, full ende-til-ende | ✅ **Fullstendig verifisert 2026-08-11** mot [launch.smarthealthit.org](https://launch.smarthealthit.org/) — innlogging, pasientvalg, callback, Altinn-sesjon og full FHIR-prefill (pasient/lege/virksomhet). 7 bugs funnet og rettet | [IMPLEMENTERING.md §13](IMPLEMENTERING.md), [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) |
+| 2b | Altinn-sesjon etableres for legen | ⚠️ Mitigert i dev (auto-innlogging via localtest-testbruker i `/smart/callback`), men ikke en produksjonsløsning — se §14 for det egentlige forslaget (HelseID-identitet) | [RISIKOREGISTER.md R10](RISIKOREGISTER.md), [VEIKART.md fase 1](VEIKART.md) |
 | 3 | Altinn henter FHIR-data fra EPJ | ✅ Verifisert (mot lokal HAPI FHIR-mock, ikke reell fastlege-EPJ) | [FhirPrefillService.cs](../src/App/services/FhirPrefillService.cs), [RISIKOREGISTER.md R1](RISIKOREGISTER.md) |
 | 3b | Altinn henter pasientens egenerklæring (QuestionnaireResponse) | ❌ Ikke implementert — avhenger av steg 1 | [PASIENTFLYT.md §3](PASIENTFLYT.md) |
 | 4 | Lege fyller ut, signerer, sender inn | ✅ Verifisert («Signer og send inn», Task_1) | [process.bpmn](../src/App/config/process/process.bpmn) |
@@ -94,6 +95,7 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | Pasient/Helsenorge | [PASIENTFLYT.md](PASIENTFLYT.md) — begge alternativer |
 | Helsenorge EksternAPI teknisk | [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md), [local-dev/helseid-token-test/](../local-dev/helseid-token-test/), [local-dev/helsenorge-oppgave-test/](../local-dev/helsenorge-oppgave-test/) |
 | EPJ ↔ Altinn (SMART launch) | [KRAVSPESIFIKASJON-v0.6.md §4](KRAVSPESIFIKASJON-v0.6.md), [arkitektur-oversikt.svg](arkitektur-oversikt.svg), [smart-launch-sekvens.svg](smart-launch-sekvens.svg) |
+| Testing mot ekte SMART-server + funn (redirect-bugs, sesjonsgap) | [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | Signering | [IMPLEMENTERING.md](IMPLEMENTERING.md) — Altinn signing task-avsnittet |
 | Altinn ↔ SVV (mottak) | [BESLUTNINGER.md C-3](BESLUTNINGER.md) — Altinn Events, FINT Arkiv-mønster, to-lags datamodell |
 | Altinn ↔ EPJ (writeback) | [VEIKART.md fase 2](VEIKART.md) |
@@ -112,6 +114,10 @@ Bekreftet fungerende 2026-08-11 (se README.md for fullstendige steg). Fire prose
 | SMART Auth Mock | 9090 | `cd local-dev/smart-mock && node server.js` |
 | Altinn-appen (`forer-legeerklaering`) | 5005 | `cd src/App && dotnet run` |
 
-**Kjent fallgruve:** Altinn localtest-plattformen (port 5101/8000) kan henge/ikke svare hvis den startes *før* Altinn-appen selv er oppe på port 5005 — den ser ut til å ha en avhengighet til appen ved oppstart av forespørsler. Start i denne rekkefølgen: containere → SMART mock → Altinn-appen, og gi containerne litt tid før du tester.
+**Kjente fallgruver:**
+- Altinn localtest-plattformen (port 5101/8000) kan henge/ikke svare hvis den startes *før* Altinn-appen selv er oppe på port 5005 — den ser ut til å ha en avhengighet til appen ved oppstart av forespørsler. Start i denne rekkefølgen: containere → SMART mock (eller ingenting, se under) → Altinn-appen, og gi containerne litt tid før du tester.
+- `app-localtest` sin nginx-konfig (`loadbalancer/templates/nginx.conf.conf`) bruker `proxy_set_header Host $host;` — dette **utelater porten** fra `Host`-headeren videre til appen, som ødelegger enhver funksjon som bygger egne redirect-URL-er fra `Request.Host` (bl.a. SMART-callback). Rettet lokalt til `$http_host`; husk `podman restart localtest-loadbalancer` etter endringen. Dette er en feil i Altinns delte infrastruktur, ikke i dette repoet — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md).
 
 Etter at alt kjører: åpne `http://localhost:9090/epj` for EPJ-simulatoren (anbefalt startpunkt for demo), eller gå direkte til `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/dev-login` for hurtigstart uten UI.
+
+**For å teste den ekte SMART-launch-flyten** (ikke bare `/dev-login`) mot en standardkompatibel server, se [IMPLEMENTERING.md §13 «Teste mot launch.smarthealthit.org»](IMPLEMENTERING.md) — SMART Auth Mock trengs ikke for den testen, og hele kjeden inkl. Altinn-innlogging og FHIR-prefill er nå bekreftet fungerende (steg 2b i statustabellen over er dev-mitigert).

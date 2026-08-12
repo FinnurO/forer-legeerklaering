@@ -21,6 +21,7 @@
 11. [Cache-strategi for FHIR-data](#11-cache-strategi-for-fhir-data)
 12. [Proxy-sikkerhet og audit logging](#12-proxy-sikkerhet-og-audit-logging)
 13. [Teststrategi og testmiljøer](#13-teststrategi)
+    - [Teste mot launch.smarthealthit.org](#teste-mot-en-ekte-standardkompatibel-smart-server-launchsmarthealthitorg)
 14. [HelseID-integrasjon: kom i gang](#14-helseid-integrasjon-kom-i-gang)
     - [14.1 HelseID EksternAPI (Oppgave/Skjema) — maskin-til-maskin, verifisert](#141-helseid-eksternapi-helsenorge-oppgaveskjema--maskin-til-maskin-verifisert)
 15. [Referanser og inspirasjonskilder](#15-referanser-og-inspirasjonskilder)
@@ -882,6 +883,36 @@ SyntPop lege:    HPR = 7654321, navn = "Per Hansen", spesialitet = Allmennmedisi
 Data fra SyntPop må konverteres til FHIR-ressurser og PUT inn i HAPI FHIR manuelt (via seed-script). Det er ingen direkte FHIR-integrasjon. På sikt kan seed-scriptet oppdateres til å hente data fra SyntPop API automatisk.
 
 For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://github.com/synthetichealth/synthea) genererer FHIR R4-bundles direkte.
+
+### Teste mot en ekte, standardkompatibel SMART-server: launch.smarthealthit.org
+
+**Status (2026-08-11): ✅ Full ende-til-ende-demo oppnådd.** Fra `launch.smarthealthit.org` gjennom innlogging, pasientvalg, SMART-callback, Altinn-innlogging og fullstendig FHIR-prefill (pasient, lege, virksomhet, konsultasjon) til et utfylt skjema klart til signering. Underveis ble **7 bugs** funnet og rettet — se funn #1–7 under. Dette er den mest grundig verifiserte enkeltstrekningen i hele PoC-en.
+
+[SMART Launcher](https://launch.smarthealthit.org/) (fra SMART Health IT-prosjektet, `smart-on-fhir/smart-launcher-v2` på GitHub) er en offentlig, spec-compliant EHR-launch-simulator med syntetiske Synthea-pasienter. Siden hele OAuth-redirecten skjer i nettleseren (ikke server-til-server), kan den brukes til å teste vår faktiske `SmartLaunchController`-flyt lokalt — noe vi aldri hadde gjort før, siden `/smart/dev-login` alltid har vært workaround-veien.
+
+**Slik gjør du det:**
+1. Sørg for at hele det lokale miljøet kjører (Altinn localtest, HAPI FHIR, Altinn-appen — se README.md «Kom i gang»). SMART Auth Mock trengs *ikke* for denne testen.
+2. Gå til [launch.smarthealthit.org](https://launch.smarthealthit.org/)
+3. Launch Type: «Provider EHR Launch», FHIR Version: «R4»
+4. La «Patient(s)» og «Provider(s)» stå tomme (gir en interaktiv pasientvelger/innlogging — mer realistisk enn en forhåndsvalgt pasient)
+5. I feltet **«App's Launch URL»**, lim inn: `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch`
+6. Klikk **Launch** — dette åpner en lenke i formatet `<launch-url>?iss=...&launch=...`, som du åpner i din egen nettleser (ikke i et sandboxet/skybasert nettleserpanel — `local.altinn.cloud` blir ofte blokkert der som et internt nettverk)
+
+**Funn #1 — `ERR_TOO_MANY_REDIRECTS` (løst i vår egen kode):** `SmartConfiguration`- og `TokenResponse`-klassene i `SmartLaunchController.cs` hadde ingen `[JsonPropertyName]`-attributter. `JsonSerializerOptions { PropertyNameCaseInsensitive = true }` løser kun store/små bokstaver — **ikke** `snake_case` (`authorization_endpoint`) → `PascalCase` (`AuthorizationEndpoint`). Feltene deserialiserte alltid til `null`, `BuildAuthorizationUrl` bygde en tom/relativ redirect-URL, og nettleseren tolket det som «last denne siden på nytt» — i det uendelige. Denne koden har vært ødelagt siden den ble skrevet; den ble aldri oppdaget fordi `/smart/dev-login` omgår hele discovery/redirect-stien. Rettet med eksplisitte `[JsonPropertyName("...")]` på begge klassene (både `authorization_endpoint`/`token_endpoint` og OAuth2-tokenfeltene `access_token`/`token_type`/`expires_in`/`refresh_token`, som har samme snake_case-problem).
+
+**Funn #2 — manglende port i `redirect_uri` (løst i `app-localtest`, ikke vårt repo):** Etter funn #1 var rettet, kom en ny variant av samme feil: `redirect_uri` ble bygget uten port (`local.altinn.cloud` i stedet for `local.altinn.cloud:8000`), som ga `ERR_CONNECTION_REFUSED` på callback. Rotårsak: `app-localtest/loadbalancer/templates/nginx.conf.conf` bruker `proxy_set_header Host $host;` — en kjent nginx-fallgruve der `$host` **utelater porten**. Rettet lokalt til `proxy_set_header Host $http_host;` (som bevarer det klienten faktisk sendte) og verifisert med `podman restart localtest-loadbalancer`. Dette er en feil i Altinns egen delte `app-localtest`-infrastruktur (git-repo `C:\Users\jsf\source\app-localtest` hos Johann), ikke i `forer-legeerklaering` — bør vurderes rapportert til Altinn Studio-teamet, siden enhver Altinn-app som konstruerer sin egen eksterne redirect-URL fra `Request.Host` vil rammes.
+
+**Funn #3 — manglende Altinn-sesjon etter SMART callback (mitigert i dev, IKKE løst for prod — se VEIKART.md fase 1):** Med bugs #1–2 rettet fullføres hele SMART-flyten korrekt — innlogging, pasientvalg, autorisasjonskode, callback, tokenutveksling. Men appen hadde da kun FHIR/SMART-kontekst, **ingen Altinn-sesjon**. Altinns eget `AltinnCore.Authentication.JwtCookie`-rammeverk (i `Altinn.App.Api`) forsøker å utfordre med en redirect til `{ApiAuthenticationEndpoint}authentication?goto=...` — et endepunkt som ikke finnes i denne versjonen av `app-localtest` (verifisert: `AuthenticationController` har kun `refresh`/`orgToken`/`appToken`, ingen ren `authentication`-rute, og «goto» finnes ikke i kildekoden i det hele tatt). Dette er sannsynligvis nøyaktig grunnen til at `/smart/dev-login` ble laget: den er den eneste stien som *både* logger inn i Altinn (via localtests test-token-endepunkt) *og* seeder FHIR-konteksten i ett steg.
+
+**Midlertidig løsning (kun Development):** `Callback` sjekker nå om det finnes en Altinn-sesjon (`AltinnStudioRuntime`-cookie); hvis ikke, kalles samme localtest-testbruker-mekanikk som `/dev-login` bruker (utledet til en delt `EstablishLocaltestAltinnSessionAsync`-metode), som logger inn som Dr. Ola Nordmann. **Dette er ikke en produksjonsløsning** — den bruker localtests test-token-endepunkt, som ikke finnes utenfor lokal testing. Se VEIKART.md fase 1 for det egentlige forslaget: `/smart/callback` må i produksjon etablere en ekte Altinn-sesjon koblet til HelseID-identitet (§14), ikke en generisk ID-porten-utfordring.
+
+**Funn #4 — `FhirBaseUrlOverride` kapret ekte eksterne servere:** `SmartOnFhir:FhirBaseUrlOverride` er satt i `appsettings.Development.json` for å peke vår egen lokale SMART-mock til riktig Docker-adresse. Koden brukte den ubetinget uansett `iss`, som betød at en ekte ekstern launch (smarthealthit.org) fikk FHIR-oppslagene sine omdirigert til vår egen tomme HAPI FHIR-mock — stille feil, ingen data funnet. Rettet: override brukes nå kun når `iss` ikke er `https://` (dvs. bare for vår egen `http`-mock).
+
+**Funn #5 — kaskaderende bug fra funn #1:** Da `TokenResponse.AccessToken` fikk `[JsonPropertyName("access_token")]` (funn #1), endret det også hvordan tokenet *serialiseres* til sesjonen — fra `"AccessToken"` til `"access_token"`. `FhirPrefillService.TokenData` (en annen klasse, brukt til å lese tokenet tilbake ut av sesjonen i `ProcessDataRead`) hadde ingen tilsvarende attributt og forventet fortsatt `"AccessToken"`. Tokenet ble dermed `null` → `Bearer <null>` → **401 Unauthorized** på alle FHIR-kall, helt stille. Rettet med samme `[JsonPropertyName("access_token")]` på `TokenData`, pluss oppdatering av to steder som konstruerte et mock-token som anonymt objekt (`/dev-login`, `/test-prefill`) til samme nøkkelnavn.
+
+**Funn #6 — `fhirUser` som relativ URL:** `FillPractitioner` antok `ctx.FhirUser` alltid var en full URL. `launch.smarthealthit.org` returnerte en relativ referanse (`Practitioner/<id>`), som gjorde at HTTP-kallet feilet stille (ugyldig URI). Rettet med samme mønster som allerede fantes for Organization-referanser: prepend `FhirBaseUrl` hvis verdien ikke starter med `http`.
+
+**Funn #7 — `fhirUser` manglet som toppnivåfelt i token-responsen:** Selv med funn #4–6 rettet, forble legenavn tomt. `token.FhirUser` var tom fordi smarthealthit.org for denne launch-konfigurasjonen ikke inkluderte `fhirUser` som eget felt i token-svaret — kun som et `fhirUser`-claim inne i selve `access_token`-JWT-en. En kommentar i koden hadde allerede forutsett akkurat dette scenariet («noen EPJ-systemer returnerer det som JWT-claim i access_token i stedet») uten at fallbacken faktisk var implementert. Lagt til `TryExtractClaimFromJwt` — dekoder JWT-payloaden uten signaturvalidering (kun brukt til prefill, aldri til autorisasjonsbeslutninger) og henter ut `fhirUser`-claimet hvis toppnivåfeltet mangler.
 
 ---
 

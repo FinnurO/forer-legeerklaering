@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Altinn.App.Core.Features;
 using Altinn.App.Core.Internal.Data;
@@ -182,10 +183,15 @@ namespace Altinn.App.Services
 
         private async Task FillPractitioner(HttpClient client, FhirLaunchContext ctx, ForerLegeerklaeringModel model)
         {
-            // fhirUser is a full URL reference to the Practitioner resource
+            // Per SMART App Launch IG er fhirUser typisk en full URL, men noen servere (bl.a.
+            // launch.smarthealthit.org) returnerer en relativ referanse ("Practitioner/<id>").
+            // Bug funnet 2026-08-11 — samme mønster som allerede håndteres for Organization under.
             if (string.IsNullOrEmpty(ctx.FhirUser))
                 return;
-            using var doc = await TryGetFhirResource(client, ctx.FhirUser, "Practitioner");
+            var fhirUserUrl = ctx.FhirUser.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? ctx.FhirUser
+                : $"{ctx.FhirBaseUrl}/{ctx.FhirUser}";
+            using var doc = await TryGetFhirResource(client, fhirUserUrl, "Practitioner");
             if (doc == null)
                 return;
             var root = doc.RootElement;
@@ -416,6 +422,13 @@ namespace Altinn.App.Services
 
         private class TokenData
         {
+            // BUG (2026-08-11): SmartLaunchController.TokenResponse.AccessToken har
+            // [JsonPropertyName("access_token")] (rettet for å deserialisere ekte OAuth2-svar
+            // riktig — se SmartLaunchController.cs). Det gjorde at SERIALISERINGEN til sesjonen
+            // også endret seg til snake_case, som brøt denne DEserialiseringen (ingen options her,
+            // strengt case-sensitivt "AccessToken"). Tokenet ble null -> "Bearer <null>" -> 401
+            // Unauthorized på alle FHIR-kall. Oppdaget ved test mot launch.smarthealthit.org.
+            [JsonPropertyName("access_token")]
             public string AccessToken { get; set; }
         }
 
