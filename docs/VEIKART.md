@@ -54,6 +54,8 @@ Strategien følger det NAV har bevist med `syk-inn`:
 
 **Status (2026-08-13):** Analysert og arkitektur besluttet. **Venter** på at Johann oppretter de to klientregistreringene over før bygging starter — ikke igangsatt.
 
+**Bekreftet presedens:** «Apotekdrift» (DMP, apotektillatelser) er en produksjonssatt Altinn Studio-app som allerede gjør nøyaktig denne typen HPR-validering mot Maskinporten. Bekrefter konfigurasjonsmønster (`{AppNavn}-MaskinportenSettings` med `HprApiEndpoint`/`Authority`) og avdekker at HPR-oppslaget også bør sjekke `Utdannelse`/autorisasjonstype (bekreft at personen er autorisert som *lege*, ikke bare at HPR-nummeret er gyldig for en vilkårlig helsepersonellkategori). Se [DOBBEL-INNGANGSMODUS.md §3.3](DOBBEL-INNGANGSMODUS.md) for fullt funn, inkl. et alternativt side-/felt-nivå valideringsmønster (`ValidateHprNumber` knyttet til spesifikke datamodell-felt) som kan gi bedre UX enn en hard `IInstantiationValidator`-blokkering.
+
 **Åpent strategisk spørsmål:** bør Digdir (via Altinn Studio-teamet) forfølge HelseID som en fullverdig, godkjent Altinn OIDC-provider på plattformnivå (analogt med Feide/UIDP), fremfor at hver helse-app bygger sin egen app-interne tilleggsflyt? Det ville gitt samme gevinst til *alle* fremtidige helse-apper på Altinn, ikke bare denne — direkte relevant for helse-template-visjonen i STRATEGI.md Spor B. Ikke en beslutning som kan tas i denne PoC-en alene.
 
 ---

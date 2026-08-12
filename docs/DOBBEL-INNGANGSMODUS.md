@@ -60,6 +60,11 @@ Viktig innsikt: Altinn vet allerede hvem som er innlogget (ID-porten-fødselsnum
 
 Se [VEIKART.md fase 1b](VEIKART.md) for full tiltaksliste. **Status:** venter på to klientregistreringer (HelseID authorization_code-klient, Maskinporten `nhn:hpr/basic`-klient) — ikke igangsatt.
 
+**Bekreftet presedens (2026-08-13):** Johann fant et konkret eksempel fra en annen, produksjonssatt Altinn Studio-app — «Apotekdrift» (DMP/tidl. Statens legemiddelverk, apotektillatelser) — som gjør nøyaktig denne typen HPR-validering i dag. Bekrefter:
+- **Konfigurasjonsmønster:** `{AppNavn}-MaskinportenSettings` i `appsettings.Production.json`, med `HprApiEndpoint` (samme URL vi fant: `https://api.offentlig.hpr.nhn.no/`) og `Authority` (`https://maskinporten.no/`).
+- **`Utdannelse`-feltet er også relevant** — HPR-oppslaget returnerer ikke bare navn og HPR-nummer, men også autorisasjonstype/utdannelse. For oss betyr det at bekreftelsen bør sjekke at personen faktisk er autorisert som **lege** spesifikt, ikke bare at HPR-nummeret finnes og er gyldig for en eller annen helsepersonellkategori.
+- **Valideringsmønster:** Apotekdrift bruker en `ValidateHprNumber(...)`-metode knyttet til en spesifikk side/felt i skjemaet (`Page.FilialstatusInfoStedligLeder`) med selector-uttrykk som peker til nøyaktige datamodell-felt (`m => m.Meldingsdel...hprNummer`) — dette er trolig et **side-/felt-nivå valideringsmønster** (validering skjer når legen når et bestemt steg, med feilmelding på spesifikke felt), ikke nødvendigvis en hard blokkering ved instansiering (`IInstantiationValidator`). Verdt å vurdere dette mønsteret som et alternativ til/supplement for §3.4 sin `IInstantiationValidator`-idé — kan gi bedre brukeropplevelse (feilmelding i konteksten der den oppstår, fremfor å nekte oppstart av hele tjenesten).
+
 ### 3.4 Tilgangsstyring — hvem har lov til å starte tjenesten normalt?
 
 I SMART-modus er det implisitt bare en lege som kommer inn (via EPJ-ens egen autentisering, og på sikt HelseID). I normal Altinn-modus kan i prinsippet **enhver Altinn-bruker** starte tjenesten i dag — `applicationmetadata.json` sin `partyTypesAllowed: {person: true}` har ingen ytterligere sjekk på hvem denne personen er.
