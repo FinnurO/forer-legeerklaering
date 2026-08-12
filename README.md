@@ -69,6 +69,7 @@ Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJ
 | [NHN-DOKUMENTASJON.md](docs/NHN-DOKUMENTASJON.md) | Oppsummering av NHNs implementasjonsguide for SMART App Launch og NHNs produksjons-Førerrett-App på Helsenorge-plattformen |
 | [KARTLEGGING-kandidater.md](docs/KARTLEGGING-kandidater.md) | Kartlegging av EPJ-systemer, eksisterende SMART-apper og kandidater for nye SMART on FHIR-implementasjoner i norsk helsesektor |
 | [STRATEGI.md](docs/STRATEGI.md) | Produktvisjon, to spor (Førerrett PoC / Altinn Health Integration Framework), samarbeidsmodell, gevinsthypotese og nasjonal roadmap |
+| [HACKATHON-EHIN-2026.md](docs/HACKATHON-EHIN-2026.md) | Forberedelse til Norwegian FHIR Hackathon 2026 (EHiN-pre-konferanse, 9. nov) — gap-analyse mot SMART-sporets bronse/sølv/gull-krav |
 
 ---
 

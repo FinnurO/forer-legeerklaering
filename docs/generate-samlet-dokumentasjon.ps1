@@ -33,6 +33,7 @@ $sections = @(
     @{ File = "NHN-DOKUMENTASJON.md";            Title = "NHN-dokumentasjon" }
     @{ File = "KARTLEGGING-kandidater.md";       Title = "Kartlegging av rapporteringsplikter" }
     @{ File = "STRATEGI.md";                     Title = "Strategi" }
+    @{ File = "HACKATHON-EHIN-2026.md";           Title = "Norwegian FHIR Hackathon 2026 - forberedelse" }
 )
 
 function Get-Slug([int]$Number, [string]$Title) {
