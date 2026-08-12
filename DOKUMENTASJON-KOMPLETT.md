@@ -4000,15 +4000,32 @@ Prioritert etter innsats vs. verdi:
 - **Nettverk mot EPJ-leverandører:** hackathonet samler nettopp de aktørene som er relevante for [RISIKOREGISTER.md R1](RISIKOREGISTER.md) (fastlege-EPJ FHIR-modenhet er ukjent) og potensielt for HelseID-kontakter (C-2).
 - **EHiN-tilknytning:** som pre-konferanse til EHiN gir dette en naturlig arena for å nevne PoC-en for et bredere publikum enn det rent tekniske hackathon-miljøet.
 - **Gratis, lav risiko:** ingen kostnad, og selv et Bronse-nivå-resultat er allerede oppnådd — nedsiden ved å delta er minimal.
+- **Trolig første sjanse til å teste mot norske FHIR-identifikatorer** — se punkt 6.
 
 ---
 
-## 5. Referanser
+## 6. NAVs referansemateriale — og hvorfor det ikke løser R1 i forkant
+
+Sporet lenker til to NAV-repoer (samme team som `syk-inn`, jf. [SAMMENLIGNING-syk-inn.md](SAMMENLIGNING-syk-inn.md)):
+
+| Repo | Hva det er | Relevans for oss |
+|---|---|---|
+| [`navikt/smart-on-fhir`](https://github.com/navikt/smart-on-fhir) | Server-only SMART-bibliotek (`SmartClient` + `ReadyClient`) — samme rolle som vår `SmartLaunchController`/`FhirPrefillService` | Referansekode for en produksjonsrettet norsk SMART-klient. Ikke produksjonsklar selv (eksplisitt merket) |
+| [`navikt/smart-on-fhir-validator`](https://github.com/navikt/smart-on-fhir-validator) | En **klient**-app ment å bli startet *fra* en EPJ, som validerer at EPJ-en korrekt tilbyr HPR-nummer og fødselsnummer/D-nummer med riktige OID-er | **Feil retning for oss** — vi trenger noe som simulerer en EPJ med norske data, ikke en klient til. Nyttig likevel som fasit på hvilke OID-sjekker en «compliant» norsk EPJ må bestå |
+
+**Konklusjon:** Ingen av disse gir oss en EPJ-simulator med norske identifikatorer å teste mot *før* hackathonet. `launch.smarthealthit.org` (som vi allerede har verifisert mot) bruker amerikanske Synthea-data — det tester protokollen, ikke de norske OID-ene. Sporbeskrivelsen sier det medbrakte EPJ-testmiljøet på selve dagen har «Synthetic Norwegian patient data» (fnr, D-nummer, HPR-nummer, orgnr) — **dette er trolig første reelle mulighet vi får til å verifisere `GetIdentifier`-mappingen i `FhirPrefillService.cs` mot ekte norske OID-er i praksis**, ikke bare i kode.
+
+**Forberedelse som faktisk kan gjøres i forkant:** les gjennom `smart-on-fhir-validator` sin valideringslogikk for OID-sjekkene (HPR: `2.16.578.1.12.4.1.4.4`, fnr: `2.16.578.1.12.4.1.4.1`, D-nummer: `2.16.578.1.12.4.1.4.2`) og bekreft at disse stemmer nøyaktig overens med det `FhirPrefillService.GetIdentifier` allerede bruker — de matcher for HPR og fnr, men **D-nummer er ikke håndtert i det hele tatt i dag** (kun fødselsnummer-OID-en sjekkes). Verdt å legge til før hackathonet, siden D-nummer er vanlig for pasienter uten norsk fødselsnummer.
+
+---
+
+## 7. Referanser
 
 - [SMART on FHIR-sporet](https://hl7norway.github.io/Norwegian-FHIR-Hackathon-2026/currentbuild/smart-track.html)
 - [IMPLEMENTERING.md §13](IMPLEMENTERING.md) — vår egen verifisering mot launch.smarthealthit.org, inkl. alle 7 bugs
 - [IMPLEMENTERING.md §14 og §14.1](IMPLEMENTERING.md) — HelseID og Helsenorge EksternAPI-erfaring, direkte overførbar til Gull-nivå
 - [VEIKART.md](VEIKART.md) fase 2 — writeback-planen som overlapper med Gull-alternativ 1
+- [navikt/smart-on-fhir](https://github.com/navikt/smart-on-fhir) og [navikt/smart-on-fhir-validator](https://github.com/navikt/smart-on-fhir-validator) — NAVs referansekode og OID-valideringslogikk
 - [RISIKOREGISTER.md](RISIKOREGISTER.md) R1 (EPJ-modenhet), R4 (sikkerhetsgap), R9 (NHN-kontakt)
 
 
