@@ -22,6 +22,7 @@ $outFile  = Join-Path $repoRoot "DOKUMENTASJON-KOMPLETT.md"
 # Rekkefølge og titler — må holdes i sync med dokumentasjonstabellen i README.md
 $sections = @(
     @{ File = "HELHETLIG-FLYT.md";               Title = "Helhetlig flyt: Pasient - Helsenorge - EPJ - SVV" }
+    @{ File = "DOBBEL-INNGANGSMODUS.md";          Title = "Dobbel inngangsmodus: SMART on FHIR vs. normal Altinn-pålogging" }
     @{ File = "KRAVSPESIFIKASJON-v0.6.md";      Title = "Kravspesifikasjon v0.6" }
     @{ File = "IMPLEMENTERING.md";               Title = "Implementeringsdetaljer" }
     @{ File = "SKJEMA-IS2569.md";                Title = "Skjemastruktur IS-2569" }

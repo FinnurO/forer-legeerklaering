@@ -86,6 +86,8 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 
 **Syntese — modellene utelukker ikke hverandre.** Det sterkeste grepet er å **standardisere integrasjonslaget** og la *hostingmodellen* velges per case, ut fra tre variabler: (1) hvem er mottaker — helsemottaker eller tverrsektor-mottaker, (2) trengs innbyggerkanal (→ vanskelig å unngå Helsenorge), (3) hvor høy er den kliniske UX-terskelen. Posisjoneringen blir da: **Altinn-modellen er selvbetjenings-, tverrsektor- og DPG-laget**; **NHN-modellen er det helse-native laget med innbyggerkanal**; **EPJ-modellen gir best klinisk UX der den finnes**; **NAV-modellen passer virksomheter med tung egen utviklingskapasitet**. Gevinsten for nasjonen ligger i at de deler samme integrasjonsstandard — ikke i at én modell vinner.
 
+**Tilleggsdifferensiator, lagt til 2026-08-12 — dobbel inngangsmodus:** ikke alle EPJ-leverandører har, eller vil, implementere SMART on FHIR. NAV-modellen (`syk-inn`), NHN-modellen (Førerrett-App) og EPJ-modellen har alle *dedikerte* apper som forutsetter sin respektive integrasjon og ikke fungerer uten. **Altinn-modellen er den eneste som kan tilby samme skjema uavhengig av om EPJ-en støtter SMART eller ikke** — legen kan komme inn via SMART EHR Launch *eller* logge inn i Altinn normalt (ID-porten) som en hvilken som helst annen Altinn-tjeneste, i samme app. Se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md) for full analyse av hva dette krever teknisk, og hvorfor det bør bli en eksplisitt del av «helse-template»-visjonen i Spor B.
+
 ---
 
 ## Samarbeidsmodell

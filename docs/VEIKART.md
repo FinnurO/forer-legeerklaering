@@ -39,6 +39,27 @@ Strategien følger det NAV har bevist med `syk-inn`:
 
 ---
 
+## Fase 1b — Portal-modus: pasientoppslag og HPR-bekreftelse uten SMART
+
+*Lagt til 2026-08-13. Adresserer [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md) §3.2–3.4 — hva som skal til for at legen kan bruke appen selv om EPJ-en ikke støtter SMART on FHIR. Avventer to klientregistreringer, se «Status» under. Ikke startet.*
+
+**Nøkkelfunn (2026-08-13):** Altinn Platform sin native innlogging støtter i dag **kun ID-porten, Feide og UIDP** som godkjente identitetsleverandører (kilde: [OIDC Providers – Altinn](https://docs.altinn.studio/technology/architecture/capabilities/runtime/security/authentication/oidcproviders/)). Å legge til HelseID som en fullverdig, plattformnivå Altinn-innloggingsmetode krever godkjenning/arbeid fra Altinn Studio-teamet selv — det er ikke noe vi kan løse i denne apps kode alene. **Løsningen er derfor en app-intern tilleggsflyt**, ikke en endring av Altinns native innlogging: legen logger inn i Altinn helt normalt (ID-porten, uendret), og appen tilbyr deretter en egen HelseID-autorisasjonsflyt *inni* skjemaet — samme tekniske mønster som `SmartLaunchController` allerede bruker for SMART-launch, bare trigget av legen selv i stedet for av en EPJ.
+
+| Tiltak | Beskrivelse | Avhengighet |
+|---|---|---|
+| **Modus-deteksjon** | Sett et modus-indikatorfelt (SMART vs. portal) i `IInstantiationProcessor.DataCreation` — kjører uansett hvilken vei brukeren kom inn, før `ProcessDataRead`. Se DOBBEL-INNGANGSMODUS.md §3.1/3.5. | Ingen — kan startes nå |
+| **`PersonLookup`-komponent** | Innebygd Altinn Studio-komponent («Finn person», søk i Folkeregisteret) — legges i layout, synlig kun i portal-modus, for å identifisere pasienten. `OrganisationLookup` er tilsvarende for virksomhet/orgnr. | Ingen — kan startes nå |
+| **HelseID-tilleggsflyt for legen** | Ny, app-intern OAuth-redirect til HelseID (authorization_code + PKCE), separat fra Altinn sin egen ID-porten-innlogging. Henter `pid` + `hpr_number`-claims. Krever ny HelseID-klient (autentisering, ikke system-til-system) — se IMPLEMENTERING.md §14 for registreringsprosess. | ❌ HelseID authorization_code-klient finnes ikke ennå — må registreres på selvbetjening.test.nhn.no |
+| **HPR-bekreftelse** | `GET /v1/personer/{hpr_number}` mot [HPR Offentlig API](https://utviklerportal.nhn.no/informasjonstjenester/helsepersonellregisteret) (testmiljø: `https://api.offentlig.test.hpr.nhn.no/`), Maskinporten-sikret, scope `nhn:hpr/basic` (selvbetjent, ingen godkjenning fra Helsedirektoratet nødvendig siden vi kun trenger oppslag *på HPR-nummer*, ikke fnr — det ville krevd `nhn:hpr/extended`). Bekrefter navn og autorisert rolle, prefiller legens felter. | ❌ Maskinporten-klient med `nhn:hpr/basic` finnes ikke ennå — må registreres (selvbetjent, samarbeidsportalen.digdir.no) |
+
+**Status (2026-08-13):** Analysert og arkitektur besluttet. **Venter** på at Johann oppretter de to klientregistreringene over før bygging starter — ikke igangsatt.
+
+**Bekreftet presedens:** «Apotekdrift» (DMP, apotektillatelser) er en produksjonssatt Altinn Studio-app som allerede gjør nøyaktig denne typen HPR-validering mot Maskinporten. Bekrefter konfigurasjonsmønster (`{AppNavn}-MaskinportenSettings` med `HprApiEndpoint`/`Authority`) og avdekker at HPR-oppslaget også bør sjekke `Utdannelse`/autorisasjonstype (bekreft at personen er autorisert som *lege*, ikke bare at HPR-nummeret er gyldig for en vilkårlig helsepersonellkategori). Se [DOBBEL-INNGANGSMODUS.md §3.3](DOBBEL-INNGANGSMODUS.md) for fullt funn, inkl. et alternativt side-/felt-nivå valideringsmønster (`ValidateHprNumber` knyttet til spesifikke datamodell-felt) som kan gi bedre UX enn en hard `IInstantiationValidator`-blokkering.
+
+**Åpent strategisk spørsmål:** bør Digdir (via Altinn Studio-teamet) forfølge HelseID som en fullverdig, godkjent Altinn OIDC-provider på plattformnivå (analogt med Feide/UIDP), fremfor at hver helse-app bygger sin egen app-interne tilleggsflyt? Det ville gitt samme gevinst til *alle* fremtidige helse-apper på Altinn, ikke bare denne — direkte relevant for helse-template-visjonen i STRATEGI.md Spor B. Ikke en beslutning som kan tas i denne PoC-en alene.
+
+---
+
 ## Fase 2 — Writeback til EPJ
 
 *Lukker den viktigste funksjonelle mangelen. NAVs ADR01 fra `syk-inn` er en direkte oppskrift.*
@@ -97,6 +118,8 @@ Digdir.SmartOnFhir/
 **Hva som ikke skal inn:**  
 Applikasjonslogikk (prefill-mapping, FHIR-ressursmodeller, skjemastruktur). Pakken er protokoll, ikke domene.
 
+**Lagt til 2026-08-12 — dobbel inngangsmodus må være del av malen, ikke bare protokollen:** ikke alle EPJ-er støtter SMART. Malen bør derfor også inneholde et konvensjonsmønster for at appen fungerer *uten* SMART-kontekst (normal Altinn-pålogging), ikke bare selve SMART-protokollhåndteringen. Se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md) for full analyse — dette er trolig den sterkeste differensiatoren for Altinn-modellen (STRATEGI.md), og bør derfor prioriteres inn i pakken/malen, ikke behandles som en `forer-legeerklaering`-spesifikk bivirkning.
+
 **Publisering:** NuGet.org + GitHub Packages. Versjonering via SemVer, changelog-drevet.
 
 **Estimat:** 2–3 uker for v0.1 (etter at fase 1-koden er stabil nok å ekstrahere fra).
@@ -120,18 +143,20 @@ Applikasjonslogikk (prefill-mapping, FHIR-ressursmodeller, skjemastruktur). Pakk
 ## Prioritert rekkefølge
 
 ```
-Fase 1: SMART-klient (tokenvalidering, refresh, allowlist, distribuert sesjon)
+Fase 1:  SMART-klient (tokenvalidering, refresh, allowlist, distribuert sesjon)
     ↓
-Fase 2: Writeback (DocumentReference + QuestionnaireResponse)
+Fase 1b: Portal-modus (PersonLookup, HelseID-tilleggsflyt, HPR-bekreftelse) — venter på klientregistreringer
     ↓
-Fase 3: Testing (e2e + unit + integrasjon)
+Fase 2:  Writeback (DocumentReference + QuestionnaireResponse)
     ↓
-Fase 4: NuGet-pakke Digdir.SmartOnFhir
+Fase 3:  Testing (e2e + unit + integrasjon)
     ↓
-Fase 5: Full IS-2569, HelseID, mottaksarkitektur (etter menneskelige avklaringer)
+Fase 4:  NuGet-pakke Digdir.SmartOnFhir
+    ↓
+Fase 5:  Full IS-2569, HelseID, mottaksarkitektur (etter menneskelige avklaringer)
 ```
 
-Fase 1–3 er uavhengige av menneskelige beslutninger og kan startes nå.  
+Fase 1–3 er uavhengige av menneskelige beslutninger og kan startes nå. Fase 1b sin modus-deteksjon og `PersonLookup`-komponent kan også startes nå — kun HelseID-tilleggsflyten og HPR-bekreftelsen venter på klientregistreringer.  
 Fase 4 er avhengig av at fase 1 er stabil — ikke av fase 2–3.  
 Fase 5 er avhengig av avklaringene i `BESLUTNINGER.md`.
 
