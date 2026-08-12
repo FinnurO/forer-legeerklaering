@@ -196,7 +196,8 @@ forer-legeerklaering/
 
 | Begrensning | Status |
 |---|---|
-| Full OAuth-redirect-flyt (ERR_TOO_MANY_REDIRECTS) | Uløst — workaround: Hurtigstart (`/smart/dev-login`) |
+| ~~Full OAuth-redirect-flyt (ERR_TOO_MANY_REDIRECTS)~~ | ✅ Løst 2026-08-11 — full ende-til-ende-demo verifisert mot [launch.smarthealthit.org](https://launch.smarthealthit.org/) (7 bugs funnet og rettet), se [IMPLEMENTERING.md §13](docs/IMPLEMENTERING.md) |
+| Altinn-sesjon i produksjon — dagens `/smart/callback`-mitigering bruker localtests testbruker-endepunkt, som ikke finnes i prod | Dev-mitigert 2026-08-11, prod-design gjenstår — se [VEIKART.md fase 1](docs/VEIKART.md), [RISIKOREGISTER.md R10](docs/RISIKOREGISTER.md) |
 | DocumentReference writeback til EPJ etter innsending | Planlagt — se [VEIKART.md fase 2](docs/VEIKART.md) |
 | FHIR-token validering mot EPJ | Ikke implementert (kreves i prod) — se [VEIKART.md fase 1](docs/VEIKART.md) |
 | Issuer allowlist er tom | Konfig-gap (kreves i prod) — se [VEIKART.md fase 1](docs/VEIKART.md) |

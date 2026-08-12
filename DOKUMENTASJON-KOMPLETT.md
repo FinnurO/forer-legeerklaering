@@ -1,6 +1,6 @@
 ﻿# forer-legeerklaering — Samlet dokumentasjon
 
-**Generert:** 2026-08-11
+**Generert:** 2026-08-12
 **Kilde:** `docs/` — rekkefølge etter tabell i README.md. Generert av `docs/generate-samlet-dokumentasjon.ps1` — kjør skriptet på nytt etter endringer i docs/*.md, rediger ikke denne filen direkte.
 
 ---
@@ -101,7 +101,8 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | # | Steg | Status | Kilde |
 |---|---|---|---|
 | 1 | Pasient fyller ut egenerklæring via Helsenorge | ❌ Ikke implementert — kun arkitekturforslag (to alternativer) | [PASIENTFLYT.md](PASIENTFLYT.md) |
-| 2 | EPJ → Altinn: SMART EHR Launch | ✅ Verifisert (mock lokalt; `/smart/dev-login`-workaround pga. `ERR_TOO_MANY_REDIRECTS` i full flyt) | [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs), [RISIKOREGISTER.md R8](RISIKOREGISTER.md) |
+| 2 | EPJ → Altinn: SMART EHR Launch, full ende-til-ende | ✅ **Fullstendig verifisert 2026-08-11** mot [launch.smarthealthit.org](https://launch.smarthealthit.org/) — innlogging, pasientvalg, callback, Altinn-sesjon og full FHIR-prefill (pasient/lege/virksomhet). 7 bugs funnet og rettet | [IMPLEMENTERING.md §13](IMPLEMENTERING.md), [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) |
+| 2b | Altinn-sesjon etableres for legen | ⚠️ Mitigert i dev (auto-innlogging via localtest-testbruker i `/smart/callback`), men ikke en produksjonsløsning — se §14 for det egentlige forslaget (HelseID-identitet) | [RISIKOREGISTER.md R10](RISIKOREGISTER.md), [VEIKART.md fase 1](VEIKART.md) |
 | 3 | Altinn henter FHIR-data fra EPJ | ✅ Verifisert (mot lokal HAPI FHIR-mock, ikke reell fastlege-EPJ) | [FhirPrefillService.cs](../src/App/services/FhirPrefillService.cs), [RISIKOREGISTER.md R1](RISIKOREGISTER.md) |
 | 3b | Altinn henter pasientens egenerklæring (QuestionnaireResponse) | ❌ Ikke implementert — avhenger av steg 1 | [PASIENTFLYT.md §3](PASIENTFLYT.md) |
 | 4 | Lege fyller ut, signerer, sender inn | ✅ Verifisert («Signer og send inn», Task_1) | [process.bpmn](../src/App/config/process/process.bpmn) |
@@ -120,6 +121,7 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | Pasient/Helsenorge | [PASIENTFLYT.md](PASIENTFLYT.md) — begge alternativer |
 | Helsenorge EksternAPI teknisk | [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md), [local-dev/helseid-token-test/](../local-dev/helseid-token-test/), [local-dev/helsenorge-oppgave-test/](../local-dev/helsenorge-oppgave-test/) |
 | EPJ ↔ Altinn (SMART launch) | [KRAVSPESIFIKASJON-v0.6.md §4](KRAVSPESIFIKASJON-v0.6.md), [arkitektur-oversikt.svg](arkitektur-oversikt.svg), [smart-launch-sekvens.svg](smart-launch-sekvens.svg) |
+| Testing mot ekte SMART-server + funn (redirect-bugs, sesjonsgap) | [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | Signering | [IMPLEMENTERING.md](IMPLEMENTERING.md) — Altinn signing task-avsnittet |
 | Altinn ↔ SVV (mottak) | [BESLUTNINGER.md C-3](BESLUTNINGER.md) — Altinn Events, FINT Arkiv-mønster, to-lags datamodell |
 | Altinn ↔ EPJ (writeback) | [VEIKART.md fase 2](VEIKART.md) |
@@ -138,9 +140,13 @@ Bekreftet fungerende 2026-08-11 (se README.md for fullstendige steg). Fire prose
 | SMART Auth Mock | 9090 | `cd local-dev/smart-mock && node server.js` |
 | Altinn-appen (`forer-legeerklaering`) | 5005 | `cd src/App && dotnet run` |
 
-**Kjent fallgruve:** Altinn localtest-plattformen (port 5101/8000) kan henge/ikke svare hvis den startes *før* Altinn-appen selv er oppe på port 5005 — den ser ut til å ha en avhengighet til appen ved oppstart av forespørsler. Start i denne rekkefølgen: containere → SMART mock → Altinn-appen, og gi containerne litt tid før du tester.
+**Kjente fallgruver:**
+- Altinn localtest-plattformen (port 5101/8000) kan henge/ikke svare hvis den startes *før* Altinn-appen selv er oppe på port 5005 — den ser ut til å ha en avhengighet til appen ved oppstart av forespørsler. Start i denne rekkefølgen: containere → SMART mock (eller ingenting, se under) → Altinn-appen, og gi containerne litt tid før du tester.
+- `app-localtest` sin nginx-konfig (`loadbalancer/templates/nginx.conf.conf`) bruker `proxy_set_header Host $host;` — dette **utelater porten** fra `Host`-headeren videre til appen, som ødelegger enhver funksjon som bygger egne redirect-URL-er fra `Request.Host` (bl.a. SMART-callback). Rettet lokalt til `$http_host`; husk `podman restart localtest-loadbalancer` etter endringen. Dette er en feil i Altinns delte infrastruktur, ikke i dette repoet — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md).
 
 Etter at alt kjører: åpne `http://localhost:9090/epj` for EPJ-simulatoren (anbefalt startpunkt for demo), eller gå direkte til `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/dev-login` for hurtigstart uten UI.
+
+**For å teste den ekte SMART-launch-flyten** (ikke bare `/dev-login`) mot en standardkompatibel server, se [IMPLEMENTERING.md §13 «Teste mot launch.smarthealthit.org»](IMPLEMENTERING.md) — SMART Auth Mock trengs ikke for den testen, og hele kjeden inkl. Altinn-innlogging og FHIR-prefill er nå bekreftet fungerende (steg 2b i statustabellen over er dev-mitigert).
 
 
 ---
@@ -800,6 +806,7 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 11. [Cache-strategi for FHIR-data](#11-cache-strategi-for-fhir-data)
 12. [Proxy-sikkerhet og audit logging](#12-proxy-sikkerhet-og-audit-logging)
 13. [Teststrategi og testmiljøer](#13-teststrategi)
+    - [Teste mot launch.smarthealthit.org](#teste-mot-en-ekte-standardkompatibel-smart-server-launchsmarthealthitorg)
 14. [HelseID-integrasjon: kom i gang](#14-helseid-integrasjon-kom-i-gang)
     - [14.1 HelseID EksternAPI (Oppgave/Skjema) — maskin-til-maskin, verifisert](#141-helseid-eksternapi-helsenorge-oppgaveskjema--maskin-til-maskin-verifisert)
 15. [Referanser og inspirasjonskilder](#15-referanser-og-inspirasjonskilder)
@@ -1661,6 +1668,36 @@ SyntPop lege:    HPR = 7654321, navn = "Per Hansen", spesialitet = Allmennmedisi
 Data fra SyntPop må konverteres til FHIR-ressurser og PUT inn i HAPI FHIR manuelt (via seed-script). Det er ingen direkte FHIR-integrasjon. På sikt kan seed-scriptet oppdateres til å hente data fra SyntPop API automatisk.
 
 For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://github.com/synthetichealth/synthea) genererer FHIR R4-bundles direkte.
+
+### Teste mot en ekte, standardkompatibel SMART-server: launch.smarthealthit.org
+
+**Status (2026-08-11): ✅ Full ende-til-ende-demo oppnådd.** Fra `launch.smarthealthit.org` gjennom innlogging, pasientvalg, SMART-callback, Altinn-innlogging og fullstendig FHIR-prefill (pasient, lege, virksomhet, konsultasjon) til et utfylt skjema klart til signering. Underveis ble **7 bugs** funnet og rettet — se funn #1–7 under. Dette er den mest grundig verifiserte enkeltstrekningen i hele PoC-en.
+
+[SMART Launcher](https://launch.smarthealthit.org/) (fra SMART Health IT-prosjektet, `smart-on-fhir/smart-launcher-v2` på GitHub) er en offentlig, spec-compliant EHR-launch-simulator med syntetiske Synthea-pasienter. Siden hele OAuth-redirecten skjer i nettleseren (ikke server-til-server), kan den brukes til å teste vår faktiske `SmartLaunchController`-flyt lokalt — noe vi aldri hadde gjort før, siden `/smart/dev-login` alltid har vært workaround-veien.
+
+**Slik gjør du det:**
+1. Sørg for at hele det lokale miljøet kjører (Altinn localtest, HAPI FHIR, Altinn-appen — se README.md «Kom i gang»). SMART Auth Mock trengs *ikke* for denne testen.
+2. Gå til [launch.smarthealthit.org](https://launch.smarthealthit.org/)
+3. Launch Type: «Provider EHR Launch», FHIR Version: «R4»
+4. La «Patient(s)» og «Provider(s)» stå tomme (gir en interaktiv pasientvelger/innlogging — mer realistisk enn en forhåndsvalgt pasient)
+5. I feltet **«App's Launch URL»**, lim inn: `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch`
+6. Klikk **Launch** — dette åpner en lenke i formatet `<launch-url>?iss=...&launch=...`, som du åpner i din egen nettleser (ikke i et sandboxet/skybasert nettleserpanel — `local.altinn.cloud` blir ofte blokkert der som et internt nettverk)
+
+**Funn #1 — `ERR_TOO_MANY_REDIRECTS` (løst i vår egen kode):** `SmartConfiguration`- og `TokenResponse`-klassene i `SmartLaunchController.cs` hadde ingen `[JsonPropertyName]`-attributter. `JsonSerializerOptions { PropertyNameCaseInsensitive = true }` løser kun store/små bokstaver — **ikke** `snake_case` (`authorization_endpoint`) → `PascalCase` (`AuthorizationEndpoint`). Feltene deserialiserte alltid til `null`, `BuildAuthorizationUrl` bygde en tom/relativ redirect-URL, og nettleseren tolket det som «last denne siden på nytt» — i det uendelige. Denne koden har vært ødelagt siden den ble skrevet; den ble aldri oppdaget fordi `/smart/dev-login` omgår hele discovery/redirect-stien. Rettet med eksplisitte `[JsonPropertyName("...")]` på begge klassene (både `authorization_endpoint`/`token_endpoint` og OAuth2-tokenfeltene `access_token`/`token_type`/`expires_in`/`refresh_token`, som har samme snake_case-problem).
+
+**Funn #2 — manglende port i `redirect_uri` (løst i `app-localtest`, ikke vårt repo):** Etter funn #1 var rettet, kom en ny variant av samme feil: `redirect_uri` ble bygget uten port (`local.altinn.cloud` i stedet for `local.altinn.cloud:8000`), som ga `ERR_CONNECTION_REFUSED` på callback. Rotårsak: `app-localtest/loadbalancer/templates/nginx.conf.conf` bruker `proxy_set_header Host $host;` — en kjent nginx-fallgruve der `$host` **utelater porten**. Rettet lokalt til `proxy_set_header Host $http_host;` (som bevarer det klienten faktisk sendte) og verifisert med `podman restart localtest-loadbalancer`. Dette er en feil i Altinns egen delte `app-localtest`-infrastruktur (git-repo `C:\Users\jsf\source\app-localtest` hos Johann), ikke i `forer-legeerklaering` — bør vurderes rapportert til Altinn Studio-teamet, siden enhver Altinn-app som konstruerer sin egen eksterne redirect-URL fra `Request.Host` vil rammes.
+
+**Funn #3 — manglende Altinn-sesjon etter SMART callback (mitigert i dev, IKKE løst for prod — se VEIKART.md fase 1):** Med bugs #1–2 rettet fullføres hele SMART-flyten korrekt — innlogging, pasientvalg, autorisasjonskode, callback, tokenutveksling. Men appen hadde da kun FHIR/SMART-kontekst, **ingen Altinn-sesjon**. Altinns eget `AltinnCore.Authentication.JwtCookie`-rammeverk (i `Altinn.App.Api`) forsøker å utfordre med en redirect til `{ApiAuthenticationEndpoint}authentication?goto=...` — et endepunkt som ikke finnes i denne versjonen av `app-localtest` (verifisert: `AuthenticationController` har kun `refresh`/`orgToken`/`appToken`, ingen ren `authentication`-rute, og «goto» finnes ikke i kildekoden i det hele tatt). Dette er sannsynligvis nøyaktig grunnen til at `/smart/dev-login` ble laget: den er den eneste stien som *både* logger inn i Altinn (via localtests test-token-endepunkt) *og* seeder FHIR-konteksten i ett steg.
+
+**Midlertidig løsning (kun Development):** `Callback` sjekker nå om det finnes en Altinn-sesjon (`AltinnStudioRuntime`-cookie); hvis ikke, kalles samme localtest-testbruker-mekanikk som `/dev-login` bruker (utledet til en delt `EstablishLocaltestAltinnSessionAsync`-metode), som logger inn som Dr. Ola Nordmann. **Dette er ikke en produksjonsløsning** — den bruker localtests test-token-endepunkt, som ikke finnes utenfor lokal testing. Se VEIKART.md fase 1 for det egentlige forslaget: `/smart/callback` må i produksjon etablere en ekte Altinn-sesjon koblet til HelseID-identitet (§14), ikke en generisk ID-porten-utfordring.
+
+**Funn #4 — `FhirBaseUrlOverride` kapret ekte eksterne servere:** `SmartOnFhir:FhirBaseUrlOverride` er satt i `appsettings.Development.json` for å peke vår egen lokale SMART-mock til riktig Docker-adresse. Koden brukte den ubetinget uansett `iss`, som betød at en ekte ekstern launch (smarthealthit.org) fikk FHIR-oppslagene sine omdirigert til vår egen tomme HAPI FHIR-mock — stille feil, ingen data funnet. Rettet: override brukes nå kun når `iss` ikke er `https://` (dvs. bare for vår egen `http`-mock).
+
+**Funn #5 — kaskaderende bug fra funn #1:** Da `TokenResponse.AccessToken` fikk `[JsonPropertyName("access_token")]` (funn #1), endret det også hvordan tokenet *serialiseres* til sesjonen — fra `"AccessToken"` til `"access_token"`. `FhirPrefillService.TokenData` (en annen klasse, brukt til å lese tokenet tilbake ut av sesjonen i `ProcessDataRead`) hadde ingen tilsvarende attributt og forventet fortsatt `"AccessToken"`. Tokenet ble dermed `null` → `Bearer <null>` → **401 Unauthorized** på alle FHIR-kall, helt stille. Rettet med samme `[JsonPropertyName("access_token")]` på `TokenData`, pluss oppdatering av to steder som konstruerte et mock-token som anonymt objekt (`/dev-login`, `/test-prefill`) til samme nøkkelnavn.
+
+**Funn #6 — `fhirUser` som relativ URL:** `FillPractitioner` antok `ctx.FhirUser` alltid var en full URL. `launch.smarthealthit.org` returnerte en relativ referanse (`Practitioner/<id>`), som gjorde at HTTP-kallet feilet stille (ugyldig URI). Rettet med samme mønster som allerede fantes for Organization-referanser: prepend `FhirBaseUrl` hvis verdien ikke starter med `http`.
+
+**Funn #7 — `fhirUser` manglet som toppnivåfelt i token-responsen:** Selv med funn #4–6 rettet, forble legenavn tomt. `token.FhirUser` var tom fordi smarthealthit.org for denne launch-konfigurasjonen ikke inkluderte `fhirUser` som eget felt i token-svaret — kun som et `fhirUser`-claim inne i selve `access_token`-JWT-en. En kommentar i koden hadde allerede forutsett akkurat dette scenariet («noen EPJ-systemer returnerer det som JWT-claim i access_token i stedet») uten at fallbacken faktisk var implementert. Lagt til `TryExtractClaimFromJwt` — dekoder JWT-payloaden uten signaturvalidering (kun brukt til prefill, aldri til autorisasjonsbeslutninger) og henter ut `fhirUser`-claimet hvis toppnivåfeltet mangler.
 
 ---
 
@@ -2774,17 +2811,19 @@ Dette dokumentet samler risikoene som allerede er beskrevet andre steder i dokum
 | R5 | Lav adopsjon hos fastleger — konteksbytte ut av EPJ til Altinn er svakere UX enn EPJ-native løsninger | Endringsledelse / brukeradopsjon | Middels | Middels-Høy — teknisk fungerende løsning som ingen tar i bruk i klinisk praksis | Digdir + fastlegeorganisasjoner (Legeforeningen) | Brukertest med reelle fastleger; vurder om «grønt» parallell-case (KARTLEGGING D6) er bedre første pilot enn førerrett | Ikke startet |
 | R6 | Initiativet oppfattes som konkurrerende med NHNs produksjonsløsning for IS-2569 på Helsenorge | Strategisk / posisjonering | Middels | Middels — politisk sårbarhet, dobbeltarbeid, samarbeidsvilje fra NHN | Programleder | Bruk firemodell-analysen (STRATEGI.md) som felles språk med NHN; kontakt NHN-teamet (Slack `ext-utv-hn-forerrett`) for skriftlig komplementaritet | Dialog ikke bekreftet gjennomført — se [BESLUTNINGER.md C-6](BESLUTNINGER.md) |
 | R7 | Ingen automatiserte tester — regresjon kan innføres uten å bli fanget opp | Teknisk kvalitet | Høy | Middels — hindrer trygg videreutvikling og bredding | Teknisk team | VEIKART.md fase 3: e2e-røyktest + unit-tester (jf. `syk-inn`: 23 unit + 24 e2e) | Ikke startet — se [VEIKART.md fase 3](VEIKART.md) |
-| R8 | Full OAuth-redirect-flyt (`ERR_TOO_MANY_REDIRECTS`) er ikke løst — kun `/smart/dev-login`-workaround er bevist | Teknisk | Middels | Middels — den reelle SMART-launch-flyten er ikke bevist ende-til-ende | Teknisk team | Diagnostiser redirect-loopen mot en ekte EPJ-testklient | Uløst — se [README.md «Kjente begrensninger»](../README.md) |
+| ~~R8~~ | ~~Full OAuth-redirect-flyt (`ERR_TOO_MANY_REDIRECTS`) er ikke løst~~ | Teknisk | — | — | Teknisk team | — | ✅ **Løst 2026-08-11** mot [launch.smarthealthit.org](https://launch.smarthealthit.org/) — to bugs funnet og rettet, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | R9 | Helsenorge EksternAPI-autentisering er verifisert, men selve testmiljøtilgangen (portal + «digitalt aktive» testpersoner) krever formell NHN-leverandørkontakt — ikke selvbetjent | Organisatorisk / avhengighet | Lav (kjent prosess) | Middels — blokkerer videre verifisering av pasientsporet (PASIENTFLYT.md alt. B) inntil kontakt er tatt | Programleder | Ta kontakt via `ext-utv-hn-forerrett`-Slack eller `ide-ogbestillingsmottak@nhn.no` for testmiljøtilgang og provisjonering av testpersoner | Ikke startet — se [BESLUTNINGER.md C-6](BESLUTNINGER.md) og [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) |
+| R10 | Etter vellykket SMART callback har appen FHIR/token-kontekst, men ingen Altinn-sesjon — Altinns generiske JWT-cookie-utfordring (`AltinnCore.Authentication.JwtCookie`) redirecter til et endepunkt som ikke finnes i `app-localtest` | Teknisk / arkitektur | Middels (mitigert i dev) | Høy for produksjon — uten en ekte løsning kan ikke SMART-launch fungere selvstendig i prod | Teknisk team | ✅ Dev-mitigering implementert 2026-08-11 (auto-innlogging via localtest-testbruker i `/smart/callback`). **Gjenstår:** ekte produksjonsdesign koblet til HelseID-identitet (§14) | Delvis løst — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md), [VEIKART.md fase 1](VEIKART.md) |
 
 ---
 
 ## Prioritert lukkerekkefølge
 
 1. **R2 (rettslig grunnlag) og R3 (mottaksarkitektur)** — begge er forutsetninger uavhengig av hvilken leveransemodell som velges (jf. [STRATEGI.md](STRATEGI.md) «Fire leveransemodeller»). Ingen dialog med helseaktører bør starte før disse har en navngitt eier og et konkret neste steg.
-2. **R1 (EPJ-modenhet) og R4 (sikkerhetsgap)** — tekniske forutsetninger for at PoC-en kan kalles produksjonsklar. Kan startes uten menneskelige avklaringer.
-3. **R7 og R8** — kvalitets- og robusthetsarbeid, gjøres parallelt med 1–2.
-4. **R5 og R6** — adopsjon og posisjonering. Krever at 1–2 er på plass først for å ha noe reelt å vise fastleger og NHN.
+2. **R10 (Altinn-sesjon mangler)** — blokkerer enhver ende-til-ende-demo uten `/dev-login`. Pågår.
+3. **R1 (EPJ-modenhet) og R4 (sikkerhetsgap)** — tekniske forutsetninger for at PoC-en kan kalles produksjonsklar. Kan startes uten menneskelige avklaringer.
+4. **R7** — kvalitets- og robusthetsarbeid, gjøres parallelt med 1–3. (R8 er løst.)
+5. **R5 og R6** — adopsjon og posisjonering. Krever at 1–3 er på plass først for å ha noe reelt å vise fastleger og NHN.
 
 Se også [BESLUTNINGER.md](BESLUTNINGER.md) for beslutningsdetaljer og [VEIKART.md](VEIKART.md) for tekniske tiltak per fase.
 
@@ -2825,7 +2864,8 @@ Strategien følger det NAV har bevist med `syk-inn`:
 | **Refresh-håndtering** | `offline_access` etterspørres allerede — men token byttes ikke ut. Implementer bakgrunns-refresh i `FhirPrefillService` (sjekk `ExpiresAt` før hvert FHIR-kall, exchang refresh token om nødvendig). | `syk-inn`: `autoRefresh` |
 | **Issuer-allowlist** | Fyll `SmartOnFhir:AllowedIssuerList` i appsettings og sett opp per-miljø konfigurasjon (dev/test/prod). Legg til kjente norske fastlege-EPJ-er: CGM Journal, Infodoc, WebMed, Pridok, Aspit System X. (DIPS Arena er sykehus-EPJ og ikke aktuell for denne bruksflyten — men relevant dersom Spor B generaliseres til spesialisthelsetjenesten.) | README «Konfig-gap» |
 | **Distribuert sesjon** | Bytt `AddDistributedMemoryCache()` med Redis/Valkey. Kreves for HA (flere pod-er). FHIR-kontekst og token lagres allerede i sesjon — ingen kodeendring utover DI-konfig. | `syk-inn`: Valkey med 30-dagers TTL |
-| **ERR_TOO_MANY_REDIRECTS** | Diagnostiser og løs redirect-loopen i full OAuth-flyt. `/dev-login`-workaround er kun lokalt. | README «Kjente begrensninger» |
+| ~~**ERR_TOO_MANY_REDIRECTS**~~ | ✅ **Løst 2026-08-11.** To bugs funnet ved testing mot [launch.smarthealthit.org](https://launch.smarthealthit.org/): (1) manglende `[JsonPropertyName]` på snake_case FHIR/OAuth-felter i `SmartLaunchController.cs` — rettet; (2) `app-localtest` sin nginx bruker `$host` (uten port) i stedet for `$http_host` — rettet lokalt, bør rapporteres til Altinn Studio-teamet. Se [IMPLEMENTERING.md §13](IMPLEMENTERING.md). | README «Kjente begrensninger», IMPLEMENTERING.md §13 |
+| **Altinn-sesjon mangler etter SMART callback** | ⚠️ **Mitigert i dev, ikke løst for prod (2026-08-11).** `/smart/callback` etablerer nå automatisk en localtest-testbrukersesjon i Development hvis ingen Altinn-sesjon finnes — nok til en fungerende lokal demo. **Gjenstår:** en ekte produksjonsløsning, koblet til HelseID-identitet (§14) fremfor localtests testbruker-endepunkt, som ikke finnes utenfor lokal testing. | IMPLEMENTERING.md §13, §14 |
 
 **Estimat:** 2–3 uker med tilgang til et ekte fastlege-EPJ-testmiljø (f.eks. WebMed/CGM sandkasse).
 

@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Altinn.App.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -157,7 +158,8 @@ namespace Altinn.App.Controllers
             if (string.IsNullOrEmpty(fhirBase))
                 return BadRequest("SmartOnFhir:FhirBaseUrlOverride ikke konfigurert");
 
-            var mockToken = new { AccessToken = "mock-test-token" };
+            // Nøkkelnavn må matche FhirPrefillService.TokenData sin [JsonPropertyName("access_token")].
+            var mockToken = new { access_token = "mock-test-token" };
             var tokenJson = System.Text.Json.JsonSerializer.Serialize(mockToken);
 
             var fhirContext = new FhirLaunchContext
@@ -208,31 +210,9 @@ namespace Altinn.App.Controllers
             if (!_env.IsDevelopment())
                 return NotFound();
 
-            // Fetch JWT from localtest (server-to-server, bypasses CSRF)
-            var localtestBase =
-                _config["PlatformSettings:ApiAuthenticationEndpoint"]?.Replace("/authentication/api/v1/", "")
-                ?? "http://localhost:5101";
-
-            var client = _httpClientFactory.CreateClient();
-            var tokenResponse = await client.GetAsync(
-                $"{localtestBase}/Home/GetTestUserToken/{userId}?authenticationLevel=2"
-            );
-            if (!tokenResponse.IsSuccessStatusCode)
+            var loginOk = await EstablishLocaltestAltinnSessionAsync(userId, partyId);
+            if (!loginOk)
                 return StatusCode(502, $"Kunne ikke hente token fra localtest for userId={userId}");
-
-            var token = await tokenResponse.Content.ReadAsStringAsync();
-
-            // Set the same cookies localtest's LogInTestUser sets
-            var runtimeCookieName = _config["AppSettings:RuntimeCookieName"] ?? "AltinnStudioRuntime";
-            var partyCookieName = _config["AppSettings:AltinnPartyCookieName"] ?? "AltinnPartyId";
-            var cookieOptions = new CookieOptions
-            {
-                Path = "/",
-                SameSite = SameSiteMode.Lax,
-                IsEssential = true,
-            };
-            Response.Cookies.Append(runtimeCookieName, token, cookieOptions);
-            Response.Cookies.Append(partyCookieName, partyId.ToString(), cookieOptions);
 
             _logger.LogInformation(
                 "DevLogin: userId={UserId} partyId={PartyId} patient={PatientId} encounter={EncounterId}",
@@ -246,7 +226,8 @@ namespace Altinn.App.Controllers
             var fhirBase = _config["SmartOnFhir:FhirBaseUrlOverride"];
             if (!string.IsNullOrEmpty(fhirBase))
             {
-                var mockTokenJson = System.Text.Json.JsonSerializer.Serialize(new { AccessToken = "mock-test-token" });
+                // Nøkkelnavn må matche FhirPrefillService.TokenData sin [JsonPropertyName("access_token")].
+                var mockTokenJson = System.Text.Json.JsonSerializer.Serialize(new { access_token = "mock-test-token" });
                 var fhirContext = new FhirLaunchContext
                 {
                     PatientId = patientId,
@@ -274,6 +255,38 @@ namespace Altinn.App.Controllers
             var org = RouteData.Values["org"]?.ToString();
             var app = RouteData.Values["app"]?.ToString();
             return Redirect($"/{org}/{app}");
+        }
+
+        /// <summary>
+        /// Dev-only: henter en localtest-JWT for gitt userId/partyId og setter Altinn-auth-cookies.
+        /// Utledet fra DevLogin slik at Callback kan gjenbruke den samme innloggingsmekanikken (R10).
+        /// </summary>
+        private async Task<bool> EstablishLocaltestAltinnSessionAsync(int userId, int partyId)
+        {
+            var localtestBase =
+                _config["PlatformSettings:ApiAuthenticationEndpoint"]?.Replace("/authentication/api/v1/", "")
+                ?? "http://localhost:5101";
+
+            var client = _httpClientFactory.CreateClient();
+            var tokenResponse = await client.GetAsync(
+                $"{localtestBase}/Home/GetTestUserToken/{userId}?authenticationLevel=2"
+            );
+            if (!tokenResponse.IsSuccessStatusCode)
+                return false;
+
+            var token = await tokenResponse.Content.ReadAsStringAsync();
+
+            var runtimeCookieName = _config["AppSettings:RuntimeCookieName"] ?? "AltinnStudioRuntime";
+            var partyCookieName = _config["AppSettings:AltinnPartyCookieName"] ?? "AltinnPartyId";
+            var cookieOptions = new CookieOptions
+            {
+                Path = "/",
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true,
+            };
+            Response.Cookies.Append(runtimeCookieName, token, cookieOptions);
+            Response.Cookies.Append(partyCookieName, partyId.ToString(), cookieOptions);
+            return true;
         }
 
         /// <summary>
@@ -318,12 +331,28 @@ namespace Altinn.App.Controllers
             if (token == null)
                 return StatusCode(502, "Token exchange failed");
 
+            // Fallback bekreftet nødvendig 2026-08-11 mot launch.smarthealthit.org: fhirUser kom ikke
+            // som eget toppnivåfelt i token-responsen for denne launch-konfigurasjonen, kun som claim
+            // i access_token-JWT-en. Dekodes uten signaturvalidering — brukes kun til en FHIR-referanse
+            // for prefill, ikke til autorisasjonsbeslutninger, så det er innenfor akseptabel risiko her.
+            if (string.IsNullOrEmpty(token.FhirUser))
+            {
+                token.FhirUser = TryExtractClaimFromJwt(token.AccessToken, "fhirUser");
+                if (!string.IsNullOrEmpty(token.FhirUser))
+                    _logger.LogInformation("fhirUser hentet fra access_token-claim (ikke toppnivåfelt)");
+            }
+
             // Store token server-side — never expose to browser
             HttpContext.Session.SetString(TokenSessionKey, JsonSerializer.Serialize(token));
 
             // Store FHIR context for pre-fill
-            // Allow override of FHIR base URL (useful when iss uses localhost but app runs on host)
-            var fhirBaseUrl = _config["SmartOnFhir:FhirBaseUrlOverride"] ?? iss;
+            // FhirBaseUrlOverride finnes for vår egen lokale SMART-mock (iss er en Docker-intern
+            // http-adresse appen ikke kan nå direkte). Den skal IKKE brukes for ekte eksterne
+            // SMART-servere (https), ellers prøver FhirPrefillService å hente pasientdata fra vår
+            // egen HAPI FHIR-mock med en pasient-ID fra en helt annen server (404/tom prefill).
+            // Bug funnet 2026-08-11 ved test mot launch.smarthealthit.org — se IMPLEMENTERING.md §13.
+            var isRealExternalIssuer = iss?.StartsWith("https://", StringComparison.OrdinalIgnoreCase) == true;
+            var fhirBaseUrl = isRealExternalIssuer ? iss : (_config["SmartOnFhir:FhirBaseUrlOverride"] ?? iss);
             var fhirContext = new FhirLaunchContext
             {
                 PatientId = token.Patient,
@@ -336,6 +365,22 @@ namespace Altinn.App.Controllers
             // Clear PKCE and state from session
             HttpContext.Session.Remove(StateSessionKey);
             HttpContext.Session.Remove(PkceSessionKey);
+
+            // R10 (RISIKOREGISTER.md): en ekte SMART callback gir FHIR-kontekst, men ingen
+            // Altinn-sesjon — Altinns generiske ID-porten-utfordring virker ikke fra denne inngangen
+            // (se IMPLEMENTERING.md §13). Midlertidig demo-løsning: i Development, etabler en
+            // localtest-testbrukersesjon automatisk hvis vi ikke allerede har en. Dette er IKKE en
+            // produksjonsløsning — se VEIKART.md fase 1 for det egentlige forslaget (HelseID-identitet
+            // → Altinn-sesjon).
+            var runtimeCookieName = _config["AppSettings:RuntimeCookieName"] ?? "AltinnStudioRuntime";
+            var hasAltinnSession = Request.Cookies.ContainsKey(runtimeCookieName);
+            if (!hasAltinnSession && _env.IsDevelopment())
+            {
+                _logger.LogInformation(
+                    "Callback: ingen Altinn-sesjon funnet — etablerer localtest-testbruker (kun dev)"
+                );
+                await EstablishLocaltestAltinnSessionAsync(userId: 12345, partyId: 512345);
+            }
 
             return Redirect($"/{org}/{app}");
         }
@@ -452,18 +497,73 @@ namespace Altinn.App.Controllers
             return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
 
+        /// <summary>
+        /// Dekoder en JWT-payload uten signaturvalidering og henter ut ett claim.
+        /// KUN for prefill-formål (f.eks. fhirUser-fallback) — skal ALDRI brukes til
+        /// autorisasjonsbeslutninger uten signatur-/utsteder-/utløpsvalidering.
+        /// </summary>
+        private static string TryExtractClaimFromJwt(string jwt, string claimName)
+        {
+            try
+            {
+                var parts = jwt?.Split('.');
+                if (parts == null || parts.Length < 2)
+                    return null;
+
+                var payload = parts[1].Replace('-', '+').Replace('_', '/');
+                switch (payload.Length % 4)
+                {
+                    case 2:
+                        payload += "==";
+                        break;
+                    case 3:
+                        payload += "=";
+                        break;
+                }
+
+                var json = Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+                using var doc = JsonDocument.Parse(json);
+                return doc.RootElement.TryGetProperty(claimName, out var value) ? value.GetString() : null;
+            }
+            catch (Exception)
+            {
+                // access_token er ikke nødvendigvis en JWT (kan være et opakt token) — det er da
+                // forventet at dette feiler, ikke en feilsituasjon som skal logges som warning/error.
+                return null;
+            }
+        }
+
         private class SmartConfiguration
         {
+            // BUG (2026-08-11, R8 i RISIKOREGISTER.md): PropertyNameCaseInsensitive løser kun
+            // store/små bokstaver, ikke snake_case -> PascalCase. Uten disse attributtene
+            // deserialiserer "authorization_endpoint"/"token_endpoint" til null, BuildAuthorizationUrl
+            // bygger en tom/relativ URL, og Redirect() sender nettleseren tilbake til /smart/launch
+            // — som årsaket ERR_TOO_MANY_REDIRECTS. Reprodusert og bekreftet mot launch.smarthealthit.org.
+            [JsonPropertyName("authorization_endpoint")]
             public string AuthorizationEndpoint { get; set; }
+
+            [JsonPropertyName("token_endpoint")]
             public string TokenEndpoint { get; set; }
         }
 
         private class TokenResponse
         {
+            // Samme snake_case-bug som SmartConfiguration (OAuth2 token-respons, RFC 6749) —
+            // rettet samtidig, siden ExchangeCodeForToken ellers ville feile likt etter at
+            // autorisasjonsomdirigeringen er fikset.
+            [JsonPropertyName("access_token")]
             public string AccessToken { get; set; }
+
+            [JsonPropertyName("token_type")]
             public string TokenType { get; set; }
+
+            [JsonPropertyName("expires_in")]
             public int ExpiresIn { get; set; }
+
+            [JsonPropertyName("refresh_token")]
             public string RefreshToken { get; set; }
+
             public string Patient { get; set; }
             public string Encounter { get; set; }
 
