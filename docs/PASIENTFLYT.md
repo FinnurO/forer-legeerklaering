@@ -1,7 +1,9 @@
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
-**Dato:** 2026-06-16 (oppdatert 2026-08-10)  
+**Dato:** 2026-06-16 (oppdatert 2026-08-12)  
 **Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere. Alternativ B sin autentisering er nå teknisk verifisert, se §4.
+
+**Viktig presisering (2026-08-12):** Dette dokumentet beskriver **innbyggerens** del av flyten — pasienten som fyller ut egenerklæring (NA-0201). Dette er et vanlig **Altinn-skjema**, **ikke SMART on FHIR**. Kvitteringen havner i Altinn innboks (standard) og skal *i tillegg* havne i Helsenorge (se «DokumentAPI»-avsnittet under §4). Dette er en helt annen integrasjon enn **legens writeback til EPJ** (som *er* SMART on FHIR, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)) — de to må ikke blandes, selv om begge til slutt handler om samme legeerklæring.
 
 ---
 
@@ -206,6 +208,16 @@ Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App b
 ### Anbefaling
 
 **Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
+
+### DokumentAPI — kvittering til Helsenorge (funn 2026-08-12)
+
+Presisert av Johann: når innbyggeren fyller ut egenerklæringen **i Altinn**, skal kvitteringen havne i Altinn innboks (standard) **og** i Helsenorge. Fant den relevante mekanismen: [Helsenorge DokumentAPI](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1820623169) (`POST <BaseUrl>/dokumenter/api/v1/SaveDokument`) — «lagre dokument i innbyggers helsearkiv på Helsenorge... som informasjon til innbygger, eventuelt innbyggers kopi».
+
+**To ting å være klar over før dette kan brukes:**
+1. **Innholdstype-begrensning:** dokumentasjonen sier eksplisitt at API-et «pr. i dag kun» tilbyr lagring av «resultat fra Verktøy der det utføres egenkartlegging» (`innholdType = Egenkartlegging`, kode 6, eneste definerte verdi for eksterne systemer). En egenerklæring (NA-0201, pasienten svarer selv på 17 ja/nei-spørsmål om egen helse) er i praksis nettopp en egenkartlegging — dette skiller seg fra **legens** legeerklæring (IS-2569, en klinisk vurdering), som ikke ville kvalifisert under denne kategorien. Bør bekreftes med NHN at NA-0201-kvitteringen faktisk faller innenfor definisjonen, men den språklige treffsikkerheten er lovende.
+2. **Autentisering er brukertilstedeværelse-basert:** DokumentAPI krever «en innlogget innbygger» med AksessToken via «sømløs pålogging» (Helsenorge som OpenID Connect-provider) — altså en helt annen autentiseringsmodell enn `client_credentials`-flyten vi allerede har verifisert for Oppgave/Skjema (IMPLEMENTERING.md §14.1). Å kalle DokumentAPI fra Altinn krever at Altinn-appen får en Helsenorge-OIDC-token for den *samme* innbyggeren som er innlogget i Altinn — en SSO/token-utvekslings-utfordring vi ikke har utforsket, analog til HelseID-pid-matchingen beskrevet for legen i §14.
+
+**Testmiljøtilgang:** samme begrensning som Oppgave-API-et — «oppsett av API-klient i test-miljø(er) avtales som en del av kundeoppkoplingen» (se [RISIKOREGISTER.md R9](RISIKOREGISTER.md)).
 
 ---
 

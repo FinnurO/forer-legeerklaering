@@ -926,6 +926,30 @@ For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://g
 
 Se [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) `TestWriteback()`-metoden for full implementasjon.
 
+**Kan man se resultatet?** Ja — smarthealthit.org sin FHIR-server tillater ukryptert `GET` uten token. `curl https://launch.smarthealthit.org/v/r4/fhir/DocumentReference/<id>` (eller lim URL-en inn i en nettleser) viser ressursen som rå FHIR-JSON. Det finnes ikke noe klinisk visningsgrensesnitt på smarthealthit.org — det er et API-sandkasse, ikke en journal-UI — så «se resultatet» betyr i praksis å lese JSON-en direkte, ikke en visuell journalside.
+
+### Viktig presisering — to ulike aktører og oppgaver må ikke blandes
+
+Johann presiserte 2026-08-12: **innbyggers egenerklæring** (NA-0201) og **writeback til EPJ** er to helt forskjellige integrasjoner, ikke to varianter av samme ting:
+
+| | Innbyggers egenerklæring | Writeback til EPJ |
+|---|---|---|
+| **Aktør** | Innbygger/pasient | Behandler (lege) |
+| **Hvor fylles det ut** | Altinn (egen app, `forer-egenerklaring`) | — (data hentes/skrives via FHIR, ikke fylt ut på nytt) |
+| **Protokoll** | *Ikke* SMART on FHIR — vanlig Altinn-skjema | SMART on FHIR |
+| **Hvor havner resultatet** | Altinn innboks (alltid) + kvittering til Helsenorge (i tillegg) | EPJ-ens FHIR-server |
+| **Relevant API** | Trolig Helsenorge DokumentAPI (se PASIENTFLYT.md) — ikke bekreftet | `DocumentReference`/`QuestionnaireResponse` via SMART-token (denne seksjonen) |
+
+Dette skiller seg fra tidligere formuleringer i STRATEGI.md/PASIENTFLYT.md som til tider har omtalt begge som del av «SMART on FHIR-flyten» — kun writeback til EPJ er SMART on FHIR. Egenerklæringen er et rent Altinn-skjema med en kvitteringsmekanisme mot Helsenorge.
+
+### Timing-bug funnet og rettet: writeback må ikke skje før innsending (2026-08-12)
+
+Johann påpekte at writeback ikke bør skje før legen faktisk trykker «Send inn» — og det avdekket en **allerede eksisterende bug**, ikke bare et fremtidig hensyn for writeback-koden. `IDataProcessor.ProcessDataWrite` (som `ForerKonklusjonModel`-avledningen lå i, se BESLUTNINGER.md C-3) kjører på **hver autolagring** mens legen fyller ut skjemaet — ikke bare ved innsending. Det betyr SVV-konklusjonen ble skrevet/oppdatert gjentatte ganger under utfylling, potensielt med en halvferdig eller uferdig vurdering.
+
+**Riktig hook er `IProcessTaskEnd.End(taskId, instance)`** — kjører når en prosessoppgave *avsluttes* (for oss: Task_1, signering/innsending). Verifiserte den eksakte metodesignaturen direkte mot den installerte `Altinn.App.Core` 8.6.4-pakken via refleksjon (GitHub sin `main`-gren viste en annen, nyere signatur på `IDataClient.GetFormData` enn det som faktisk er installert — verdt å huske for senere).
+
+**Rettet:** `FhirPrefillService` implementerer nå `IProcessTaskEnd` i tillegg til `IDataProcessor`. `ProcessDataWrite` er en no-op. `End(taskId, instance)` sjekker `taskId == "Task_1"`, henter `ForerLegeerklaeringModel` via `IDataClient.GetFormData`, og avleder/lagrer `ForerKonklusjonModel` — først da. **Denne samme regelen gjelder for den fremtidige EPJ-writeback-implementasjonen** (VEIKART.md fase 2): den må også ligge i `End()`, ikke i `ProcessDataWrite` eller trigges av testendepunktet `test-writeback` (som er et manuelt, sesjonsbasert diagnoseverktøy — ikke koblet til prosesslivssyklusen, og skal aldri bli mønsteret for den ferdige implementasjonen).
+
 ---
 
 ## 14. HelseID-integrasjon: kom i gang

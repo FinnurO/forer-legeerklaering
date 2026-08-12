@@ -1712,6 +1712,30 @@ For globalt tilgjengelige syntetiske pasienter (ikke norsk): [Synthea](https://g
 
 Se [SmartLaunchController.cs](../src/App/controllers/SmartLaunchController.cs) `TestWriteback()`-metoden for full implementasjon.
 
+**Kan man se resultatet?** Ja — smarthealthit.org sin FHIR-server tillater ukryptert `GET` uten token. `curl https://launch.smarthealthit.org/v/r4/fhir/DocumentReference/<id>` (eller lim URL-en inn i en nettleser) viser ressursen som rå FHIR-JSON. Det finnes ikke noe klinisk visningsgrensesnitt på smarthealthit.org — det er et API-sandkasse, ikke en journal-UI — så «se resultatet» betyr i praksis å lese JSON-en direkte, ikke en visuell journalside.
+
+### Viktig presisering — to ulike aktører og oppgaver må ikke blandes
+
+Johann presiserte 2026-08-12: **innbyggers egenerklæring** (NA-0201) og **writeback til EPJ** er to helt forskjellige integrasjoner, ikke to varianter av samme ting:
+
+| | Innbyggers egenerklæring | Writeback til EPJ |
+|---|---|---|
+| **Aktør** | Innbygger/pasient | Behandler (lege) |
+| **Hvor fylles det ut** | Altinn (egen app, `forer-egenerklaring`) | — (data hentes/skrives via FHIR, ikke fylt ut på nytt) |
+| **Protokoll** | *Ikke* SMART on FHIR — vanlig Altinn-skjema | SMART on FHIR |
+| **Hvor havner resultatet** | Altinn innboks (alltid) + kvittering til Helsenorge (i tillegg) | EPJ-ens FHIR-server |
+| **Relevant API** | Trolig Helsenorge DokumentAPI (se PASIENTFLYT.md) — ikke bekreftet | `DocumentReference`/`QuestionnaireResponse` via SMART-token (denne seksjonen) |
+
+Dette skiller seg fra tidligere formuleringer i STRATEGI.md/PASIENTFLYT.md som til tider har omtalt begge som del av «SMART on FHIR-flyten» — kun writeback til EPJ er SMART on FHIR. Egenerklæringen er et rent Altinn-skjema med en kvitteringsmekanisme mot Helsenorge.
+
+### Timing-bug funnet og rettet: writeback må ikke skje før innsending (2026-08-12)
+
+Johann påpekte at writeback ikke bør skje før legen faktisk trykker «Send inn» — og det avdekket en **allerede eksisterende bug**, ikke bare et fremtidig hensyn for writeback-koden. `IDataProcessor.ProcessDataWrite` (som `ForerKonklusjonModel`-avledningen lå i, se BESLUTNINGER.md C-3) kjører på **hver autolagring** mens legen fyller ut skjemaet — ikke bare ved innsending. Det betyr SVV-konklusjonen ble skrevet/oppdatert gjentatte ganger under utfylling, potensielt med en halvferdig eller uferdig vurdering.
+
+**Riktig hook er `IProcessTaskEnd.End(taskId, instance)`** — kjører når en prosessoppgave *avsluttes* (for oss: Task_1, signering/innsending). Verifiserte den eksakte metodesignaturen direkte mot den installerte `Altinn.App.Core` 8.6.4-pakken via refleksjon (GitHub sin `main`-gren viste en annen, nyere signatur på `IDataClient.GetFormData` enn det som faktisk er installert — verdt å huske for senere).
+
+**Rettet:** `FhirPrefillService` implementerer nå `IProcessTaskEnd` i tillegg til `IDataProcessor`. `ProcessDataWrite` er en no-op. `End(taskId, instance)` sjekker `taskId == "Task_1"`, henter `ForerLegeerklaeringModel` via `IDataClient.GetFormData`, og avleder/lagrer `ForerKonklusjonModel` — først da. **Denne samme regelen gjelder for den fremtidige EPJ-writeback-implementasjonen** (VEIKART.md fase 2): den må også ligge i `End()`, ikke i `ProcessDataWrite` eller trigges av testendepunktet `test-writeback` (som er et manuelt, sesjonsbasert diagnoseverktøy — ikke koblet til prosesslivssyklusen, og skal aldri bli mønsteret for den ferdige implementasjonen).
+
 ---
 
 ## 14. HelseID-integrasjon: kom i gang
@@ -2270,8 +2294,10 @@ Total estimert utvidelse: fra 18 til ~70 felt i datamodellen.
 
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
-**Dato:** 2026-06-16 (oppdatert 2026-08-10)  
+**Dato:** 2026-06-16 (oppdatert 2026-08-12)  
 **Status:** Arkitekturforslag — utenfor PoC-scope, men nødvendig å adressere. Alternativ B sin autentisering er nå teknisk verifisert, se §4.
+
+**Viktig presisering (2026-08-12):** Dette dokumentet beskriver **innbyggerens** del av flyten — pasienten som fyller ut egenerklæring (NA-0201). Dette er et vanlig **Altinn-skjema**, **ikke SMART on FHIR**. Kvitteringen havner i Altinn innboks (standard) og skal *i tillegg* havne i Helsenorge (se «DokumentAPI»-avsnittet under §4). Dette er en helt annen integrasjon enn **legens writeback til EPJ** (som *er* SMART on FHIR, se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)) — de to må ikke blandes, selv om begge til slutt handler om samme legeerklæring.
 
 ---
 
@@ -2477,6 +2503,16 @@ Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App b
 
 **Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
 
+### DokumentAPI — kvittering til Helsenorge (funn 2026-08-12)
+
+Presisert av Johann: når innbyggeren fyller ut egenerklæringen **i Altinn**, skal kvitteringen havne i Altinn innboks (standard) **og** i Helsenorge. Fant den relevante mekanismen: [Helsenorge DokumentAPI](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1820623169) (`POST <BaseUrl>/dokumenter/api/v1/SaveDokument`) — «lagre dokument i innbyggers helsearkiv på Helsenorge... som informasjon til innbygger, eventuelt innbyggers kopi».
+
+**To ting å være klar over før dette kan brukes:**
+1. **Innholdstype-begrensning:** dokumentasjonen sier eksplisitt at API-et «pr. i dag kun» tilbyr lagring av «resultat fra Verktøy der det utføres egenkartlegging» (`innholdType = Egenkartlegging`, kode 6, eneste definerte verdi for eksterne systemer). En egenerklæring (NA-0201, pasienten svarer selv på 17 ja/nei-spørsmål om egen helse) er i praksis nettopp en egenkartlegging — dette skiller seg fra **legens** legeerklæring (IS-2569, en klinisk vurdering), som ikke ville kvalifisert under denne kategorien. Bør bekreftes med NHN at NA-0201-kvitteringen faktisk faller innenfor definisjonen, men den språklige treffsikkerheten er lovende.
+2. **Autentisering er brukertilstedeværelse-basert:** DokumentAPI krever «en innlogget innbygger» med AksessToken via «sømløs pålogging» (Helsenorge som OpenID Connect-provider) — altså en helt annen autentiseringsmodell enn `client_credentials`-flyten vi allerede har verifisert for Oppgave/Skjema (IMPLEMENTERING.md §14.1). Å kalle DokumentAPI fra Altinn krever at Altinn-appen får en Helsenorge-OIDC-token for den *samme* innbyggeren som er innlogget i Altinn — en SSO/token-utvekslings-utfordring vi ikke har utforsket, analog til HelseID-pid-matchingen beskrevet for legen i §14.
+
+**Testmiljøtilgang:** samme begrensning som Oppgave-API-et — «oppsett av API-klient i test-miljø(er) avtales som en del av kundeoppkoplingen» (se [RISIKOREGISTER.md R9](RISIKOREGISTER.md)).
+
 ---
 
 ## 5. Mapping: Egenerklæring → IS-2569
@@ -2665,7 +2701,9 @@ Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rø
 ```
 *(Faktiske id-er og namespace i `src/App/config/applicationmetadata.json` — implementert 2026-06-19, commit `38057a4`.)*
 
-`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.ProcessDataWrite` ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (ikke implementert ennå, se VEIKART.md fase 2).
+`ForerKonklusjonModel` populeres automatisk i `FhirPrefillService.End()` (`IProcessTaskEnd`, kjører når Task_1/signering avsluttes — se nedenfor) ved innsending (upsert via `IDataClient`), avledet fra den komplette modellen. Altinn Events varsler SVVs mottakssystem om at konklusjonen er klar; BFF skriver full attest til EPJ via `DocumentReference` (skrivemekanikken er nå bevist mot en ekte SMART-server, se IMPLEMENTERING.md §13, men selve produksjonsimplementasjonen gjenstår, se VEIKART.md fase 2).
+
+**Rettet 2026-08-12 — timing-bug:** avledningen lå tidligere i `IDataProcessor.ProcessDataWrite`, som kjører på *hver autolagring* under utfylling, ikke bare ved innsending. Flyttet til `IProcessTaskEnd.End(taskId, instance)`, som kun kjører når Task_1 faktisk avsluttes. Se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) for full forklaring — samme regel gjelder for den fremtidige EPJ-writeback-implementasjonen.
 
 **Kjent forenkling i PoC-implementasjonen:** `ForerLegeerklaeringModel` har i dag ett enkelt `Forer_Kjoretoygruppe`-felt og én `Forer_ErSkikket`-boolean — legen vurderer altså kun *én* kjøretøygruppe per legeerklæring. `DeriveKonklusjon()` i `FhirPrefillService.cs` setter derfor resultatet på den ene gruppen som matcher, og lar de to andre `GruppeX_Resultat`-feltene stå tomme. De tre uavhengige gruppefeltene i `ForerKonklusjonModel` er altså forberedt for, men ikke fylt av, reelle per-gruppe-vurderinger — det krever at `ForerLegeerklaeringModel` utvides til å holde skikkethet per gruppe (jf. full IS-2569, C-5).
 
