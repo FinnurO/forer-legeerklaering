@@ -379,3 +379,6 @@ nb-configuration.xml
 .idea
 src/Altinn.Apps/AppTemplates/AspNet/App/Properties/launchSettings.json
 *.iml
+
+## Lokalt genererte nokkelfiler (aldri commit privat OG offentlig-JWK-artefakter sammen)
+local-dev/smarthealthit-testing/*.json
