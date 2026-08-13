@@ -404,6 +404,15 @@ namespace Altinn.App.Controllers
             var codeVerifier = HttpContext.Session.GetString(PkceSessionKey);
             var smartConfig = await DiscoverSmartConfiguration(iss);
 
+            // Sikkerhetstesting 2026-08-13 (HACKATHON-EHIN-2026.md punkt 4): Launch() sjekker allerede
+            // smartConfig == null før den dereferereres, men Callback() gjorde det ikke — en transient
+            // discovery-feil (nettverksblip, EPJ nede et øyeblikk) mellom launch og callback ville gitt
+            // en uhåndtert NullReferenceException her (smartConfig.TokenEndpoint), ikke en trygg 502.
+            // Ikke reprodusert av noen av launch.smarthealthit.org sine "Simulated Error"-varianter i
+            // denne testrunden (de går alle via en gyldig discovery), men en reell driftsrisiko uansett.
+            if (smartConfig == null)
+                return StatusCode(502, "Could not retrieve SMART configuration from EPJ");
+
             var org = RouteData.Values["org"]?.ToString();
             var app = RouteData.Values["app"]?.ToString();
             var redirectUri = $"{Request.Scheme}://{Request.Host}/{org}/{app}/smart/callback";
@@ -421,6 +430,19 @@ namespace Altinn.App.Controllers
 
             if (token == null)
                 return StatusCode(502, "Token exchange failed");
+
+            // Sikkerhetstesting 2026-08-13: EPJ-ens token-endepunkt kan i teorien svare HTTP 200 med en
+            // JSON-body som mangler access_token (f.eks. en feil-body som likevel ikke gir non-2xx-status).
+            // ExchangeCodeForToken sin EnsureSuccessStatusCode()-sjekk fanger ikke dette — uten denne
+            // sjekken ville vi fortsatt inn i sesjonen med et token-objekt uten faktisk bearer-verdi.
+            // Relevant for token_invalid_token/token_expired_registration_token/token_invalid_scope-
+            // varianter i launch.smarthealthit.org sin "Simulated Error"-meny (krever interaktiv innlogging
+            // for å faktisk trigge — ikke reprodusert direkte i denne testrunden, se IMPLEMENTERING.md §13).
+            if (string.IsNullOrEmpty(token.AccessToken))
+            {
+                _logger.LogWarning("Token exchange ga ingen access_token fra {Endpoint}", smartConfig.TokenEndpoint);
+                return StatusCode(502, "Token exchange failed: no access token in response");
+            }
 
             // Fallback bekreftet nødvendig 2026-08-11 mot launch.smarthealthit.org: fhirUser kom ikke
             // som eget toppnivåfelt i token-responsen for denne launch-konfigurasjonen, kun som claim
