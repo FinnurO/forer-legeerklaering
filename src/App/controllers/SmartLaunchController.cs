@@ -418,6 +418,7 @@ namespace Altinn.App.Controllers
             var redirectUri = $"{Request.Scheme}://{Request.Host}/{org}/{app}/smart/callback";
             var clientId = _config["SmartOnFhir:ClientId"];
             var clientSecret = _config["SmartOnFhir:ClientSecret"];
+            var privateKeyPath = _config["SmartOnFhir:ClientAssertionPrivateKeyPath"];
 
             var token = await ExchangeCodeForToken(
                 smartConfig.TokenEndpoint,
@@ -425,6 +426,7 @@ namespace Altinn.App.Controllers
                 redirectUri,
                 clientId,
                 clientSecret,
+                privateKeyPath,
                 codeVerifier
             );
 
@@ -525,19 +527,13 @@ namespace Altinn.App.Controllers
             string redirectUri,
             string clientId,
             string clientSecret,
+            string clientAssertionPrivateKeyPath,
             string codeVerifier
         )
         {
             try
             {
                 var client = _httpClientFactory.CreateClient();
-
-                // Confidential client: Basic auth with client_id:client_secret
-                if (!string.IsNullOrEmpty(clientSecret))
-                {
-                    var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
-                }
 
                 var body = new Dictionary<string, string>
                 {
@@ -547,6 +543,34 @@ namespace Altinn.App.Controllers
                     ["client_id"] = clientId,
                     ["code_verifier"] = codeVerifier,
                 };
+
+                // Confidential Asymmetric client (private_key_jwt, RFC 7523): foretrekkes over
+                // client_secret hvis begge er konfigurert — en JWK-privatnøkkel er sterkere enn en
+                // delt hemmelighet siden ingenting hemmelig sendes over tråden i det hele tatt.
+                // Nøkkelen leses fra en lokal JSON-fil UTENFOR repoet (aldri i git, aldri i chat) —
+                // se docs/IMPLEMENTERING.md §14.2.
+                if (!string.IsNullOrEmpty(clientAssertionPrivateKeyPath))
+                {
+                    var assertion = BuildClientAssertionJwt(clientId, tokenEndpoint, clientAssertionPrivateKeyPath);
+                    if (assertion == null)
+                    {
+                        _logger.LogError(
+                            "Kunne ikke bygge client_assertion fra {Path} — se tidligere feilmelding",
+                            clientAssertionPrivateKeyPath
+                        );
+                        return null;
+                    }
+
+                    body["client_assertion_type"] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+                    body["client_assertion"] = assertion;
+                }
+                // Confidential Symmetric client: Basic auth med client_id:client_secret
+                else if (!string.IsNullOrEmpty(clientSecret))
+                {
+                    var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+                }
+                // Ellers: public client, ingen client-autentisering (kun code_verifier/PKCE).
 
                 var response = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(body));
                 response.EnsureSuccessStatusCode();
@@ -561,6 +585,117 @@ namespace Altinn.App.Controllers
                 _logger.LogError(ex, "Token exchange failed at {Endpoint}", tokenEndpoint);
                 return null;
             }
+        }
+
+        // Klasse som matcher JWK-JSON-formatet nøkkelparet ble generert i (se
+        // docs/IMPLEMENTERING.md §14.2) — samme felt-konvensjon (n, e, d, p, q, dp, dq, qi)
+        // som RFC 7518 §6.3.2 for en RSA-privatnøkkel.
+        private class ClientAssertionJwk
+        {
+            public string Kid { get; set; }
+            public string N { get; set; }
+            public string E { get; set; }
+            public string D { get; set; }
+            public string P { get; set; }
+            public string Q { get; set; }
+            public string Dp { get; set; }
+            public string Dq { get; set; }
+            public string Qi { get; set; }
+        }
+
+        /// <summary>
+        /// Bygger en signert JWT client_assertion for private_key_jwt-autentisering (RFC 7523 / SMART
+        /// App Launch IG v2.2.0 §5.4.1.1). iss/sub/aud/jti/exp følger profilen alle store EPJ-leverandører
+        /// (bl.a. HelseID) forventer: iss=sub=client_id, aud=token-endepunktet, kort levetid, unik jti.
+        /// </summary>
+        private string BuildClientAssertionJwt(string clientId, string tokenEndpoint, string privateKeyPath)
+        {
+            try
+            {
+                var jwkJson = System.IO.File.ReadAllText(privateKeyPath);
+                var jwk = JsonSerializer.Deserialize<ClientAssertionJwk>(
+                    jwkJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+                if (jwk == null || string.IsNullOrEmpty(jwk.D))
+                {
+                    _logger.LogError("JWK på {Path} mangler privat eksponent (d) — kan ikke signere", privateKeyPath);
+                    return null;
+                }
+
+                var rsaParameters = new RSAParameters
+                {
+                    Modulus = Base64UrlDecode(jwk.N),
+                    Exponent = Base64UrlDecode(jwk.E),
+                    D = Base64UrlDecode(jwk.D),
+                    P = Base64UrlDecode(jwk.P),
+                    Q = Base64UrlDecode(jwk.Q),
+                    DP = Base64UrlDecode(jwk.Dp),
+                    DQ = Base64UrlDecode(jwk.Dq),
+                    InverseQ = Base64UrlDecode(jwk.Qi),
+                };
+
+                using var rsa = RSA.Create();
+                rsa.ImportParameters(rsaParameters);
+
+                var header = new Dictionary<string, string>
+                {
+                    ["alg"] = "RS384",
+                    ["typ"] = "JWT",
+                    ["kid"] = jwk.Kid,
+                };
+                var now = DateTimeOffset.UtcNow;
+                var payload = new Dictionary<string, object>
+                {
+                    ["iss"] = clientId,
+                    ["sub"] = clientId,
+                    ["aud"] = tokenEndpoint,
+                    ["jti"] = Guid.NewGuid().ToString("N"),
+                    ["iat"] = now.ToUnixTimeSeconds(),
+                    // Kort levetid (2 minutter) — client_assertion er en engangs-signatur for én
+                    // token-exchange, ikke et gjenbrukbart adgangstoken.
+                    ["exp"] = now.AddMinutes(2).ToUnixTimeSeconds(),
+                };
+
+                var headerB64 = Base64UrlEncode(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(header)));
+                var payloadB64 = Base64UrlEncode(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload)));
+                var signingInput = $"{headerB64}.{payloadB64}";
+                var signature = rsa.SignData(
+                    Encoding.UTF8.GetBytes(signingInput),
+                    HashAlgorithmName.SHA384,
+                    RSASignaturePadding.Pkcs1
+                );
+
+                return $"{signingInput}.{Base64UrlEncode(signature)}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Kunne ikke bygge client_assertion-JWT fra JWK på {Path}", privateKeyPath);
+                return null;
+            }
+        }
+
+        private static string Base64UrlEncode(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
+        private static byte[] Base64UrlDecode(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+
+            var padded = value.Replace('-', '+').Replace('_', '/');
+            switch (padded.Length % 4)
+            {
+                case 2:
+                    padded += "==";
+                    break;
+                case 3:
+                    padded += "=";
+                    break;
+            }
+            return Convert.FromBase64String(padded);
         }
 
         private static string BuildAuthorizationUrl(

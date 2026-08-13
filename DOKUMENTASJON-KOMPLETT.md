@@ -1893,6 +1893,36 @@ Alle tre er `text/plain`-svar (bekreftet med `curl -D -`), så selv om `error`-v
 
 **Ikke i scope for denne runden:** selve tokenvalideringen (signatur, issuer, audience, utløpstid på et *gyldig-utseende* token) er fortsatt ikke implementert noe sted i appen — denne testrunden bekreftet kun at *feilresponser* fra EPJ-en håndteres trygt, ikke at appen selv ville avvist et forfalsket eller manipulert token. Det gapet står uendret i [RISIKOREGISTER.md R4](RISIKOREGISTER.md).
 
+### Verifisert: `client_secret`-autentisering (Confidential Symmetric) mot launch.smarthealthit.org (2026-08-13)
+
+Appens `ExchangeCodeForToken` har lenge støttet HTTP Basic-auth med `client_id:client_secret` når `SmartOnFhir:ClientSecret` er satt (`SmartLaunchController.cs`), men dette var aldri verifisert mot en ekte, ekstern SMART-server — kun mot vår egen mock, som ikke bryr seg om client-autentisering.
+
+**Fremgangsmåte:**
+1. `dotnet user-secrets init` + `dotnet user-secrets set "SmartOnFhir:ClientSecret" "<testverdi>"` i `src/App` — verdien lagres i `%APPDATA%\Microsoft\UserSecrets\<UserSecretsId>\secrets.json`, **utenfor repoet**, lastes automatisk av `WebApplication.CreateBuilder` i Development siden `App.csproj` nå har en `<UserSecretsId>`.
+2. launch.smarthealthit.org sin «Client Registration & Validation»-fane: Client Type = **Confidential Symmetric**, Client Identity Validation = **Loose** (godtar en hvilken som helst `client_secret` — reell verdimatch er ikke poenget her, poenget er at appen *sender* Basic-auth-headeren korrekt og *håndterer* en vellykket confidential-client-tokenrespons).
+3. Pasient og behandler forhåndsvalgt i `launch=`-payloaden (patient-ID hentet via `GET /v/r4/fhir/Patient?_count=1`, provider-ID `4832580` fra launcher-listen) — unngår launcher sin interaktive innloggings-/pasientvelger, som verken `curl` eller nettleserverktøyet kan gjennomføre mot `local.altinn.cloud`. Dette gjorde det mulig å kjøre **hele** launch → authorize → callback-kjeden med `curl` og en cookie-jar, uten manuell trigging.
+4. Resultat: `/smart/callback` svarte `302` til `/digdir/forer-legeerklaering` med `AltinnStudioRuntime`-cookien satt — dvs. token-exchange med Basic-auth `client_secret` lyktes (ingen av de to nye 502-vaktene fra sikkerhetstestrunden over ble utløst), og dev-only Altinn-sesjonsetableringen kjørte som forventet.
+
+**Konklusjon:** Confidential Symmetric-klienter (client_secret) er nå bekreftet å fungere ende-til-ende, ikke bare "burde fungere ut fra kodelesing".
+
+### Verifisert: `private_key_jwt`-autentisering (Confidential Asymmetric) mot launch.smarthealthit.org (2026-08-13)
+
+`ExchangeCodeForToken` støttet tidligere kun `client_secret` (Basic-auth) eller ingen autentisering (public client). Lagt til: **RFC 7523 `private_key_jwt`** — appen signerer selv en kort­levd JWT (`client_assertion`) med en privat RSA-nøkkel i stedet for å sende noe hemmelig over tråden. Dette er autentiseringsmetoden HelseID selv krever (se §14 under og [`local-dev/helseid-token-test/`](../local-dev/helseid-token-test/)), så det er verdt å ha samme mekanisme tilgjengelig for selve SMART-launchen.
+
+**Implementasjon** (`SmartLaunchController.cs`):
+- Ny config-nøkkel `SmartOnFhir:ClientAssertionPrivateKeyPath` — peker på en lokal JWK-JSON-fil **utenfor repoet**. Tom streng i `appsettings*.json` (committet), reell verdi satt via `dotnet user-secrets` (kun lokalt, aldri i git — se `docs/BESLUTNINGER.md`-mønsteret og sikkerhetsregelen fra denne sesjonen: private nøkler skal aldri limes inn i chat eller commit'es).
+- `BuildClientAssertionJwt(clientId, tokenEndpoint, privateKeyPath)`: leser JWK (RFC 7518 §6.3.2-felter: `n`,`e`,`d`,`p`,`q`,`dp`,`dq`,`qi`), bygger `RSAParameters`, signerer en JWT med `RS384`: `iss=sub=client_id`, `aud=token_endpoint`, unik `jti`, 2 minutters levetid. Base64url-koding gjort manuelt (samme mønster som den eksisterende `TryExtractClaimFromJwt`-dekoderen i samme fil, bare motsatt vei) — ingen ny NuGet-avhengighet.
+- `ExchangeCodeForToken`: hvis `ClientAssertionPrivateKeyPath` er satt, sendes `client_assertion`+`client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer` i stedet for Basic-auth. `private_key_jwt` foretrekkes over `client_secret` hvis begge skulle være konfigurert samtidig.
+
+**Nøkkelgenerering (denne runden):** RSA 2048-nøkkelpar generert lokalt med `System.Security.Cryptography.RSA` (PowerShell-script, ikke committet), eksportert som JWK. Privat JWK skrevet **kun** til `C:\Users\jsf\.local-secrets\` (utenfor alle repoer). Offentlig JWK (kun `kty`/`use`/`alg`/`kid`/`n`/`e` — ingen `d`/`p`/`q` osv.) er trygg å dele/registrere.
+
+**Fremgangsmåte:**
+1. launch.smarthealthit.org sin «Client Registration & Validation»-fane: Client Type = **Confidential Asymmetric**, Client Identity Validation = **Loose** (godtar en hvilken som helst *strukturelt gyldig* JWT-assertion — kontrollerer at `iss`/`sub`/`aud`/`exp` er til stede og konsistente, men verifiserer *ikke* signaturen kryptografisk mot en forhåndsregistrert JWKS. Strict-modus, som ville krevd at vi limte den offentlige JWK-en inn i en egen JWKS-boks, ble ikke testet i denne runden — se "Ikke i scope" under.)
+2. Samme teknikk som §-en over for å unngå launcher sin interaktive pasient-/behandlervelger: patient-ID og provider-ID forhåndsvalgt i `launch=`-payloaden.
+3. Kjørt hele launch → authorize → callback-kjeden med `curl` og cookie-jar. Resultat: `302` til `/digdir/forer-legeerklaering` med `AltinnStudioRuntime`-cookien satt — samme vellykkede utfall som Confidential Symmetric-testen. `dotnet run`-loggen viser ingen feilmelding fra `BuildClientAssertionJwt`/`ExchangeCodeForToken` (disse logger kun ved feil), og siden `Callback()` returnerer `502` umiddelbart hvis assertion-bygging feiler, er en vellykket omdirigering logisk bevis på at hele kjeden — JWK-innlasting, RSA-signering, HTTP-utveksling, tokenparsing — fungerte.
+
+**Ikke i scope for denne runden:** faktisk kryptografisk signaturverifisering av vår JWT mot en registrert JWKS (Strict-modus). Det denne testen beviser er at appen *bygger og sender* en RFC 7523-korrekt `client_assertion` som en ekte SMART-server godtar strukturelt — ikke at en angriper med feil nøkkel ville blitt avvist. Naturlig oppfølging: registrer den offentlige JWK-en i Strict-modus og bekreft at et signaturbevis faktisk kreves.
+
 ---
 
 ## 14. HelseID-integrasjon: kom i gang
@@ -1916,19 +1946,24 @@ Testmiljøet (`selvbetjening.test.nhn.no`) er tilgjengelig uten formell leverand
 | Grant type | `authorization_code` |
 | Auth method | `private_key_jwt` |
 
-4. Generer JWK-nøkkelpar (RS256). Last ned privat nøkkel — lagres i `appsettings.Development.json` (aldri i git)
+4. Generer JWK-nøkkelpar (RS256). **Rettelse (2026-08-13):** den private nøkkelen skal *aldri* lagres i `appsettings.Development.json` — den filen er committet til git (`src/App/appsettings.Development.json` er sporet i repoet, ikke gitignoret). Bruk i stedet samme mønster som er verifisert for SMART-launchens `private_key_jwt` over (§13): skriv JWK-en til en lokal JSON-fil et sted **utenfor** repoet (f.eks. `C:\Users\<bruker>\.local-secrets\`), og pek på filen via `dotnet user-secrets set "HelseID:PrivateKeyJwkPath" "<full sti>"` i `src/App`. `appsettings.Development.json` skal kun ha en tom placeholder-verdi, akkurat som `SmartOnFhir:ClientSecret`/`SmartOnFhir:ClientAssertionPrivateKeyPath`.
 
 ### Steg 2: Konfigurer app
 
 ```json
-// appsettings.Development.json
+// appsettings.Development.json (committet — kun placeholder)
 {
   "HelseID": {
     "Authority": "https://helseid-sts.test.nhn.no",
     "ClientId": "<din-klient-id>",
-    "PrivateKeyJwk": "<din-private-nøkkel-som-JWK-json>"
+    "PrivateKeyJwkPath": ""
   }
 }
+```
+
+```bash
+# Lokalt, ALDRI committet — ekte verdi satt via user-secrets
+dotnet user-secrets set "HelseID:PrivateKeyJwkPath" "C:\Users\<bruker>\.local-secrets\helseid-private-key.json"
 ```
 
 ### Steg 3: Token-validering i BFF

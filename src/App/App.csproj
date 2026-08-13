@@ -3,6 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Altinn.Application</AssemblyName>
     <RootNamespace>Altinn.App</RootNamespace>
+    <UserSecretsId>b5405b1e-fe65-4c41-9854-0efbfb838d2c</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Altinn.App.Api" Version="8.6.4">
