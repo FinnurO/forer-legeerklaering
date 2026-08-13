@@ -18,7 +18,7 @@ Testmiljøet hackathon-sporet bruker er slående likt vårt eget:
 
 **Vår posisjon er uvanlig sterk for dette arrangementet:** de fleste deltakere starter fra et skjelett-repo og bygger Bronse-nivå fra bunnen i løpet av dagen. Vi kommer med en **ekte, produksjonsformet Altinn Studio-app** som allerede er verifisert mot en ekte ekstern SMART-server. Det er en god historie å fortelle — og en mulighet til å teste PoC-en mot *enda et* uavhengig SMART-miljø.
 
-**Oppdatert 2026-08-12:** Bronse er i praksis oppnådd, og vi har allerede krysset av **minst ett alternativ på både Sølv- og Gull-nivå** (scope-detektivarbeid og writeback til EPJ, se §2) — mot et amerikansk testmiljø. Det gjenstår å bekrefte at det samme fungerer mot hackathonets norske EPJ-testmiljø på selve dagen, men det tekniske mønsteret er bevist. Vi går inn i dette arrangementet nærmere «alt bestått» enn «under utvikling».
+**Oppdatert 2026-08-13:** Bronse er i praksis oppnådd. På Sølv har vi krysset av **to av tre alternativer** (scope-detektivarbeid, client_secret-autentisering). På Gull har vi krysset av **to av fire alternativer** (writeback til EPJ, `private_key_jwt`) og gjort en fullstendig sikkerhetstestrunde (alle 9 «Simulated Error»-varianter reprodusert, ikke bare 3) — alt mot et amerikansk testmiljø. Det gjenstår å bekrefte at det samme fungerer mot hackathonets norske EPJ-testmiljø på selve dagen, men det tekniske mønsteret er bevist for begge Gull-alternativene og repeterbart via [`local-dev/smarthealthit-testing/`](../local-dev/smarthealthit-testing/) (se [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md)). Vi går inn i dette arrangementet med mer enn det som kreves alt bestått.
 
 ---
 
@@ -37,54 +37,51 @@ Testmiljøet hackathon-sporet bruker er slående likt vårt eget:
 
 ### Sølv — velg én
 
-**Status (2026-08-12): ett alternativ er i praksis oppnådd.**
+**Status (2026-08-13): to av tre alternativer er oppnådd.**
 
 | Alternativ | Vår status |
 |---|---|
 | **Klinisk mini-app** (diagnoser/målinger med klinisk verdi — trender, sammendrag, flagg) | ⚠️ Delvis. `FillCondition` henter siste aktive diagnose, men **`Observation` er ikke implementert i det hele tatt** — scope `patient/Observation.read` etterspørres, men brukes aldri. Ingen trend/sammendrag/flagging-logikk finnes |
 | **Scope-detektivarbeid** (be om smalere tilganger, dekod tokens, bevis hva som faktisk ble innvilget vs. forespurt) | ✅ **2 av 3 deler gjort 2026-08-11–12.** «Dekod tokens»: `TryExtractClaimFromJwt` dekoder `access_token`-JWT-en for `fhirUser`-claimet (fant vi trengte dette da toppnivåfeltet manglet, se §13 funn #7). «Bevis innvilget vs. forespurt»: `TokenResponse.Scope` + `/smart/test-writeback` viser innvilget scope explisitt — bekreftet at begge skrivescopene ble innvilget uten innsnevring. **Gjenstår:** selve eksperimentet med å *be om* et smalere scope-sett og se hva som skjer |
-| **Redo launch med client_secret-autentisering** i stedet for public client | ⚠️ Delvis — `ExchangeCodeForToken` støtter allerede Basic-auth med client_secret hvis konfigurert (`if (!string.IsNullOrEmpty(clientSecret))`), men `ClientSecret` er tom streng i begge appsettings-filer i dag. Koden er der, men aldri faktisk testet med en ekte hemmelighet |
+| **Redo launch med client_secret-autentisering** i stedet for public client | ✅ **Gjort 2026-08-13.** `ExchangeCodeForToken` sin Basic-auth-vei kjørt ende-til-ende mot launch.smarthealthit.org (Confidential Symmetric, Loose-validering) via `dotnet user-secrets` + [`test-smart-launch.ps1`](../local-dev/smarthealthit-testing/test-smart-launch.ps1) — `302` med Altinn-sesjon etablert. Se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) og [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md) |
 
-**Anbefaling (oppdatert 2026-08-12):** Scope-detektivarbeid kan trolig krysses av som løst — gjenstår kun å eksplisitt teste en smalere scope-forespørsel, som er en 10-minutters øvelse gitt at infrastrukturen allerede finnes. «Redo launch med client_secret» er det billigste alternativet om vi vil ha to Sølv-oppgaver demonstrert.
+**Anbefaling (oppdatert 2026-08-13):** To av tre Sølv-alternativer er krysset av. Gjenstående arbeid for et tredje: eksplisitt teste en smalere scope-forespørsel (10 minutter), eller `Observation`-håndtering (moderat innsats, se §3).
 
 ### Gull — velg én
 
-**Status (2026-08-12): ett alternativ er oppnådd (skrivemekanikk bevist).**
+**Status (2026-08-13): to av fire alternativer er oppnådd, sikkerhetstesting fullført.**
 
 | Alternativ | Vår status |
 |---|---|
 | **Writeback til EPJ** (dokumenter eller målinger) | ✅ Skrivemekanikk bevist 2026-08-11 — `POST DocumentReference` mot launch.smarthealthit.org ga `HTTP 201 Created`, ingen innsnevring av skrivescope. Timing-bug funnet og rettet 2026-08-12 (avledningslogikk flyttet fra `ProcessDataWrite` til `IProcessTaskEnd.End()`, se §13). Gjenstår: ekte innhold (PDF), idempotens (PUT + klient-id), `QuestionnaireResponse`. Se [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
-| **`private_key_jwt` asymmetrisk klientautentisering ende-til-ende** | ❌ Ikke implementert for *denne* klienten (SMART EHR launch mot EPJ). **Men** vi har akkurat gjort nøyaktig dette for en annen klient (Helsenorge EksternAPI, se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og `local-dev/helseid-token-test/`) — samme mønster, samme `HelseID.Library`-erfaring, kan trolig gjenbrukes/tilpasses raskt |
+| **`private_key_jwt` asymmetrisk klientautentisering ende-til-ende** | ✅ **Gjort 2026-08-13.** Implementert i `ExchangeCodeForToken`/`BuildClientAssertionJwt` (RFC 7523, RS384) for *denne* klienten (SMART EHR launch, ikke bare Helsenorge EksternAPI-erfaringen fra §14.1). RSA-nøkkelpar generert lokalt (se [`generate-client-assertion-jwk.ps1`](../local-dev/smarthealthit-testing/generate-client-assertion-jwk.ps1)), kjørt ende-til-ende mot launch.smarthealthit.org (Confidential Asymmetric, Loose-validering) — `302` med Altinn-sesjon etablert. **Ikke testet:** faktisk kryptografisk signaturverifisering (Strict-modus/registrert JWKS) — kun strukturell validering. Se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) og [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md) |
 | **Backend services SMART-flyt** (system-til-system, ingen bruker til stede) | ❌ Ikke implementert for SMART EHR-domenet. **Men** `client_credentials`-flyten vi bygde for Helsenorge EksternAPI er konseptuelt identisk (maskin-til-maskin, ingen brukerinnlogging) — se `local-dev/helsenorge-oppgave-test/` |
-| **Sikkerhetstesting** (tukle med autorisasjonsparametere, gjenbruk koder, feil audience, utløpte tokens, be om ikke-autoriserte ressurser) | ⚠️ **Delvis gjort 2026-08-13.** 3 av 9 «Simulated Error»-varianter fra launch.smarthealthit.org (`auth_invalid_client_id`/`_redirect_uri`/`_scope`) testet fullautomatisert med curl — alle feiler trygt (400, ingen hemmeligheter, tydelig serverlogg). 2 robusthetsbugs funnet ved kodegjennomgang og rettet i `SmartLaunchController.Callback()`. 6 gjenstående varianter (krever interaktiv innlogging) vurdert ved kodeinspeksjon som robuste, men ikke reprodusert — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) for manuelle URL-er. **Fortsatt ikke gjort:** ekte tokenvalidering (signatur/issuer/audience) er fortsatt ikke implementert (jf. [RISIKOREGISTER.md R4](RISIKOREGISTER.md)) — denne runden testet kun feilhåndtering, ikke selve valideringsgapet |
+| **Sikkerhetstesting** (tukle med autorisasjonsparametere, gjenbruk koder, feil audience, utløpte tokens, be om ikke-autoriserte ressurser) | ✅ **Fullført 2026-08-13.** Alle 9 «Simulated Error»-varianter fra launch.smarthealthit.org reprodusert automatisert med [`test-smart-launch.ps1`](../local-dev/smarthealthit-testing/test-smart-launch.ps1) — løsningen på den tidligere blokkeringen («krever interaktiv innlogging») var å forhåndsvelge pasient+behandler i launch-payloaden, som hopper over launcherens velger helt. 2 robusthetsbugs funnet og rettet i `SmartLaunchController.Callback()` (manglende null-sjekk på `smartConfig`, manglende sjekk på tomt `access_token`). Alle varianter feiler trygt der de faktisk trigger en feil (`502`, ingen stacktrace, ingen hemmeligheter) — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) for full resultattabell inkl. hvilke varianter som viste seg å ikke ha noen effekt mot en Public client. **Fortsatt ikke gjort:** ekte tokenvalidering (signatur/issuer/audience) er fortsatt ikke implementert (jf. [RISIKOREGISTER.md R4](RISIKOREGISTER.md)) — denne runden testet kun feilhåndtering, ikke selve valideringsgapet; heller ikke `request_invalid_token`/`request_expired_token` mot selve FHIR-prefill-steget |
 
-**Anbefaling (oppdatert 2026-08-12):** Writeback kan trolig krysses av som løst på mekanikk-nivå — det som gjenstår (PDF-innhold, idempotens) er polering, ikke et åpent spørsmål om hvorvidt det er mulig. **`private_key_jwt`** og **backend services-flyt** er de neste vi har mest overførbar kompetanse på fra Helsenorge-arbeidet, om vi vil demonstrere et andre Gull-alternativ. **Sikkerhetstesting** er fortsatt den mest verdifulle å gjøre uavhengig av hackathon, siden den ville avdekke reelle produksjonsrisikoer vi allerede har flagget (R4) men ikke undersøkt konkret.
+**Anbefaling (oppdatert 2026-08-13):** To Gull-alternativer er krysset av (writeback, `private_key_jwt`) — mer enn nok til å demonstrere Gull-nivå. Sikkerhetstesting er fullført som en selvstendig verdifull øvelse utover selve hackathon-kravet. **Gjenstående, om vi vil ha et tredje Gull-alternativ:** backend services-flyt, hvor `client_credentials`-mønsteret fra Helsenorge-arbeidet er direkte overførbart.
 
 ---
 
 ## 3. Konkret forberedelsesliste før 9. november
 
-**Oppdatert 2026-08-12 — to punkter er allerede gjort:**
+**Oppdatert 2026-08-13 — fem av sju punkter er nå gjort:**
 
 | # | Punkt | Nivå | Status |
 |---|---|---|---|
 | 1 | Alder fra fødselsdato | Bronse | ❌ Gjenstår (trivielt) |
 | 2 | `Observation`-håndtering | Sølv | ❌ Gjenstår (moderat innsats) |
-| 3 | Test client_secret-autentisering | Sølv | ❌ Gjenstår (lite arbeid) |
+| 3 | ~~Test client_secret-autentisering~~ | Sølv | ✅ **Gjort 2026-08-13** — se §2 |
 | 4 | ~~Scope-detektivarbeid~~ | Sølv | ✅ **Gjort 2026-08-11–12** — se §2 |
-| 5 | ~~Sikkerhetstesting-runde~~ | Gull | ⚠️ **Delvis gjort 2026-08-13** — se §2 |
-| 6 | `private_key_jwt` for SMART EHR-klienten | Gull | ❌ Gjenstår (høy innsats) |
+| 5 | ~~Sikkerhetstesting-runde~~ | Gull | ✅ **Fullført 2026-08-13** — se §2 |
+| 6 | ~~`private_key_jwt` for SMART EHR-klienten~~ | Gull | ✅ **Gjort 2026-08-13** — se §2 |
 | 7 | ~~Writeback-prototype~~ | Gull | ✅ **Gjort 2026-08-11** — se §2 |
 
 **Gjenstående, prioritert etter innsats vs. verdi:**
 
 1. **Alder fra fødselsdato** (Bronse, trivielt) — vis beregnet alder i tillegg til fødselsdato.
 2. **`Observation`-håndtering** (Sølv, moderat) — implementer `FillObservation` i `FhirPrefillService.cs` etter samme mønster som `FillCondition`. Gir også reell verdi til PoC-en uavhengig av hackathon, siden IS-2569 har flere helsekategorier som naturlig kobles til målinger (syn, blodtrykk osv.).
-3. **Test client_secret-autentisering** (Sølv, lite) — sett en test-hemmelighet i `appsettings.Development.json` (via `dotnet user-secrets`, ikke i git — jf. tidligere sesjons funn om at `appsettings.Development.json` er sporet i git) og verifiser Basic-auth-flyten fungerer mot smarthealthit.org (som støtter både public og confidential clients).
-4. ~~**Sikkerhetstesting-runde**~~ (Gull, moderat–høy verdi) — **delvis gjort 2026-08-13.** 3 av 9 «Simulated Error»-varianter testet fullautomatisert (curl), 6 gjenstår som manuell interaktiv verifisering (nettleserverktøyet blokkeres av `local.altinn.cloud`) — se [IMPLEMENTERING.md §13](IMPLEMENTERING.md) for ferdig genererte launch-URL-er. To robusthetsbugs funnet og rettet. Direkte input til [RISIKOREGISTER.md R4](RISIKOREGISTER.md).
-5. **`private_key_jwt` for SMART EHR-klienten** (Gull, høy innsats) — vurder om dette er verdt å gjøre før eller *på* selve hackathon-dagen, gitt at vi har fersk erfaring fra Helsenorge-arbeidet.
 
-**Ikke gjør før hackathon:** Ikke bruk tid på ting som uansett krever ekte norsk EPJ-tilgang (R1) eller NHN-kontakt (R9) — dette miljøet er amerikansk/Synthea-basert og løser ikke de avhengighetene.
+**Ikke gjør før hackathon:** Ikke bruk tid på ting som uansett krever ekte norsk EPJ-tilgang (R1) eller NHN-kontakt (R9) — dette miljøet er amerikansk/Synthea-basert og løser ikke de avhengighetene. Backend services-flyten (Gull-alternativ 3) er også lav prioritet nå — vi har allerede to Gull-alternativer krysset av.
 
 ---
 
@@ -117,6 +114,7 @@ Sporet lenker til to NAV-repoer (samme team som `syk-inn`, jf. [SAMMENLIGNING-sy
 
 - [SMART on FHIR-sporet](https://hl7norway.github.io/Norwegian-FHIR-Hackathon-2026/currentbuild/smart-track.html)
 - [IMPLEMENTERING.md §13](IMPLEMENTERING.md) — vår egen verifisering mot launch.smarthealthit.org, inkl. alle 7 bugs
+- [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md) — hvordan reprodusere alle testene selv (client_secret, private_key_jwt, alle 9 Simulated Error-varianter)
 - [IMPLEMENTERING.md §14 og §14.1](IMPLEMENTERING.md) — HelseID og Helsenorge EksternAPI-erfaring, direkte overførbar til Gull-nivå
 - [VEIKART.md](VEIKART.md) fase 2 — writeback-planen som overlapper med Gull-alternativ 1
 - [navikt/smart-on-fhir](https://github.com/navikt/smart-on-fhir) og [navikt/smart-on-fhir-validator](https://github.com/navikt/smart-on-fhir-validator) — NAVs referansekode og OID-valideringslogikk
