@@ -72,6 +72,7 @@ Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJ
 | [STRATEGI.md](docs/STRATEGI.md) | Produktvisjon, to spor (Førerrett PoC / Altinn Health Integration Framework), samarbeidsmodell, gevinsthypotese og nasjonal roadmap |
 | [HACKATHON-EHIN-2026.md](docs/HACKATHON-EHIN-2026.md) | Forberedelse til Norwegian FHIR Hackathon 2026 (EHiN-pre-konferanse, 9. nov) — gap-analyse mot SMART-sporets bronse/sølv/gull-krav |
 | [TESTGUIDE-SMARTHEALTHIT.md](docs/TESTGUIDE-SMARTHEALTHIT.md) | Hvordan reprodusere alle SMART-launch-testene mot launch.smarthealthit.org selv: klienttyper, secrets, Simulated Error-scenarioer, og status på automatiske tester (ingen finnes) |
+| [NAV-EPJ-TESTMILJO.md](docs/NAV-EPJ-TESTMILJO.md) | Hvordan sette opp `navikt/nav-epj` lokalt som et Norway-tilpasset SMART on FHIR-testmiljø (korrekte fnr/HPR-OID-er) — inkl. seks bugs som må rettes, miljø-fallgruver, og hvordan teste både automatisert og som menneske i en nettleser |
 
 ---
 

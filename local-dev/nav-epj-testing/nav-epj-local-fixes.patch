@@ -1,0 +1,224 @@
+diff --git a/build.gradle.kts b/build.gradle.kts
+index ee5bffb..2b0f31d 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -1,5 +1,10 @@
+ plugins {
+   alias(libs.plugins.kotlin.jvm)
++  // Lokal fix (ikke committet upstream): kotlinx.serialization.json.Json.encodeToString/
++  // decodeFromString brukes i ValkeyService (LaunchContext/AuthCodeContext), men
++  // kompilator-pluginet som genererer serializerne var ikke lagt til — enhver reell bruk av
++  // /fhir/launch feilet derfor alltid med "Serializer for class '...' is not found."
++  alias(libs.plugins.kotlin.serialization)
+   alias(ktorLibs.plugins.ktor)
+   alias(libs.plugins.spotless)
+   alias(libs.plugins.detekt)
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 371032a..f4b1eaf 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -46,6 +46,7 @@ kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref =
+ 
+ [plugins]
+ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
++kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+ detekt = { id = "dev.detekt", version.ref = "detekt" }
+ flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
+\ No newline at end of file
+diff --git a/src/main/kotlin/no/nav/helse/fhir/EpjClient.kt b/src/main/kotlin/no/nav/helse/fhir/EpjClient.kt
+index 2fa7d22..ddae658 100644
+--- a/src/main/kotlin/no/nav/helse/fhir/EpjClient.kt
++++ b/src/main/kotlin/no/nav/helse/fhir/EpjClient.kt
+@@ -6,12 +6,27 @@ import io.ktor.client.plugins.*
+ import io.ktor.client.plugins.contentnegotiation.*
+ import io.ktor.client.plugins.logging.*
+ import io.ktor.serialization.jackson3.*
++import no.nav.helse.plugins.localDateTimeModule
++import no.nav.helse.plugins.uuidModule
+ import tools.jackson.databind.SerializationFeature
++import tools.jackson.module.kotlin.KotlinModule
+ 
+ fun initEpjClient(baseUrl: String): HttpClient {
+   return HttpClient(CIO) {
+     install(Logging)
+-    install(ContentNegotiation) { jackson { enable(SerializationFeature.INDENT_OUTPUT) } }
++    install(ContentNegotiation) {
++      jackson {
++        enable(SerializationFeature.INDENT_OUTPUT)
++        // Lokal fix (ikke committet upstream): denne klienten manglet KotlinModule/uuidModule/
++        // localDateTimeModule som configureSerialization() registrerer for hovedserveren
++        // (plugins/Serialization.kt). Uten disse feiler PatientService/PractitionerService/
++        // EncounterService osv. sin deserialisering av *Id-verdiklassene og
++        // kotlinx.datetime.LocalDateTime-feltene.
++        addModule(KotlinModule.Builder().build())
++        addModule(uuidModule)
++        addModule(localDateTimeModule)
++      }
++    }
+     defaultRequest { url(baseUrl) }
+   }
+ }
+diff --git a/src/main/kotlin/no/nav/helse/plugins/Serialization.kt b/src/main/kotlin/no/nav/helse/plugins/Serialization.kt
+index a8e0931..7b71263 100644
+--- a/src/main/kotlin/no/nav/helse/plugins/Serialization.kt
++++ b/src/main/kotlin/no/nav/helse/plugins/Serialization.kt
+@@ -4,6 +4,7 @@ import io.ktor.serialization.jackson3.*
+ import io.ktor.server.application.*
+ import io.ktor.server.plugins.contentnegotiation.*
+ import kotlin.uuid.Uuid
++import kotlinx.datetime.LocalDateTime
+ import tools.jackson.core.JsonGenerator
+ import tools.jackson.core.JsonParser
+ import tools.jackson.databind.DeserializationContext
+@@ -28,7 +29,38 @@ val uuidModule: SimpleModule =
+       Uuid::class.java,
+       object : ValueDeserializer<Uuid>() {
+         override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Uuid =
+-          Uuid.parse(p.toString())
++          // Lokal fix (ikke committet upstream): p.toString() returnerte parserens Java
++          // toString() (f.eks. "tools.jackson.core.json.UTF8StreamJsonParser@...", 53 tegn),
++          // ikke den faktiske JSON-strengverdien -> Uuid.parse feilet alltid når denne
++          // deserializeren faktisk ble brukt (jf. p.getString() i JsonParser sitt API).
++          Uuid.parse(p.string)
++      },
++    )
++  }
++
++// Lokal fix (ikke committet upstream): kotlinx.datetime.LocalDateTime hadde ingen registrert
++// (de)serializer noe sted. Serialisering "virket" bare tilfeldig via generisk bean-refleksjon
++// (produserte et internt, ikke-standard JSON-objekt med bl.a. et syntetisk
++// "value$kotlinx_datetime"-felt), men deserialisering feilet alltid med
++// KotlinInvalidNullException siden Kotlin-modulens creator-baserte deserializer forventer noe
++// helt annet enn den formen. Konkret reprodusert av EncounterService (via epjClient) sitt kall
++// mot /api/patients/{id}/konsultasjoner/active, som deserialiserer en Konsultasjon inkludert
++// startetTidspunkt/avsluttetTidspunkt.
++val localDateTimeModule: SimpleModule =
++  SimpleModule().apply {
++    addSerializer(
++      LocalDateTime::class.java,
++      object : ValueSerializer<LocalDateTime>() {
++        override fun serialize(value: LocalDateTime, gen: JsonGenerator, ctxt: SerializationContext) {
++          gen.writeString(value.toString())
++        }
++      },
++    )
++    addDeserializer(
++      LocalDateTime::class.java,
++      object : ValueDeserializer<LocalDateTime>() {
++        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): LocalDateTime =
++          LocalDateTime.parse(p.string)
+       },
+     )
+   }
+@@ -39,6 +71,7 @@ fun Application.configureSerialization() {
+       enable(SerializationFeature.INDENT_OUTPUT)
+       addModule(KotlinModule.Builder().build())
+       addModule(uuidModule)
++      addModule(localDateTimeModule)
+     }
+   }
+ }
+diff --git a/src/main/kotlin/no/nav/helse/smart/api/SmartRouting.kt b/src/main/kotlin/no/nav/helse/smart/api/SmartRouting.kt
+index 18636e6..4c9ba8f 100644
+--- a/src/main/kotlin/no/nav/helse/smart/api/SmartRouting.kt
++++ b/src/main/kotlin/no/nav/helse/smart/api/SmartRouting.kt
+@@ -82,7 +82,16 @@ fun Application.configureSmartRouting() {
+           valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter.id))
+ 
+           val iss = env.smart.fhirServerUrl
+-          call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
++          // Lokal fix (ikke committet upstream): iss/launch ble limt inn i URL-en uten
++          // url-encoding. iss inneholder "://" som blant annet Altinn Local Test sin nginx
++          // stripper fra query-strings hvis det ikke er prosentkodet (samme mekanisme brukes
++          // her via URLBuilder som allerede var korrekt for rejectViaRedirect).
++          val launchTarget =
++            URLBuilder("$appUrl/").apply {
++              parameters.append("iss", iss)
++              parameters.append("launch", launchId)
++            }
++          call.respondRedirect(launchTarget.buildString())
+         }
+       }
+ 
+@@ -189,7 +198,17 @@ fun Application.configureSmartRouting() {
+               codeChallenge = codeChallenge,
+             ),
+           )
+-          call.respondRedirect("$redirectUri?code=$code&state=$state")
++          // Lokal fix (ikke committet upstream): code/state ble limt inn uten url-encoding.
++          // state er en base64-streng (kan inneholde +, /, =) — en ren "+" i en query-string
++          // blir tolket som mellomrom av standard application/x-www-form-urlencoded-parsing
++          // (bl.a. hos mottakende klient), noe som korrumperer state-verdien og trigger en
++          // falsk "State mismatch — possible CSRF"-avvisning hos klienten omtrent hver gang.
++          val callbackTarget =
++            URLBuilder(redirectUri).apply {
++              parameters.append("code", code)
++              parameters.append("state", state)
++            }
++          call.respondRedirect(callbackTarget.buildString())
+         }
+       }
+     }
+diff --git a/src/main/kotlin/no/nav/helse/smart/valkey/ValkeyData.kt b/src/main/kotlin/no/nav/helse/smart/valkey/ValkeyData.kt
+index 9e63fb2..f50db49 100644
+--- a/src/main/kotlin/no/nav/helse/smart/valkey/ValkeyData.kt
++++ b/src/main/kotlin/no/nav/helse/smart/valkey/ValkeyData.kt
+@@ -1,7 +1,10 @@
+ package no.nav.helse.smart.valkey
+ 
+-data class LaunchContext(val patientId: String?, val encounterId: String?)
++import kotlinx.serialization.Serializable
+ 
++@Serializable data class LaunchContext(val patientId: String?, val encounterId: String?)
++
++@Serializable
+ data class AuthCodeContext(
+   val username: String,
+   val redirectUrl: String,
+diff --git a/src/main/resources/application-local.yaml b/src/main/resources/application-local.yaml
+index 7f1b3fa..71f4dc2 100644
+--- a/src/main/resources/application-local.yaml
++++ b/src/main/resources/application-local.yaml
+@@ -3,22 +3,22 @@ ktor:
+     modules:
+       - no.nav.helse.ApplicationKt.module
+   deployment:
+-    port: 8080
++    port: 8090
+     watch:
+       - classes
+       - resources
+ 
+ database:
+-  url: "jdbc:postgresql://localhost:5434/nav-epj"
++  url: "jdbc:postgresql://[::1]:5434/nav-epj"
+   user: "postgres"
+   password: "postgres"
+ 
+ epj:
+-  baseUrl: "http://localhost:8080"
++  baseUrl: "http://localhost:8090"
+ 
+ smart:
+-  issuerBaseUrl: "http://localhost:8080/oidc"
+-  fhirServerUrl: "http://localhost:8080/fhir"
++  issuerBaseUrl: "http://localhost:8090/oidc"
++  fhirServerUrl: "http://localhost:8090/fhir"
+   clients:
+     - clientId: "syk-inn"
+       redirectUris: ["http://localhost:3000", "http://localhost:3000/fhir/callback"]
+@@ -27,8 +27,11 @@ smart:
+     - clientId: "NAV_SMART_on_FHIR_validator"
+       redirectUris: ["http://localhost:3001/callback"]
+       launchUris: ["http://localhost:3001/launch"]
++    - clientId: "forer-legeerklaering-poc"
++      redirectUris: ["http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/callback"]
++      launchUris: ["http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch"]
+ 
+ valkey:
+-  host: localhost
++  host: "::1"
+   port: 6380
+   useTLS: false
+\ No newline at end of file
