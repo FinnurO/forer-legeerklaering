@@ -4738,7 +4738,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-08-27): app registrert, første launch-forsøk pågår.** App **"Legeerklæring førerrett (Digdir)"** er opprettet på fhir.epic.com av Johann og lagret med «Save & Ready for Sandbox». Client-ID-er er utstedt og satt opp lokalt (§6). Første forsøk på å generere en launch-URL ga et tomt `launch=`-token og feil FHIR-versjon i `iss` (DSTU2 i stedet for R4) — se §9 for detaljer. Mest sannsynlig årsak: sandkasse-synkroniseringen tar lenger tid enn først antatt (opptil **1 time**, ikke 30 minutter — se §2). Neste steg: prøv launch-generering på nytt når det har gått lenger tid siden lagring.
+**Status (2026-09-08): blokkert av en feil i Epics eget sandkasseverktøy, meldt til Epic support.** App **"Legeerklæring førerrett (Digdir)"** er registrert og korrekt konfigurert (R4, bekreftet lagret). Sandkasse-synkronisering var **ikke** rotårsaken til det tomme launch-tokenet vi først mistenkte — bekreftet ved å reprodusere nøyaktig samme feil med **Epics eget offisielle "SMART on FHIR test"-eksempelapp**, som utelukker alt på vår side. LaunchPad-verktøyet (`Documentation?docId=launching`) genererer et tomt `launch=`-token og feil FHIR-versjon (`DSTU2` i stedet for det registrerte `R4`) for enhver app akkurat nå. Meldt til `open@epic.com` 2026-09-08. Se §9 for full diagnostikk og §10 for e-posten som ble sendt.
 
 ## Innhold
 
@@ -4751,6 +4751,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 7. [Veien til en reell Helseplattformen-integrasjon](#7-veien-til-en-reell-helseplattformen-integrasjon)
 8. [Referanser](#8-referanser)
 9. [Testlogg](#9-testlogg)
+10. [Feilmelding sendt til Epic support](#10-feilmelding-sendt-til-epic-support)
 
 ---
 
@@ -4912,6 +4913,51 @@ http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch?iss=http
 1. `launch=` er tomt — ingen faktisk launch-token ble generert.
 2. `iss` peker på `DSTU2`, ikke `R4` som registrert.
 
-**Vurdering:** begge avvikene peker på samme rotårsak — sandkasse-synkroniseringen (§2) har ikke fullført ennå. Ikke en feil i selve oppsettet, kun en tidsforsinkelse. **Neste steg:** vent til det har gått mer enn ~1 time siden lagring, gjenta steg 3 i sjekklisten (§6), og bekreft at `launch=` nå inneholder en faktisk verdi og at `iss` viser `R4`. Hvis avviket vedvarer etter en time, undersøk om «Save & Ready for Sandbox» faktisk fullførte uten feil (sjekk appens status på "Build Apps"-siden).
+**Vurdering (den gang):** antatt sandkasse-synkroniseringsforsinkelse (§2). **Denne teorien viste seg å være feil — se oppfølgingen 2026-09-08 under.**
+
+### 2026-09-08 — rotårsak funnet: feil i Epics eget LaunchPad-verktøy, ikke noe på vår side
+
+Gjentok forsøket >1 uke etter registrering (godt utenfor enhver rimelig synk-forsinkelse). Samme resultat: tomt `launch=`, `iss` fortsatt `DSTU2`.
+
+**Systematisk feilsøking, i rekkefølge:**
+
+1. **Bekreftet at appens R4-innstilling faktisk er lagret** — inspiserte radioknappene direkte i DOM-en (`PrimaryFHIRVersion`, verdi `R4`, `checked: true`). Ikke et lagringsproblem.
+2. **Klikket «Save & Ready for Sandbox» på nytt** for å utelukke at en tidligere lagring var ufullstendig. Ingen endring i resultatet.
+3. **Fanget selve nettverkskallet** LaunchPad-verktøyet gjør (`POST /Developer/GetLaunchUrl`) med en JS-interceptor for både request og response, i stedet for å gjette ut fra det synlige skjemaet:
+   - **Request:** `{"launchUrl":"...","tokens":"dob=%DOB%&user=%SYSLOGIN%","eptId":"Z4529","wprId":"","appId":"60326","aesKey":"shhh","ssoMethod":"1"}` — bekreftet at riktig `appId` (vår app) faktisk ble sendt. `wprId` (et skjult felt, viste seg å være "Select a MyChart user" — irrelevant for en behandler-app, korrekt tomt).
+   - **Response:** `{"Success":true,"Title":null,"Message":null,"Data":{"url":"...iss=...DSTU2&launch=","error":""}}` — serveren selv rapporterer suksess, ingen feilmelding, men leverer et tomt launch-token.
+4. **Bekreftet at R4-discovery fungerer, men DSTU2-discovery ikke gjør det**, direkte mot sandkassen med `curl`:
+   - `GET .../api/FHIR/R4/.well-known/smart-configuration` → `200 OK`
+   - `GET .../api/FHIR/DSTU2/.well-known/smart-configuration` → **`404 Not Found`**
+   - `GET .../api/FHIR/DSTU2/metadata` → `200 OK` (den eldre XML-baserte discovery-mekanismen virker for DSTU2, men ikke den nyere `.well-known`-en appen vår bruker)
+   
+   Dette forklarer *hvorfor* appen vår konkret feiler med «Could not retrieve SMART configuration from EPJ» når den mottar en DSTU2-`iss`: DSTU2 støtter rett og slett ikke discovery-mekanismen SMART App Launch IG (og vår kode) forutsetter — DSTU2 er eldre enn den spesifikasjonen.
+5. **Avgjørende test: reproduserte identisk feil med Epics EGET offisielle eksempelapp** («SMART on FHIR test», appId `-121`, med sin egen standard launch-URL `https://fhir.epic.com/Test/Smart`) — samme tomme `launch=`, samme `DSTU2`. Dette utelukker *alt* på vår side (redirect-URI, API-liste, FHIR-versjon-innstilling, klienttype) som mulig årsak.
+6. **Vurderte "HTTP Get LaunchPad" som alternativ** — forkastet: det er en helt annen, eldre SSO-mekanisme («HTTP GET with encrypted querystring»), ikke SMART on FHIR. Epics egen dokumentasjon sier eksplisitt: «Only use this method if SMART on FHIR is not an option. Epic recommends that new implementations use SMART on FHIR for SSO.» Å teste den ville ikke validert vår faktiske SMART-integrasjon.
+
+**Konklusjon:** dette er en feil i Epics eget sandkasse-LaunchPad-verktøy — ikke noe i vår appregistrering, kode, eller sandkasse-synkronisering. Meldt til Epic support (`open@epic.com`) 2026-09-08 — se §10 for e-postens innhold. **Venter på svar fra Epic** før videre testing kan fortsette gjennom dette verktøyet.
+
+**Mulige veier videre, ikke forsøkt ennå:**
+- Vent på svar fra Epic support.
+- Prøv igjen etter neste ukentlige sandkasse-refresh (søndag ca. 20:00 amerikansk sentraltid, se §3/§6).
+- Vurder å bygge launch-URL-en manuelt (samme teknikk som for launch.smarthealthit.org og nav-epj: konstruer `iss`/`launch` selv) — trolig ikke mulig her siden `launch` er et EHR-generert, opakt token vi ikke kan forfalske selv, i motsetning til `iss`.
+
+## 10. Feilmelding sendt til Epic support
+
+Sendt til `open@epic.com` 2026-09-08 (Johann sitt eget navn/organisasjon og faktiske non-production client_id satt inn i den faktiske e-posten, utelatt her):
+
+> **Subject:** SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — reproducible with Epic's own sample app
+>
+> We're testing a SMART on FHIR EHR Launch integration against the sandbox and have hit what looks like a bug in the "SMART on FHIR (OAuth 2.0)" LaunchPad tool (`fhir.epic.com/Documentation?docId=launching` → "Try It").
+>
+> **Steps to reproduce:** log in, go to the LaunchPad, choose an app (we tried both our own registered app and Epic's own built-in "SMART on FHIR test" sample app), select any patient, enter a launch URL, and click "Generate URL Only" (or "Launch" — same result either way).
+>
+> **Expected:** a real, one-time `launch` token, with `iss` pointing at the FHIR version registered for the app (our app is registered as R4).
+>
+> **Actual:** the generated URL always has an empty `launch=` parameter and `iss` always points at `.../api/FHIR/DSTU2`, regardless of the app's registered FHIR version. The underlying `POST /Developer/GetLaunchUrl` call returns `"Success":true` with no error message, and an empty `Data.url` launch token.
+>
+> **Key point:** we reproduced the exact same result using Epic's own built-in "SMART on FHIR test" app, not just our own — so this doesn't appear to be specific to our app's configuration.
+
+**Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
 
 
