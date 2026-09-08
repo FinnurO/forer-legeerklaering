@@ -1,6 +1,6 @@
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-08-27): undersøkt og dokumentert, ikke satt opp ennå.** Kontoregistrering på fhir.epic.com må gjøres av et menneske (organisasjonstilknyttet, e-postverifisert) — se §2 for URL. Dette dokumentet er skrevet for å være klart til bruk så snart det er gjort.
+**Status (2026-08-27): app registrert, første launch-forsøk pågår.** App **"Legeerklæring førerrett (Digdir)"** er opprettet på fhir.epic.com av Johann og lagret med «Save & Ready for Sandbox». Client-ID-er er utstedt og satt opp lokalt (§6). Første forsøk på å generere en launch-URL ga et tomt `launch=`-token og feil FHIR-versjon i `iss` (DSTU2 i stedet for R4) — se §9 for detaljer. Mest sannsynlig årsak: sandkasse-synkroniseringen tar lenger tid enn først antatt (opptil **1 time**, ikke 30 minutter — se §2). Neste steg: prøv launch-generering på nytt når det har gått lenger tid siden lagring.
 
 ## Innhold
 
@@ -12,6 +12,7 @@
 6. [Sjekkliste: når du har fått et client_id](#6-sjekkliste-når-du-har-fått-et-client_id)
 7. [Veien til en reell Helseplattformen-integrasjon](#7-veien-til-en-reell-helseplattformen-integrasjon)
 8. [Referanser](#8-referanser)
+9. [Testlogg](#9-testlogg)
 
 ---
 
@@ -34,7 +35,9 @@ Dette er «Sign Up to Access»-siden — bekreftet ved å inspisere den faktiske
 
 **Prosess:** gratis, selvbetjent. E-postverifisering kreves («We have sent you an email... Follow the instructions in the email to verify your email address»). Etter verifisering får du tilgang til tre ting: **Testing Sandbox**, **Client Registration**, og **Documentation**.
 
-**Én registrering av appen gir automatisk to client_id-er samtidig** — ett for non-production (sandkasse) og ett for production. Du oppgir bl.a. én eller flere `redirect_uri`-er ved registrering. Ifølge dokumentasjonen kan det ta **opptil 30 minutter** før en nyregistrert app faktisk synkroniseres til sandkassen («rolling sync between the Build Apps page and the Sandbox»).
+**Én registrering av appen gir automatisk to client_id-er samtidig** — ett for non-production (sandkasse) og ett for production. Du oppgir bl.a. én eller flere `redirect_uri`-er ved registrering.
+
+**Synkroniseringstid — to ulike tall i Epics egen dokumentasjon, det høyeste er det pålitelige:** OAuth 2.0-spesifikasjonen nevner «rolling sync between the Build Apps page and the Sandbox... up to 30 minutes». Developer Testing Guide sier derimot eksplisitt: **«The FHIR Developer Sandbox may take up to 1 hour to sync changes you make to technical settings for your app, such as endpoint URIs and selected APIs.»** Planlegg med **1 time**, ikke 30 minutter — bekreftet i praksis 2026-08-27 (se §9): et forsøk på å generere en launch-URL kort tid etter lagring ga et tomt launch-token og feil FHIR-versjon.
 
 **Jeg kan ikke gjøre denne registreringen for deg** — å opprette kontoer er noe jeg aldri gjør på andres vegne, uavhengig av hvem det gjelder. Så snart du har et client_id (non-production), ta det videre herfra — se §6.
 
@@ -119,13 +122,17 @@ Forrige runde limte vi en statisk offentlig JWK inn i launch.smarthealthit.org s
 
 ## 6. Sjekkliste: når du har fått et client_id
 
-1. Vent til synkroniseringen mot sandkassen er fullført (opptil 30 minutter etter registrering, jf. §2).
-2. Sett `SmartOnFhir:ClientId` til det utstedte **non-production** client_id-et via `dotnet user-secrets` i `src/App` (ikke i en committet appsettings-fil — samme mønster som tidligere runder).
-3. Bruk sandkassens egen launch-simulator (tilgjengelig fra "Build Apps" etter innlogging) til å generere en launch-URL mot vår apps `/smart/launch`-endepunkt — samme prinsipp som [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md), tilpasset Epics grensesnitt i stedet for smarthealthit.org sitt.
-4. Kjør gjennom hele launch → authorize → callback-kjeden, samme fremgangsmåte (curl med cookie-jar, eller direkte i nettleser) som er dokumentert for de to andre testmiljøene.
+1. Vent til synkroniseringen mot sandkassen er fullført (**opptil 1 time** etter lagring — se §2, ikke 30 minutter).
+2. Sett `SmartOnFhir:ClientId` til det utstedte **non-production** client_id-et via `dotnet user-secrets` i `src/App` (ikke i en committet appsettings-fil — samme mønster som tidligere runder). Fjern eventuelle `FhirBaseUrlOverride`/`DefaultIss`-overstyringer fra tidligere EPJ-testrunder (nav-epj) — de peker feil for Epic.
+3. **Finn launch-simulatoren** (bekreftet fungerende sti, ikke opplagt fra navigasjonen):
+   - Logg inn på fhir.epic.com, gå til `https://fhir.epic.com/Documentation?docId=launching`.
+   - Klikk fanen **«SMART on FHIR (OAuth 2.0)»**, deretter **«Try It»** rett under.
+   - Et skjema åpnes: **«Choose an app to test with»** (velg vår app), **«Select a patient»**, **«Enter launch URL to receive the request to your app»** — bruk `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch`.
+   - Klikk **«Generate URL Only»** (ikke «Launch» — det prøver å navigere direkte, og `local.altinn.cloud` er ikke nåbar fra en vanlig nettleser utenfor det lokale miljøet/en sandkassemaskin uten VPN/hosts-oppsett). Den genererte URL-en vises i et modal-vindu.
+4. Kjør gjennom hele launch → authorize → callback-kjeden med den genererte URL-en, samme fremgangsmåte (curl med cookie-jar, eller direkte i nettleser) som er dokumentert for de to andre testmiljøene.
 5. Sjekk om §5.1 (Epic-Client-ID-header) faktisk er nødvendig i praksis, eller om sandkassen fungerer uten.
 6. Hvis `private_key_jwt` skal testes: sett opp en offentlig JWKS-URL (§5.2) før forsøk på backend-services-flyten — statisk nøkkel vil ikke fungere.
-7. Dokumenter resultatet i et nytt avsnitt her, samme mønster som IMPLEMENTERING.md §13 for launch.smarthealthit.org.
+7. Dokumenter resultatet i §9, samme mønster som IMPLEMENTERING.md §13 for launch.smarthealthit.org.
 
 ## 7. Veien til en reell Helseplattformen-integrasjon
 
@@ -141,3 +148,30 @@ Epics prosess: appen må først merkes **«Ready for Production»** av utviklere
 - [fhir.epic.com/Developer/Index](https://fhir.epic.com/Developer/Index) — registrering
 - [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md) og [NAV-EPJ-TESTMILJO.md](NAV-EPJ-TESTMILJO.md) — de to andre testmiljøene, samme metodikk
 - [IMPLEMENTERING.md §13](IMPLEMENTERING.md) — vår eksisterende `private_key_jwt`-implementasjon (`BuildClientAssertionJwt`), direkte gjenbrukbar
+
+## 9. Testlogg
+
+### 2026-08-27 — app registrert, første launch-forsøk
+
+**Registrering fullført:** app **"Legeerklæring førerrett (Digdir)"** opprettet av Johann, med:
+- Application Audience: Clinicians or Administrative Users
+- Is Confidential Client: Nei (Public, for det første, enkleste testforsøket — samme fasede tilnærming som launch.smarthealthit.org: public → client_secret → private_key_jwt)
+- SMART on FHIR Version: R4
+- SMART Scope Version: v1
+- FHIR ID Generation Scheme: 64-Character-Limited FHIR IDs for USCDI FHIR Resources
+- Redirect URI: `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/callback` (eksplisitt `http://`, feltet tillot å overstyre en `https://`-hint)
+- Incoming APIs valgt ut fra faktisk kode i `FhirPrefillService.cs` (ikke gjettet fra scope-strengen): Patient.Read (R4), Practitioner.Read (Organizational Directory), PractitionerRole.Search (Organizational Directory), Encounter.Read (Patient Chart), Organization.Read (Organizational Directory), Condition.Search (Problems), DocumentReference.Create (Clinical Notes). Observation bevisst utelatt — `FillObservation` er ikke implementert ennå.
+- Lagret med «Save & Ready for Sandbox».
+- Non-production client_id satt lokalt via `dotnet user-secrets set "SmartOnFhir:ClientId" "..."` i `src/App` (ikke committet — se §6).
+
+**Første forsøk på å generere en launch-URL** (via LaunchPad-verktøyet, se §6 steg 3), kort tid etter lagring:
+
+```
+http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch?iss=https%3A%2F%2Ffhir.epic.com%2Finterconnect-fhir-oauth%2Fapi%2FFHIR%2FDSTU2&launch=
+```
+
+**To avvik fra forventet:**
+1. `launch=` er tomt — ingen faktisk launch-token ble generert.
+2. `iss` peker på `DSTU2`, ikke `R4` som registrert.
+
+**Vurdering:** begge avvikene peker på samme rotårsak — sandkasse-synkroniseringen (§2) har ikke fullført ennå. Ikke en feil i selve oppsettet, kun en tidsforsinkelse. **Neste steg:** vent til det har gått mer enn ~1 time siden lagring, gjenta steg 3 i sjekklisten (§6), og bekreft at `launch=` nå inneholder en faktisk verdi og at `iss` viser `R4`. Hvis avviket vedvarer etter en time, undersøk om «Save & Ready for Sandbox» faktisk fullførte uten feil (sjekk appens status på "Build Apps"-siden).
