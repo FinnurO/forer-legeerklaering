@@ -26,6 +26,7 @@ $sections = @(
     @{ File = "KRAVSPESIFIKASJON-v0.6.md";      Title = "Kravspesifikasjon v0.6" }
     @{ File = "IMPLEMENTERING.md";               Title = "Implementeringsdetaljer" }
     @{ File = "SKJEMA-IS2569.md";                Title = "Skjemastruktur IS-2569" }
+    @{ File = "SKJEMA-KJEVEORTOPEDISK.md";       Title = "Skjemastruktur - henvisning til kjeveortopedisk vurdering" }
     @{ File = "PASIENTFLYT.md";                  Title = "Pasientflyt" }
     @{ File = "BESLUTNINGER.md";                 Title = "Åpne beslutninger" }
     @{ File = "RISIKOREGISTER.md";               Title = "Risikoregister" }
