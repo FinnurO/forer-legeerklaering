@@ -54,7 +54,7 @@
     { "id": "field.gruppeb.kode1", "value": "1 Horisontalt overbitt, 9 mm eller mer." },
     {
       "id": "field.gruppeb.kode2",
-      "value": "2 Enkeltsidig kryss- eller sakse-bitt som omfatter tre eller flere tannpar og medfører tvangsføring og/eller asymmetrier."
+      "value": "2 Enkeltsidig kryss- eller sakse-bitt som omfatter tre eller flere tannpar og medfører tvangs-føring og/eller asymmetrier."
     },
     { "id": "field.gruppeb.kode3", "value": "3 Åpent bitt hvor det bare er okklusjonskontakt på molarene." },
     {
@@ -76,7 +76,7 @@
     },
     {
       "id": "field.gruppeb.kode9",
-      "value": "9 Agenesi av to eller flere tenner i samme sidesegment, 3. molarer (visdomstenner) unntatt."
+      "value": "9 Agenesi av to eller flere tenner i samme sidesegment, 3.molarer (visdomstenner) unntatt."
     },
     {
       "id": "field.gruppeb.kode10",
@@ -91,7 +91,7 @@
     { "id": "field.gruppec.kode11.c", "value": "c) Bittavviket er kombinert med c12." },
     {
       "id": "field.gruppec.kode12",
-      "value": "12 Stor plassmangel i fronten som er 4 mm eller mer, og kontaktbrudd mellom enkelttenner på minst 2 mm"
+      "value": "12 Stor plassmangel i fronten som er 4 mm eller mer, og kontakt-brudd mellom enkelttenner på minst 2 mm"
     },
     { "id": "field.gruppec.kode12.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
     { "id": "field.gruppec.kode12.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
@@ -102,7 +102,7 @@
     { "id": "field.gruppec.kode13.c", "value": "c) Bittavviket er kombinert med c12." },
     {
       "id": "field.gruppec.kode14",
-      "value": "14 Diastema mediale som er 3 mm eller større, eller markert generelt plassoverskudd (angis i mm)."
+      "value": "14 Diastema mediale som er 3 mm eller større, større, eller markert generelt plassoverskudd i '' (angis i mm)."
     },
     { "id": "field.gruppec.kode14.mm", "value": "Angis i mm" },
     { "id": "field.gruppec.kode14.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
