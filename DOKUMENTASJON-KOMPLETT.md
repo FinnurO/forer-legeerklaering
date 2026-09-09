@@ -5123,7 +5123,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-09-09): løst — Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres) og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4).** App **"Legeerklæring førerrett (Digdir)"** er registrert og korrekt konfigurert. Det tomme launch-tokenet og feil FHIR-versjon (`DSTU2` i stedet for det registrerte `R4`) som ble reprodusert 2026-08-27/2026-09-08 — inkludert med Epics eget offisielle "SMART on FHIR test"-eksempelapp, som utelukket alt på vår side — er bekreftet borte etter Epics fiks. Neste steg er en full ende-til-ende-test av en faktisk `Launch` (ikke bare `Generate URL Only`) mot en kjørende lokal instans av appen. Se §9 for full diagnostikk/retest og §10 for e-postutvekslingen med Epic support.
+**Status (2026-09-09): delvis løst.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Ser ut som en beslektet, men separat, synk-forsinkelse i en annen del av Epics infrastruktur. Se §9 for full diagnostikk og §10 for e-postutvekslingen med Epic support.
 
 ## Innhold
 
@@ -5338,7 +5338,25 @@ Epic support svarte (se §10) at det var et driftsproblem — synkroniseringspro
 1. `launch=` er nå et faktisk, ikke-tomt JWT — dekodet payload viser `"epic.tokentype":"launch"`, `"client_id":"fe9e031b-b4f1-49ad-9a84-59f8e05475e5"` (vår registrerte non-production client_id — riktig app), 5 minutters levetid (`exp` − `iat` = 300s).
 2. `iss` peker nå på `.../api/FHIR/R4`, ikke `DSTU2` — riktig, matcher appens registrerte FHIR-versjon.
 
-**Konklusjon:** Epics driftsfeil er bekreftet rettet. LaunchPad-verktøyet fungerer nå som forventet for vår app. Neste steg er en full ende-til-ende-test (faktisk `Launch`, ikke bare `Generate URL Only`) mot en kjørende lokal instans av appen — ikke gjort i denne omgangen siden launch-tokenet er kortlevd (5 min) og må genereres på nytt rett før selve testen, i en nettleser som faktisk når `local.altinn.cloud:8000` (dvs. på Johanns egen maskin, ikke i dette hostede browser-panelet).
+**Konklusjon:** Epics driftsfeil på LaunchPad-verktøyet er bekreftet rettet. LaunchPad-verktøyet fungerer nå som forventet for vår app.
+
+### 2026-09-09 (samme dag) — ny feil lenger inn i flyten: Epics eget `/oauth2/authorize` gir generisk autorisasjonsfeil
+
+Johann gjennomførte selve ende-til-ende-testen: startet `src/App` lokalt (port 5005), fikk en fersk launch-URL fra LaunchPad, trykket **Launch** (ikke bare Generate URL Only). Appen vår bygde og sendte en korrekt redirect til Epics `/oauth2/authorize` — riktig `client_id`, `redirect_uri` (matcher det registrerte), `aud` (R4), et gyldig launch-token, PKCE (`code_challenge`/`code_challenge_method=S256`), riktig scope-liste. Epics egen autorisasjonsserver svarte likevel med:
+
+```
+OAuth2 Error
+Something went wrong trying to authorize the client. Please try logging in again.
+```
+
+**Diagnostisert:**
+1. Bekreftet at appen vår sendte en fullstendig korrekt forespørsel — feilen oppstår altså i Epics egen `/oauth2/authorize`-behandling, ikke hos oss.
+2. Mistanke om scope-mismatch: scope-listen ba om `patient/Observation.read` (aldri valgt som Incoming API ved registrering) og både v1-stilen `patient/DocumentReference.write` og v2-stilen `patient/DocumentReference.c` samtidig, mens appen er registrert med **SMART Scope Version: v1** (som ikke har noe eget `.c`/create-scope). Fjernet begge og gjentok testen med en scope-liste som matcher registreringen nøyaktig (se separat PR for kodeendringen) — **samme feil, uendret**. Scope var altså ikke rotårsaken.
+3. Søkte opp den eksakte feilteksten — samme melding er kjent fra andre Epic-sandkasseutviklere ([smart-on-fhir Google Group-tråd](https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s)). Der ble den aldri definitivt rotårsaksforklart; utvikleren rapporterte at den «begynte å virke igjen etter noen dager, uten noen endring på min side», og mistenkte cache/synk på Epics infrastruktur.
+
+**Vurdering:** dette ser ut som en beslektet, men separat, synk-/cache-forsinkelse på Epics side — trolig i et annet internt system enn det som styrer LaunchPad-verktøyet (som nå fungerer), siden appens konfigurasjon åpenbart ikke har nådd frem til autorisasjonstjenesten ennå. Konsistent med både Epics egen «opptil 1 time»-synk-advarsel (§2) og mønsteret fra den offentlige diskusjonstråden.
+
+**Anbefalt neste steg:** vent og prøv igjen (timer/neste dag), og vurder å sende Epic support et raskt oppfølgingssvar med dette funnet (LaunchPad-tokenet er nå korrekt, men selve autorisasjonssteget feiler fortsatt generisk) — de har allerede bekreftet at de har et synk-problem, så dette er trolig samme rotårsak i en annen del av systemet deres.
 
 ## 10. Feilmelding sendt til Epic support
 
