@@ -5123,7 +5123,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-09-08): blokkert av en feil i Epics eget sandkasseverktøy, meldt til Epic support.** App **"Legeerklæring førerrett (Digdir)"** er registrert og korrekt konfigurert (R4, bekreftet lagret). Sandkasse-synkronisering var **ikke** rotårsaken til det tomme launch-tokenet vi først mistenkte — bekreftet ved å reprodusere nøyaktig samme feil med **Epics eget offisielle "SMART on FHIR test"-eksempelapp**, som utelukker alt på vår side. LaunchPad-verktøyet (`Documentation?docId=launching`) genererer et tomt `launch=`-token og feil FHIR-versjon (`DSTU2` i stedet for det registrerte `R4`) for enhver app akkurat nå. Meldt til `open@epic.com` 2026-09-08. Se §9 for full diagnostikk og §10 for e-posten som ble sendt.
+**Status (2026-09-09): løst — Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres) og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4).** App **"Legeerklæring førerrett (Digdir)"** er registrert og korrekt konfigurert. Det tomme launch-tokenet og feil FHIR-versjon (`DSTU2` i stedet for det registrerte `R4`) som ble reprodusert 2026-08-27/2026-09-08 — inkludert med Epics eget offisielle "SMART on FHIR test"-eksempelapp, som utelukket alt på vår side — er bekreftet borte etter Epics fiks. Neste steg er en full ende-til-ende-test av en faktisk `Launch` (ikke bare `Generate URL Only`) mot en kjørende lokal instans av appen. Se §9 for full diagnostikk/retest og §10 for e-postutvekslingen med Epic support.
 
 ## Innhold
 
@@ -5326,6 +5326,19 @@ Gjentok forsøket >1 uke etter registrering (godt utenfor enhver rimelig synk-fo
 - Vent på svar fra Epic support.
 - Prøv igjen etter neste ukentlige sandkasse-refresh (søndag ca. 20:00 amerikansk sentraltid, se §3/§6).
 - Vurder å bygge launch-URL-en manuelt (samme teknikk som for launch.smarthealthit.org og nav-epj: konstruer `iss`/`launch` selv) — trolig ikke mulig her siden `launch` er et EHR-generert, opakt token vi ikke kan forfalske selv, i motsetning til `iss`.
+
+### 2026-09-09 — bekreftet løst etter Epics svar
+
+Epic support svarte (se §10) at det var et driftsproblem — synkroniseringsproblemer i testmiljøene deres — og ba oss prøve på nytt. Gjentok nøyaktig samme forsøk som 2026-08-27/2026-09-08 (LaunchPad, app "Legeerklæring førerrett (Digdir)", samme launch-URL), med samme JS-interceptor på `POST /Developer/GetLaunchUrl` som avdekket feilen sist:
+
+- **Request:** `{"launchUrl":"http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch",...,"appId":"60326",...}` — samme som før.
+- **Response:** `{"Success":true,...,"Data":{"url":"...iss=https%3A%2F%2Ffhir.epic.com%2Finterconnect-fhir-oauth%2Fapi%2FFHIR%2FR4&launch=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...","error":""}}`
+
+**Begge avvikene fra 2026-08-27/2026-09-08 er borte:**
+1. `launch=` er nå et faktisk, ikke-tomt JWT — dekodet payload viser `"epic.tokentype":"launch"`, `"client_id":"fe9e031b-b4f1-49ad-9a84-59f8e05475e5"` (vår registrerte non-production client_id — riktig app), 5 minutters levetid (`exp` − `iat` = 300s).
+2. `iss` peker nå på `.../api/FHIR/R4`, ikke `DSTU2` — riktig, matcher appens registrerte FHIR-versjon.
+
+**Konklusjon:** Epics driftsfeil er bekreftet rettet. LaunchPad-verktøyet fungerer nå som forventet for vår app. Neste steg er en full ende-til-ende-test (faktisk `Launch`, ikke bare `Generate URL Only`) mot en kjørende lokal instans av appen — ikke gjort i denne omgangen siden launch-tokenet er kortlevd (5 min) og må genereres på nytt rett før selve testen, i en nettleser som faktisk når `local.altinn.cloud:8000` (dvs. på Johanns egen maskin, ikke i dette hostede browser-panelet).
 
 ## 10. Feilmelding sendt til Epic support
 
