@@ -7,252 +7,334 @@
         "id": "header-gruppec",
         "type": "Header",
         "size": "L",
-        "textResourceBindings": { "title": "header.gruppec" }
+        "textResourceBindings": {
+          "title": "header.gruppec"
+        }
       },
       {
         "id": "GruppeC_Kode11",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode11" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode11"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode11" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode11"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode11_A",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode11_A" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode11_A"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode11.a" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode11.a"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode11_B",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode11_B" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode11_B"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode11.b" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode11.b"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode11_C",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode11_C" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode11_C"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode11.c" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode11.c"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode12",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode12" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode12"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode12" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode12"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode12_A",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode12_A" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode12_A"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode12.a" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode12.a"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode12_B",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode12_B" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode12_B"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode12.b" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode12.b"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode12_C",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode12_C" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode12_C"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode12.c" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode12.c"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode13",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode13" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode13"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode13" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode13"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode13_A",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode13_A" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode13_A"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode13.a" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode13.a"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode13_B",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode13_B" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode13_B"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode13.b" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode13.b"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode13_C",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode13_C" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode13_C"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode13.c" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode13.c"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode14",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode14" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode14"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode14" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode14"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode14_PlassoverskuddMm",
         "type": "Input",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode14_PlassoverskuddMm" },
-        "formatting": { "number": {} },
-        "textResourceBindings": { "title": "field.gruppec.kode14.mm" }
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode14_PlassoverskuddMm"
+        },
+        "formatting": {
+          "number": {}
+        },
+        "textResourceBindings": {
+          "title": "field.gruppec.kode14.mm"
+        }
       },
       {
         "id": "GruppeC_Kode14_A",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode14_A" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode14_A"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode14.a" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode14.a"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode14_B",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode14_B" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode14_B"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode14.b" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode14.b"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode15",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode15" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode15"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode15" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode15"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode15_A",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode15_A" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode15_A"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode15.a" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode15.a"
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode15_B",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "GruppeC_Kode15_B" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeC_Kode15_B"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.gruppec.kode15.b" }
+          {
+            "value": "true",
+            "label": "field.gruppec.kode15.b"
+          }
+        ]
       },
       {
         "id": "header-annentilstand",
         "type": "Header",
         "size": "L",
-        "textResourceBindings": { "title": "header.annentilstand" }
+        "textResourceBindings": {
+          "title": "header.annentilstand"
+        }
       },
       {
         "id": "AnnenTilstand_Kode1",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "AnnenTilstand_Kode1" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "AnnenTilstand_Kode1"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.annentilstand.kode1" }
+          {
+            "value": "true",
+            "label": "field.annentilstand.kode1"
+          }
+        ]
       },
       {
         "id": "AnnenTilstand_Kode2",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "AnnenTilstand_Kode2" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "AnnenTilstand_Kode2"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.annentilstand.kode2" }
+          {
+            "value": "true",
+            "label": "field.annentilstand.kode2"
+          }
+        ]
       },
       {
         "id": "AnnenTilstand_Kode3",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "AnnenTilstand_Kode3" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "AnnenTilstand_Kode3"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.annentilstand.kode3" }
+          {
+            "value": "true",
+            "label": "field.annentilstand.kode3"
+          }
+        ]
       },
       {
         "id": "AnnenTilstand_Kode4",
-        "type": "RadioButtons",
-        "dataModelBindings": { "simpleBinding": "AnnenTilstand_Kode4" },
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "AnnenTilstand_Kode4"
+        },
         "options": [
-          { "value": "true", "label": "choice.ja" },
-          { "value": "false", "label": "choice.nei" }
-        ],
-        "textResourceBindings": { "title": "field.annentilstand.kode4" }
+          {
+            "value": "true",
+            "label": "field.annentilstand.kode4"
+          }
+        ]
       },
       {
         "id": "header-merknad",
         "type": "Header",
         "size": "L",
-        "textResourceBindings": { "title": "header.merknad" }
+        "textResourceBindings": {
+          "title": "header.merknad"
+        }
       },
       {
         "id": "Henvisning_Merknad",
         "type": "TextArea",
-        "dataModelBindings": { "simpleBinding": "Henvisning_Merknad" },
-        "textResourceBindings": { "title": "field.henvisning.merknad" }
+        "dataModelBindings": {
+          "simpleBinding": "Henvisning_Merknad"
+        },
+        "textResourceBindings": {
+          "title": "field.henvisning.merknad"
+        }
       },
       {
         "id": "navigation-side3",
@@ -263,7 +345,9 @@
         "id": "submit-button",
         "type": "Button",
         "mode": "submit",
-        "textResourceBindings": { "title": "button.send_inn" }
+        "textResourceBindings": {
+          "title": "button.send_inn"
+        }
       }
     ]
   }
