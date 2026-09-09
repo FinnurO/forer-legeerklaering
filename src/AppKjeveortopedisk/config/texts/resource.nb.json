@@ -4,72 +4,145 @@
   "resources": [
     { "id": "appName", "value": "Henvisning til kjeveortopedisk vurdering" },
 
-    { "id": "header.pasient", "value": "Pasientopplysninger" },
-    { "id": "field.pasient.fnr", "value": "Fødselsnummer" },
+    { "id": "general.neste", "value": "Neste" },
+    { "id": "general.tilbake", "value": "Tilbake" },
+
+    {
+      "id": "help.punkt1",
+      "value": "Oppgi den henviste pasientens personalia under dette punktet. Du må også oppgi HPR-nummeret ditt og underskrive henvisningsskjemaet."
+    },
+    {
+      "id": "help.punkt2",
+      "value": "Familier med mer enn ett barn som har rett til stønad til kjeveortopedisk behandling, kan ha krav på utvidet stønad. For å få rett til utvidet stønad må familien ha hatt faktiske utgifter til behandling av første barn. Med faktiske utgifter i denne sammenheng menes differansen mellom honorartakst og det pasienten har fått refundert tidligere for stønadsberettiget behandling. Faktiske utgifter må dokumenteres overfor kjeveortopeden. For pasienter i gruppe b øker dekningsgraden fra 75 til 90 prosent. For pasienter i gruppe c øker dekningsgraden fra 40 til 60 prosent."
+    },
+    {
+      "id": "help.punkt5",
+      "value": "Det er viktig at du som henviser til spesialist i kjeveortopedi, foretar en selvstendig vurdering av behovet for behandling før henvisning. Sett kryss i den rubrikken det henvises for – enten punkt 3 eller punkt 4. Bruk også merknadsfeltet til å gi ytterligere innspill/informasjon. For oppdater informasjon om regelverket se www.helfo.no."
+    },
+
+    { "id": "header.pasient", "value": "1a. Informasjon om pasienten" },
+    { "id": "field.pasient.fnr", "value": "Pasientens fødselsnummer" },
     { "id": "field.pasient.fornavn", "value": "Fornavn" },
     { "id": "field.pasient.etternavn", "value": "Etternavn" },
-    { "id": "field.pasient.adresse", "value": "Adresse" },
+    { "id": "field.pasient.adresse", "value": "Pasientens adresse" },
 
-    { "id": "header.henviser", "value": "Henvisende tannlege/tannpleier" },
+    { "id": "header.henviser", "value": "1b. Informasjon om henvisende behandler" },
     { "id": "field.henviser.fornavn", "value": "Fornavn" },
     { "id": "field.henviser.etternavn", "value": "Etternavn" },
-    { "id": "field.henviser.hpr", "value": "HPR-nummer" },
+    { "id": "field.henviser.hpr", "value": "Henviserens HPR-nummer" },
+    {
+      "id": "text.egenerklaering",
+      "value": "Jeg har foretatt en selvstendig vurdering av pasientens behov for kjeveortopedisk vurdering. På bakgrunn av min vurdering henvises pasienten til kjeveortoped."
+    },
 
     { "id": "header.virksomhet", "value": "Virksomhet" },
     { "id": "field.virksomhet.navn", "value": "Navn på virksomhet" },
     { "id": "field.virksomhet.orgnr", "value": "Organisasjonsnummer" },
 
-    { "id": "header.stonad", "value": "Utvidet stønad" },
-    { "id": "field.henvisning.utvidetstonad", "value": "Har pasienten krav på utvidet stønad?" },
-    { "id": "choice.ja", "value": "Ja" },
-    { "id": "choice.nei", "value": "Nei" },
+    { "id": "header.stonad", "value": "2. Utvidet stønad" },
+    { "id": "checkboxgroup.utvidetstonad.title", "value": "Utvidet stønad" },
+    {
+      "id": "field.henvisning.utvidetstonad",
+      "value": "Kryss av hvis pasienten har krav på utvidet stønad til kjeveortopedisk behandling"
+    },
 
-    { "id": "header.gruppea", "value": "Gruppe a — 100 % stønad" },
-    { "id": "field.gruppea.8a1", "value": "Leppe-kjeve-ganespalte" },
-    { "id": "field.gruppea.8a2", "value": "Medfødt og ervervet kraniofacial lidelse" },
-    { "id": "field.gruppea.8a3", "value": "Bittavvik som krever ortognatisk-kirurgisk behandling" },
+    { "id": "header.gruppea", "value": "Gruppe a 100 prosent" },
+    { "id": "field.gruppea.8a1", "value": "8a1: leppe-kjeve-ganespalte" },
+    { "id": "field.gruppea.8a2", "value": "8a2: medfødt og ervervet kraniofacial lidelse" },
+    {
+      "id": "field.gruppea.8a3",
+      "value": "8a3: bittavvik som er så alvorlig at pasienten må ha ortognatisk-kirurgisk behandling"
+    },
 
-    { "id": "header.gruppeb", "value": "Gruppe b — 75 % / 90 % ved utvidet stønad" },
-    { "id": "field.gruppeb.kode1", "value": "Horisontalt overbitt, 9 mm eller mer" },
-    { "id": "field.gruppeb.kode2", "value": "Enkeltsidig kryss- eller sakse-bitt (≥3 tannpar) med tvangsføring og/eller asymmetrier" },
-    { "id": "field.gruppeb.kode3", "value": "Åpent bitt hvor det bare er okklusjonskontakt på molarene" },
-    { "id": "field.gruppeb.kode4", "value": "Retinerte fortenner, hjørnetenner og premolarer med behov for aktiv fremføring" },
-    { "id": "field.gruppeb.kode5", "value": "Underbitt som omfatter alle fire incisiver, med eller uten tvangsføring" },
-    { "id": "field.gruppeb.kode6", "value": "Agenesi eller tanntap i fronten (fortenner og hjørnetenner)" },
-    { "id": "field.gruppeb.kode7", "value": "Dypt bitt med buccal/palatinal påbitning av slimhinnen (≥2 tenner)" },
-    { "id": "field.gruppeb.kode8", "value": "Dobbeltsidig saksebitt (≥2 tannpar på hver side)" },
-    { "id": "field.gruppeb.kode9", "value": "Agenesi av ≥2 tenner i samme sidesegment (3. molarer unntatt)" },
-    { "id": "field.gruppeb.kode10", "value": "Agenesi av enkelttenner i sidesegmentene (ved lukkede luker) og/eller hypoplastisk molar" },
+    { "id": "header.gruppeb.normal", "value": "Gruppe b 75 prosent" },
+    { "id": "header.gruppeb.utvidet", "value": "Gruppe b 90 prosent ved utvidet stønad" },
+    { "id": "field.gruppeb.kode1", "value": "1 Horisontalt overbitt, 9 mm eller mer." },
+    {
+      "id": "field.gruppeb.kode2",
+      "value": "2 Enkeltsidig kryss- eller sakse-bitt som omfatter tre eller flere tannpar og medfører tvangs-føring og/eller asymmetrier."
+    },
+    { "id": "field.gruppeb.kode3", "value": "3 Åpent bitt hvor det bare er okklusjonskontakt på molarene." },
+    {
+      "id": "field.gruppeb.kode4",
+      "value": "4 Retinerte fortenner, hjørnetenner og premolarer hvor det er nødvendig med aktiv fremføring."
+    },
+    {
+      "id": "field.gruppeb.kode5",
+      "value": "5 Underbitt som omfatter alle fire incisiver med eller uten tvangsføring."
+    },
+    { "id": "field.gruppeb.kode6", "value": "6 Agenesi eller tanntap i fronten (fortenner og hjørnetenner)." },
+    {
+      "id": "field.gruppeb.kode7",
+      "value": "7 Dypt bitt med buccal eller palatinal påbitning av slimhinnen med to eller flere tenner."
+    },
+    {
+      "id": "field.gruppeb.kode8",
+      "value": "8 Dobbeltsidig saksebitt som omfatter to eller flere tannpar på hver side."
+    },
+    {
+      "id": "field.gruppeb.kode9",
+      "value": "9 Agenesi av to eller flere tenner i samme sidesegment, 3.molarer (visdomstenner) unntatt."
+    },
+    {
+      "id": "field.gruppeb.kode10",
+      "value": "10 Agenesi av enkelttenner i sidesegmentene (hvis luker lukkes) og/eller hypoplastisk molar."
+    },
 
-    { "id": "header.gruppec", "value": "Gruppe c — 40 % / 60 % ved utvidet stønad" },
-    { "id": "field.gruppec.kode11", "value": "Horisontalt overbitt, 6–9 mm" },
-    { "id": "field.gruppec.kode11.a", "value": "Kode 11: dokumenterte funksjonelle avvik" },
-    { "id": "field.gruppec.kode11.b", "value": "Kode 11: psykisk og sosial mestring" },
-    { "id": "field.gruppec.kode11.c", "value": "Kode 11: kombinert med kode 12" },
-    { "id": "field.gruppec.kode12", "value": "Stor plassmangel i fronten (≥4 mm) med kontaktbrudd (≥2 mm)" },
-    { "id": "field.gruppec.kode12.a", "value": "Kode 12: dokumenterte funksjonelle avvik" },
-    { "id": "field.gruppec.kode12.b", "value": "Kode 12: psykisk og sosial mestring" },
-    { "id": "field.gruppec.kode12.c", "value": "Kode 12: kombinert med kode 11 eller kode 13" },
-    { "id": "field.gruppec.kode13", "value": "Inverteringer i fronten (fortenner og hjørnetenner)" },
-    { "id": "field.gruppec.kode13.a", "value": "Kode 13: dokumenterte funksjonelle avvik" },
-    { "id": "field.gruppec.kode13.b", "value": "Kode 13: psykisk og sosial mestring" },
-    { "id": "field.gruppec.kode13.c", "value": "Kode 13: kombinert med kode 12" },
-    { "id": "field.gruppec.kode14", "value": "Diastema mediale ≥3 mm, eller markert generelt plassoverskudd" },
-    { "id": "field.gruppec.kode14.mm", "value": "Plassoverskudd, angitt i mm" },
-    { "id": "field.gruppec.kode14.a", "value": "Kode 14: dokumenterte funksjonelle avvik" },
-    { "id": "field.gruppec.kode14.b", "value": "Kode 14: psykisk og sosial mestring" },
-    { "id": "field.gruppec.kode15", "value": "Åpent bitt som omfatter ≥3 tannpar" },
-    { "id": "field.gruppec.kode15.a", "value": "Kode 15: dokumenterte funksjonelle avvik" },
-    { "id": "field.gruppec.kode15.b", "value": "Kode 15: psykisk og sosial mestring" },
+    { "id": "header.gruppec.normal", "value": "Gruppe c 40 prosent" },
+    { "id": "header.gruppec.utvidet", "value": "Gruppe c 60 prosent ved utvidet stønad" },
+    { "id": "text.gruppec.instruks", "value": "Kryss av for aktuelle punkter som a), b) og/eller c)" },
+    { "id": "field.gruppec.kode11", "value": "11 Horisontalt overbitt, 6-9 mm" },
+    { "id": "field.gruppec.kode11.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
+    { "id": "field.gruppec.kode11.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
+    { "id": "field.gruppec.kode11.c", "value": "c) Bittavviket er kombinert med c12." },
+    {
+      "id": "field.gruppec.kode12",
+      "value": "12 Stor plassmangel i fronten som er 4 mm eller mer, og kontakt-brudd mellom enkelttenner på minst 2 mm"
+    },
+    { "id": "field.gruppec.kode12.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
+    { "id": "field.gruppec.kode12.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
+    { "id": "field.gruppec.kode12.c", "value": "c) Bittavviket er kombinert med c11 eller c13." },
+    { "id": "field.gruppec.kode13", "value": "13 Inverteringer i fronten (fortenner og hjørnetenner)" },
+    { "id": "field.gruppec.kode13.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
+    { "id": "field.gruppec.kode13.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
+    { "id": "field.gruppec.kode13.c", "value": "c) Bittavviket er kombinert med c12." },
+    {
+      "id": "field.gruppec.kode14",
+      "value": "14 Diastema mediale som er 3 mm eller større, større, eller markert generelt plassoverskudd i '' (angis i mm)."
+    },
+    { "id": "field.gruppec.kode14.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
+    { "id": "field.gruppec.kode14.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
+    { "id": "field.gruppec.kode15", "value": "15 Åpent bitt som omfatter tre eller flere tannpar." },
+    { "id": "field.gruppec.kode15.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
+    { "id": "field.gruppec.kode15.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
 
-    { "id": "header.annentilstand", "value": "Annen tilstand (alternativ til gruppe a/b/c)" },
-    { "id": "field.annentilstand.kode1", "value": "Kjeveortopedisk behandling ved marginal periodontitt (punkt 6b)" },
-    { "id": "field.annentilstand.kode2", "value": "Preprotetisk kjeveortopedisk behandling — tannskade ved godkjent yrkesskade (punkt 12)" },
-    { "id": "field.annentilstand.kode3", "value": "Preprotetisk kjeveortopedisk behandling ved tannagenesi (punkt 7c)" },
-    { "id": "field.annentilstand.kode4", "value": "Preprotetisk kjeveortopedisk behandling — tannskade ved ulykke, ikke godkjent yrkesskade (punkt 13)" },
+    { "id": "header.annentilstand", "value": "4. Fyll ut hvis henvisningen gjelder annen tilstand" },
+    {
+      "id": "field.annentilstand.kode1",
+      "value": "1 Kjeveortopedisk behandling ved marginal periodontitt (punkt 6 b)."
+    },
+    {
+      "id": "field.annentilstand.kode2",
+      "value": "2 Preprotetisk kjeveortopedisk behandling i forbindelse med tannskade ved godkjent yrkesskade (punkt 12)."
+    },
+    {
+      "id": "field.annentilstand.kode3",
+      "value": "3 Preprotetisk kjeveortopedisk behandling ved tannagenesi (punkt 7 c)."
+    },
+    {
+      "id": "field.annentilstand.kode4",
+      "value": "4 Preprotetisk kjeveortopedisk behandling i forbindelse med tannskade ved ulykke som ikke er godkjent yrkesskade (punkt 13)."
+    },
 
-    { "id": "header.merknad", "value": "Merknader" },
-    { "id": "field.henvisning.merknad", "value": "Merknader fra henvisende tannlege/tannpleier" },
+    { "id": "header.merknad", "value": "5. Merknader fra henvisende tannlege/tannpleier" },
+    { "id": "field.henvisning.merknad", "value": "Merknader" },
+
+    { "id": "header.oppsummering", "value": "Oppsummering" },
+    { "id": "header.info_pasient", "value": "Informasjon til pasient/foresatte" },
+    {
+      "id": "text.info_pasient",
+      "value": "Folketrygden gir stønad til behandling hos kjeveortoped (reguleringstannlege) for visse nærmere angitte bittfeil og ved enkelte innslagspunkt. For å få stønad til behandling hos kjeveortoped må det foreligge en henvisning fra en annen tannlege eller tannpleier. En henvisning betyr derimot ikke at det foreligger et behandlingsbehov. Dette vil bli avgjort under konsultasjonen hos kjeveortopeden.\n\nStønad til tannbehandling gis etter takster fastsatt av staten v/Helse- og omsorgsdepartementet. I de tilfeller stønad gis på bakgrunn av en bittfeil, avhenger stønaden av bittfeilens alvorlighet, og utgiftene blir refundert i henhold til en prosentsats av fastsatte takster. For de alvorligste tilfellene er dekningsprosenten 100. For de mindre alvorlige tilfellene er dekningsprosenten 75. For de minst alvorlige tilfellene er dekningsprosenten 40. For enkelte kan dekningsprosenten øke som følge av reglene om utvidet stønad, se punkt 2 over. For øvrig behandling hos kjeveortoped gis det stønad enten etter angitte honorartakster eller refusjonstakster.\n\nKjeveortopeder står imidlertid fritt til å bestemme prisen for den kjeveortopediske behandlingen de utfører. Hvis kjeveortopedens pris er høyere enn den fastsatt av staten, må pasienten dekke mellomlegget.\n\nFor mer informasjon se helsenorge.no."
+    },
 
     { "id": "button.send_inn", "value": "Send inn henvisning" }
   ]
