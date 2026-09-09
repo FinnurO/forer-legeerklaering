@@ -253,4 +253,23 @@ Sendt til `open@epic.com` 2026-09-08 (Johann sitt eget navn/organisasjon og fakt
 
 **Svar fra Epic support (mottatt 2026-09-09):** bekreftet at det var et driftsproblem på deres side — synkroniseringsproblemer i testmiljøene deres (samme "opptil 1 time"-synk-mekanisme omtalt i §3, men her var selve synken feilet, ikke bare treg). Epic ba oss prøve på nytt.
 
-**Neste steg:** gjenta launch-forsøket (§9, samme fremgangsmåte som 2026-08-27/2026-09-08) — se om `launch`-token og `iss` nå er korrekte (R4, ikke DSTU2, og et faktisk ikke-tomt token). Oppdater §9 med resultatet.
+Gjentatt launch-forsøk (§9, 2026-09-09) bekreftet at `launch`-token og `iss` nå er korrekte (R4, ikke DSTU2, faktisk ikke-tomt token) — men avdekket en ny, separat feil lenger inn i flyten (Epics eget `/oauth2/authorize` gir en generisk autorisasjonsfeil, se §9). Sendt oppfølgingssvar til `open@epic.com` 2026-09-09:
+
+> **Subject:** Re: SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — LaunchPad fixed, but /oauth2/authorize now fails
+>
+> Following up on the ticket from 2026-09-08 (empty `launch=` token, `iss` always pointing to DSTU2 instead of our app's registered R4).
+>
+> Good news: the LaunchPad tool is now generating a correct, non-empty launch token with the correct R4 `iss`. Thank you for the fix.
+>
+> However, when we take that token all the way through a real end-to-end launch (redirecting to Epic's own `/oauth2/authorize` with our app's client_id, the correct redirect_uri, `aud=.../api/FHIR/R4`, the launch token, and PKCE), Epic's authorization server responds with:
+>
+> > OAuth2 Error
+> > Something went wrong trying to authorize the client. Please try logging in again.
+>
+> We've confirmed our request itself is correct (client_id, redirect_uri, aud, scopes all match what's registered), and we ruled out a scope mismatch by retesting with a scope list that exactly matches our app's registered Incoming APIs — same error persists either way.
+>
+> We also found a public smart-on-fhir discussion (https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s) reporting the identical error text, which the reporter said resolved itself after a few days with no change on their end — so this looks like it could be the same kind of sandbox sync/cache issue you mentioned, just affecting a different part of the pipeline (the authorize step, not LaunchPad token generation).
+>
+> Could you check whether our app's registration has fully synced to the authorization service? Happy to provide a fresh trace/timestamp if useful.
+
+**Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
