@@ -99,6 +99,11 @@
           { "value": "false", "label": "choice.nei" }
         ],
         "textResourceBindings": { "title": "field.henvisning.utvidetstonad" }
+      },
+      {
+        "id": "navigation-side1",
+        "type": "NavigationButtons",
+        "showBackButton": false
       }
     ]
   }

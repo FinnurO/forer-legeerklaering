@@ -255,6 +255,11 @@
         "textResourceBindings": { "title": "field.henvisning.merknad" }
       },
       {
+        "id": "navigation-side3",
+        "type": "NavigationButtons",
+        "showBackButton": true
+      },
+      {
         "id": "submit-button",
         "type": "Button",
         "mode": "submit",
