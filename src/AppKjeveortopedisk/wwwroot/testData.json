@@ -1,0 +1,55 @@
+{
+  "$schema": "https://altinncdn.no/schemas/json/test-users/test-users.schema.v1.json",
+  "persons": [
+    {
+      "partyId": 612345,
+      "partyUuid": "34329601-3efd-4fd5-95be-60bf1f47198e",
+      "ssn": "15068012345",
+      "firstName": "Tina",
+      "middleName": "",
+      "lastName": "Tannlege",
+      "partyRoles": {
+        "612345": [{ "type": "altinn", "value": "priv" }],
+        "600000": [{ "type": "altinn", "value": "dagl" }]
+      },
+      "addressCity": "Sandvika",
+      "addressHouseLetter": null,
+      "addressHouseNumber": "3",
+      "addressMunicipalName": "Bærum",
+      "addressMunicipalNumber": "3024",
+      "addressPostalCode": "1337",
+      "addressStreetName": "Tannregulering",
+      "mailingAddress": "Tannregulering 3",
+      "mailingPostalCity": "Sandvika",
+      "mailingPostalCode": "1337",
+      "mobileNumber": "90000001",
+      "telephoneNumber": "",
+      "email": "tina.tannlege@example.com",
+      "userId": 22345,
+      "language": "nb",
+      "userName": "TinaTannlege"
+    }
+  ],
+  "orgs": [
+    {
+      "partyId": 600000,
+      "partyUuid": "bb3993ea-d41b-46c2-aa02-96fb8b0321a3",
+      "orgNumber": "912345678",
+      "parentPartyId": null,
+      "name": "Sentrum Tannklinikk",
+      "businessAddress": "Tannregulering 3",
+      "businessPostalCity": "Sandvika",
+      "businessPostalCode": "1337",
+      "eMailAddress": "post@sentrumtannklinikk.example.com",
+      "faxNumber": "",
+      "internetAddress": "",
+      "mailingAddress": "Tannregulering 3",
+      "mailingPostalCity": "Sandvika",
+      "mailingPostalCode": "1337",
+      "mobileNumber": "",
+      "telephoneNumber": "67000000",
+      "unitStatus": null,
+      "unitType": "AS"
+    }
+  ]
+}

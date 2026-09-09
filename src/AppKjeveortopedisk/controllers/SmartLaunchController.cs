@@ -42,5 +42,12 @@ namespace Altinn.App.Controllers
         protected override string DefaultTestPatientId => "kaja-kviss";
         protected override string DefaultTestEncounterId => "enc-kaja-001";
         protected override string DefaultTestPractitionerPath => "Practitioner/tannlege-tina";
+
+        // Matcher Tina Tannlege sin oppføring i wwwroot/testData.json — dette caset skal i
+        // utgangspunktet kunne fylles ut helt uten SMART-kontekst (dobbel inngangsmodus), så det
+        // naturlige "hvem logger inn"-standardvalget er henvisende tannlege selv, ikke den
+        // generiske Ola Nordmann-testbrukeren fra ForerLegeerklaering.
+        protected override int DefaultUserId => 22345;
+        protected override int DefaultPartyId => 612345;
     }
 }
