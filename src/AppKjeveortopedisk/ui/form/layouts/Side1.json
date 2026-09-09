@@ -50,7 +50,6 @@
         "dataModelBindings": {
           "simpleBinding": "Pasient_Fnr"
         },
-        "readOnly": true,
         "textResourceBindings": {
           "title": "field.pasient.fnr"
         }
@@ -61,7 +60,6 @@
         "dataModelBindings": {
           "simpleBinding": "Pasient_Fornavn"
         },
-        "readOnly": true,
         "textResourceBindings": {
           "title": "field.pasient.fornavn"
         }
@@ -72,7 +70,6 @@
         "dataModelBindings": {
           "simpleBinding": "Pasient_Etternavn"
         },
-        "readOnly": true,
         "textResourceBindings": {
           "title": "field.pasient.etternavn"
         }
@@ -83,7 +80,6 @@
         "dataModelBindings": {
           "simpleBinding": "Pasient_Adresse"
         },
-        "readOnly": true,
         "textResourceBindings": {
           "title": "field.pasient.adresse"
         }
@@ -188,7 +184,6 @@
         "dataModelBindings": {
           "simpleBinding": "Virksomhet_Navn"
         },
-        "readOnly": true,
         "textResourceBindings": {
           "title": "field.virksomhet.navn"
         }
@@ -199,7 +194,6 @@
         "dataModelBindings": {
           "simpleBinding": "Virksomhet_Orgnr"
         },
-        "readOnly": true,
         "textResourceBindings": {
           "title": "field.virksomhet.orgnr"
         }

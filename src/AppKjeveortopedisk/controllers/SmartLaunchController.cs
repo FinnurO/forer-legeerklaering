@@ -33,8 +33,14 @@ namespace Altinn.App.Controllers
             : base(httpClientFactory, config, memoryCache, logger, env) { }
 
         protected override string DefaultClientId => "kjeveortopedisk-henvisning-poc";
-        protected override string DefaultTestPatientId => "test-pasient-1";
-        protected override string DefaultTestEncounterId => "enc-test-001";
-        protected override string DefaultTestPractitionerPath => "Practitioner/tannlege-test";
+
+        // Seedet i local-dev/seed.ps1 (2026-09-09) — Tina Tannlege/Kaja Kviss/Sentrum Tannklinikk,
+        // en egen navngitt tannlege-kontekst i stedet for den opprinnelige placeholderen
+        // ("tannlege-test") som aldri fantes i HAPI FHIR-mocken. Overstyr med
+        // ?patientId=...&encounterId=... på /smart/dev-login for å teste med andre
+        // pasienter/behandlere seedet i samme skript.
+        protected override string DefaultTestPatientId => "kaja-kviss";
+        protected override string DefaultTestEncounterId => "enc-kaja-001";
+        protected override string DefaultTestPractitionerPath => "Practitioner/tannlege-tina";
     }
 }
