@@ -27,6 +27,7 @@ $sections = @(
     @{ File = "IMPLEMENTERING.md";               Title = "Implementeringsdetaljer" }
     @{ File = "SKJEMA-IS2569.md";                Title = "Skjemastruktur IS-2569" }
     @{ File = "SKJEMA-KJEVEORTOPEDISK.md";       Title = "Skjemastruktur - henvisning til kjeveortopedisk vurdering" }
+    @{ File = "SMARTFHIR-COMMON.md";             Title = "SmartFhir.Common - delt SMART on FHIR-bibliotek" }
     @{ File = "PASIENTFLYT.md";                  Title = "Pasientflyt" }
     @{ File = "BESLUTNINGER.md";                 Title = "Åpne beslutninger" }
     @{ File = "RISIKOREGISTER.md";               Title = "Risikoregister" }

@@ -301,7 +301,14 @@ namespace Altinn.App.Models
 
 ---
 
-## Åpent spørsmål: appstruktur
+## Appstruktur (avklart 2026-09-09)
+
+**Besluttet av Johann:** ny app-mappe i samme repo — «dette blir jo en egen Altinn Studio app, men kan sikkert ligge som en egen mappe i dette repoet... repoet er førererklæring og mye om smart on fhir, men det vil bli lagt ned etterhvert.» Altså alternativ 1 fra listen under, med den presiseringen at `forer-legeerklaering`-repoet selv har en planlagt sluttdato — det er ikke ment som et permanent hjem for et voksende antall Altinn-caser, bare et praktisk sted å bevise mønsteret videre før neste steg (eget repo/mal) blir aktuelt.
+
+Implementert som `src/AppKjeveortopedisk` (egen `App.csproj`, `Program.cs`, datamodell, layout, `applicationmetadata.json`, prosessdefinisjon — lagt til i `src/App.sln`). Se [SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md) for hvordan SMART on FHIR-launch/-prefill ble skilt ut til et delt `SmartFhir.Common`-klassebibliotek i samme slag, slik at denne og fremtidige apper i repoet ikke dupliserer den logikken.
+
+<details>
+<summary>Opprinnelig åpent spørsmål (før avklaring)</summary>
 
 Dette blir det **andre** skjemaet i prosjektet. `src/App` er i dag én enkelt Altinn Studio-app (`forer-legeerklaering`) — det finnes ikke noe presedens i repoet for flere apper side om side. Før jeg går videre til selve Altinn Studio-skjemaet (layout, `applicationmetadata.json`, prosessdefinisjon), trengs et valg:
 
@@ -311,6 +318,12 @@ Dette blir det **andre** skjemaet i prosjektet. `src/App` er i dag én enkelt Al
 
 Altinn Studio-skjema (layout.json, layout-sets, applicationmetadata.json m.m.) er normalt noe Altinn Studio sitt eget designer-verktøy/CLI genererer — jeg vil helst vite hvor det skal bo før jeg begynner å håndskrive den strukturen, for å unngå å måtte flytte alt i etterkant.
 
-## Åpent spørsmål: FHIR-tilgjengelighet fra tannlege-EPJ
+</details>
 
-Johann avklarer hvilke FHIR-ressurser et tannlege-EPJ faktisk eksponerer. Foreløpig antatt (basert på samme mønster som førerrett-caset): `Patient`, `Practitioner` (via `fhirUser`), `Organization` (via `Encounter.serviceProvider` eller tilsvarende). Selve den kliniske klassifiseringen i §3/§4 er høyst sannsynlig **ikke** noe et generisk tannlege-EPJ har strukturert FHIR-data for (dette er en Helfo-spesifikk vurdering, ikke en diagnosekode) — den delen av skjemaet må trolig alltid fylles ut manuelt av tannlegen/tannpleieren, uavhengig av EPJ-tilkobling.
+## FHIR-tilgjengelighet fra tannlege-EPJ (delvis avklart 2026-09-09)
+
+**Besluttet av Johann:** i påvente av den fulle avklaringen («jeg skal få avklart hva som ligger tilgjengelig i ressurser») settes standardfeltene opp nå — de som uansett er felles på tvers av EPJ-er og caser. Dette ble den konkrete anledningen til å skille ut `SmartFhir.Common` (se [SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md)): `Patient` (inkl. adresse), `Practitioner` (via `fhirUser`, inkl. `PractitionerRole`-oppslag), `Organization` er nå delt kode brukt av begge apper i repoet, ikke noe som må skrives på nytt her.
+
+Fortsatt ubekreftet/manuelt:
+- Om et faktisk tannlege-EPJ eksponerer disse ressursene i praksis (venter på Johanns avklaring) — `AppKjeveortopedisk` sin `SmartLaunchController` bruker placeholder-testdata (`test-pasient-1`/`enc-test-001`/`Practitioner/tannlege-test`) inntil et reelt testmiljø finnes.
+- Den kliniske klassifiseringen i §3/§4 er, som antatt, **ikke** noe et generisk tannlege-EPJ har strukturert FHIR-data for (dette er en Helfo-spesifikk vurdering, ikke en diagnosekode) — `KjeveortopediskFhirPrefillService` fyller derfor bevisst ikke ut disse feltene. Skjemaet er fullt utfyllbart manuelt for §2–§5 uavhengig av EPJ-tilkobling, i tråd med «dobbel inngangsmodus»-kravet.

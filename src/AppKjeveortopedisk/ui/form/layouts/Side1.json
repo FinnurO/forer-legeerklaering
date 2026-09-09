@@ -1,0 +1,105 @@
+{
+  "$schema": "https://altinncdn.no/toolkits/altinn-app-frontend/4/schemas/json/layout/layout.schema.v1.json",
+  "data": {
+    "hidden": false,
+    "layout": [
+      {
+        "id": "header-pasient",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.pasient" }
+      },
+      {
+        "id": "Pasient_Fnr",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Fnr" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.fnr" }
+      },
+      {
+        "id": "Pasient_Fornavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Fornavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.fornavn" }
+      },
+      {
+        "id": "Pasient_Etternavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Etternavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.etternavn" }
+      },
+      {
+        "id": "Pasient_Adresse",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Pasient_Adresse" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.pasient.adresse" }
+      },
+      {
+        "id": "header-henviser",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.henviser" }
+      },
+      {
+        "id": "Henviser_Fornavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Henviser_Fornavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.henviser.fornavn" }
+      },
+      {
+        "id": "Henviser_Etternavn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Henviser_Etternavn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.henviser.etternavn" }
+      },
+      {
+        "id": "Henviser_HPR",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Henviser_HPR" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.henviser.hpr" }
+      },
+      {
+        "id": "header-virksomhet",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.virksomhet" }
+      },
+      {
+        "id": "Virksomhet_Navn",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Virksomhet_Navn" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.virksomhet.navn" }
+      },
+      {
+        "id": "Virksomhet_Orgnr",
+        "type": "Input",
+        "dataModelBindings": { "simpleBinding": "Virksomhet_Orgnr" },
+        "readOnly": true,
+        "textResourceBindings": { "title": "field.virksomhet.orgnr" }
+      },
+      {
+        "id": "header-stonad",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": { "title": "header.stonad" }
+      },
+      {
+        "id": "Henvisning_UtvidetStonad",
+        "type": "RadioButtons",
+        "dataModelBindings": { "simpleBinding": "Henvisning_UtvidetStonad" },
+        "options": [
+          { "value": "true", "label": "choice.ja" },
+          { "value": "false", "label": "choice.nei" }
+        ],
+        "textResourceBindings": { "title": "field.henvisning.utvidetstonad" }
+      }
+    ]
+  }
+}
