@@ -4,6 +4,19 @@
   "resources": [
     { "id": "appName", "value": "Henvisning til kjeveortopedisk vurdering" },
 
+    {
+      "id": "help.punkt1",
+      "value": "Oppgi den henviste pasientens personalia under dette punktet. Du må også oppgi HPR-nummeret ditt og underskrive henvisningsskjemaet."
+    },
+    {
+      "id": "help.punkt2",
+      "value": "Familier med mer enn ett barn som har rett til stønad til kjeveortopedisk behandling, kan ha krav på utvidet stønad. For å få rett til utvidet stønad må familien ha hatt faktiske utgifter til behandling av første barn. Med faktiske utgifter i denne sammenheng menes differansen mellom honorartakst og det pasienten har fått refundert tidligere for stønadsberettiget behandling. Faktiske utgifter må dokumenteres overfor kjeveortopeden. For pasienter i gruppe b øker dekningsgraden fra 75 til 90 prosent. For pasienter i gruppe c øker dekningsgraden fra 40 til 60 prosent."
+    },
+    {
+      "id": "help.punkt5",
+      "value": "Det er viktig at du som henviser til spesialist i kjeveortopedi, foretar en selvstendig vurdering av behovet for behandling før henvisning. Sett kryss i den rubrikken det henvises for – enten punkt 3 eller punkt 4. Bruk også merknadsfeltet til å gi ytterligere innspill/informasjon. For oppdater informasjon om regelverket se www.helfo.no."
+    },
+
     { "id": "header.pasient", "value": "1a. Informasjon om pasienten" },
     { "id": "field.pasient.fnr", "value": "Pasientens fødselsnummer" },
     { "id": "field.pasient.fornavn", "value": "Fornavn" },
@@ -118,6 +131,13 @@
 
     { "id": "header.merknad", "value": "5. Merknader fra henvisende tannlege/tannpleier" },
     { "id": "field.henvisning.merknad", "value": "Merknader" },
+
+    { "id": "header.oppsummering", "value": "Oppsummering" },
+    { "id": "header.info_pasient", "value": "Informasjon til pasient/foresatte" },
+    {
+      "id": "text.info_pasient",
+      "value": "Folketrygden gir stønad til behandling hos kjeveortoped (reguleringstannlege) for visse nærmere angitte bittfeil og ved enkelte innslagspunkt. For å få stønad til behandling hos kjeveortoped må det foreligge en henvisning fra en annen tannlege eller tannpleier. En henvisning betyr derimot ikke at det foreligger et behandlingsbehov. Dette vil bli avgjort under konsultasjonen hos kjeveortopeden.\n\nStønad til tannbehandling gis etter takster fastsatt av staten v/Helse- og omsorgsdepartementet. I de tilfeller stønad gis på bakgrunn av en bittfeil, avhenger stønaden av bittfeilens alvorlighet, og utgiftene blir refundert i henhold til en prosentsats av fastsatte takster. For de alvorligste tilfellene er dekningsprosenten 100. For de mindre alvorlige tilfellene er dekningsprosenten 75. For de minst alvorlige tilfellene er dekningsprosenten 40. For enkelte kan dekningsprosenten øke som følge av reglene om utvidet stønad, se punkt 2 over. For øvrig behandling hos kjeveortoped gis det stønad enten etter angitte honorartakster eller refusjonstakster.\n\nKjeveortopeder står imidlertid fritt til å bestemme prisen for den kjeveortopediske behandlingen de utfører. Hvis kjeveortopedens pris er høyere enn den fastsatt av staten, må pasienten dekke mellomlegget.\n\nFor mer informasjon se helsenorge.no."
+    },
 
     { "id": "button.send_inn", "value": "Send inn henvisning" }
   ]

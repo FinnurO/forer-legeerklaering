@@ -12,6 +12,22 @@
         }
       },
       {
+        "id": "grid-pasient",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [
+              { "component": "Pasient_Etternavn" },
+              { "component": "Pasient_Fornavn" },
+              { "component": "Pasient_Fnr" }
+            ]
+          },
+          {
+            "cells": [{ "component": "Pasient_Adresse" }]
+          }
+        ]
+      },
+      {
         "id": "Pasient_Fnr",
         "type": "Input",
         "dataModelBindings": {
@@ -19,7 +35,8 @@
         },
         "readOnly": true,
         "textResourceBindings": {
-          "title": "field.pasient.fnr"
+          "title": "field.pasient.fnr",
+          "help": "help.punkt1"
         }
       },
       {
@@ -62,6 +79,19 @@
         "textResourceBindings": {
           "title": "header.henviser"
         }
+      },
+      {
+        "id": "grid-henviser",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [
+              { "component": "Henviser_Etternavn" },
+              { "component": "Henviser_Fornavn" },
+              { "component": "Henviser_HPR" }
+            ]
+          }
+        ]
       },
       {
         "id": "Henviser_Fornavn",
@@ -112,6 +142,18 @@
         }
       },
       {
+        "id": "grid-virksomhet",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [
+              { "component": "Virksomhet_Navn" },
+              { "component": "Virksomhet_Orgnr" }
+            ]
+          }
+        ]
+      },
+      {
         "id": "Virksomhet_Navn",
         "type": "Input",
         "dataModelBindings": {
@@ -152,7 +194,10 @@
             "value": "true",
             "label": "field.henvisning.utvidetstonad"
           }
-        ]
+        ],
+        "textResourceBindings": {
+          "help": "help.punkt2"
+        }
       },
       {
         "id": "navigation-side1",

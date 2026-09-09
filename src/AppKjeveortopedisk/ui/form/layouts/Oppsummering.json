@@ -1,0 +1,52 @@
+{
+  "$schema": "https://altinncdn.no/toolkits/altinn-app-frontend/4/schemas/json/layout/layout.schema.v1.json",
+  "data": {
+    "hidden": false,
+    "layout": [
+      {
+        "id": "header-oppsummering",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": {
+          "title": "header.oppsummering"
+        }
+      },
+      {
+        "id": "oppsummering-form",
+        "type": "Summary2",
+        "target": {
+          "type": "layoutSet",
+          "id": "form"
+        }
+      },
+      {
+        "id": "header-info-pasient",
+        "type": "Header",
+        "size": "M",
+        "textResourceBindings": {
+          "title": "header.info_pasient"
+        }
+      },
+      {
+        "id": "info-pasient",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "text.info_pasient"
+        }
+      },
+      {
+        "id": "navigation-oppsummering",
+        "type": "NavigationButtons",
+        "showBackButton": true
+      },
+      {
+        "id": "submit-button",
+        "type": "Button",
+        "mode": "submit",
+        "textResourceBindings": {
+          "title": "button.send_inn"
+        }
+      }
+    ]
+  }
+}

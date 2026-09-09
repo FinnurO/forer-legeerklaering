@@ -340,21 +340,14 @@
           "simpleBinding": "Henvisning_Merknad"
         },
         "textResourceBindings": {
-          "title": "field.henvisning.merknad"
+          "title": "field.henvisning.merknad",
+          "help": "help.punkt5"
         }
       },
       {
         "id": "navigation-side3",
         "type": "NavigationButtons",
         "showBackButton": true
-      },
-      {
-        "id": "submit-button",
-        "type": "Button",
-        "mode": "submit",
-        "textResourceBindings": {
-          "title": "button.send_inn"
-        }
       }
     ]
   }
