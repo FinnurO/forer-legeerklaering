@@ -220,4 +220,6 @@ Sendt til `open@epic.com` 2026-09-08 (Johann sitt eget navn/organisasjon og fakt
 >
 > **Key point:** we reproduced the exact same result using Epic's own built-in "SMART on FHIR test" app, not just our own — so this doesn't appear to be specific to our app's configuration.
 
-**Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
+**Svar fra Epic support (mottatt 2026-09-09):** bekreftet at det var et driftsproblem på deres side — synkroniseringsproblemer i testmiljøene deres (samme "opptil 1 time"-synk-mekanisme omtalt i §3, men her var selve synken feilet, ikke bare treg). Epic ba oss prøve på nytt.
+
+**Neste steg:** gjenta launch-forsøket (§9, samme fremgangsmåte som 2026-08-27/2026-09-08) — se om `launch`-token og `iss` nå er korrekte (R4, ikke DSTU2, og et faktisk ikke-tomt token). Oppdater §9 med resultatet.
