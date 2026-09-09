@@ -1,6 +1,6 @@
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-09-08): blokkert av en feil i Epics eget sandkasseverktøy, meldt til Epic support.** App **"Legeerklæring førerrett (Digdir)"** er registrert og korrekt konfigurert (R4, bekreftet lagret). Sandkasse-synkronisering var **ikke** rotårsaken til det tomme launch-tokenet vi først mistenkte — bekreftet ved å reprodusere nøyaktig samme feil med **Epics eget offisielle "SMART on FHIR test"-eksempelapp**, som utelukker alt på vår side. LaunchPad-verktøyet (`Documentation?docId=launching`) genererer et tomt `launch=`-token og feil FHIR-versjon (`DSTU2` i stedet for det registrerte `R4`) for enhver app akkurat nå. Meldt til `open@epic.com` 2026-09-08. Se §9 for full diagnostikk og §10 for e-posten som ble sendt.
+**Status (2026-09-09): delvis løst.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Ser ut som en beslektet, men separat, synk-forsinkelse i en annen del av Epics infrastruktur. Se §9 for full diagnostikk og §10 for e-postutvekslingen med Epic support.
 
 ## Innhold
 
@@ -204,6 +204,37 @@ Gjentok forsøket >1 uke etter registrering (godt utenfor enhver rimelig synk-fo
 - Prøv igjen etter neste ukentlige sandkasse-refresh (søndag ca. 20:00 amerikansk sentraltid, se §3/§6).
 - Vurder å bygge launch-URL-en manuelt (samme teknikk som for launch.smarthealthit.org og nav-epj: konstruer `iss`/`launch` selv) — trolig ikke mulig her siden `launch` er et EHR-generert, opakt token vi ikke kan forfalske selv, i motsetning til `iss`.
 
+### 2026-09-09 — bekreftet løst etter Epics svar
+
+Epic support svarte (se §10) at det var et driftsproblem — synkroniseringsproblemer i testmiljøene deres — og ba oss prøve på nytt. Gjentok nøyaktig samme forsøk som 2026-08-27/2026-09-08 (LaunchPad, app "Legeerklæring førerrett (Digdir)", samme launch-URL), med samme JS-interceptor på `POST /Developer/GetLaunchUrl` som avdekket feilen sist:
+
+- **Request:** `{"launchUrl":"http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch",...,"appId":"60326",...}` — samme som før.
+- **Response:** `{"Success":true,...,"Data":{"url":"...iss=https%3A%2F%2Ffhir.epic.com%2Finterconnect-fhir-oauth%2Fapi%2FFHIR%2FR4&launch=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...","error":""}}`
+
+**Begge avvikene fra 2026-08-27/2026-09-08 er borte:**
+1. `launch=` er nå et faktisk, ikke-tomt JWT — dekodet payload viser `"epic.tokentype":"launch"`, `"client_id":"fe9e031b-b4f1-49ad-9a84-59f8e05475e5"` (vår registrerte non-production client_id — riktig app), 5 minutters levetid (`exp` − `iat` = 300s).
+2. `iss` peker nå på `.../api/FHIR/R4`, ikke `DSTU2` — riktig, matcher appens registrerte FHIR-versjon.
+
+**Konklusjon:** Epics driftsfeil på LaunchPad-verktøyet er bekreftet rettet. LaunchPad-verktøyet fungerer nå som forventet for vår app.
+
+### 2026-09-09 (samme dag) — ny feil lenger inn i flyten: Epics eget `/oauth2/authorize` gir generisk autorisasjonsfeil
+
+Johann gjennomførte selve ende-til-ende-testen: startet `src/App` lokalt (port 5005), fikk en fersk launch-URL fra LaunchPad, trykket **Launch** (ikke bare Generate URL Only). Appen vår bygde og sendte en korrekt redirect til Epics `/oauth2/authorize` — riktig `client_id`, `redirect_uri` (matcher det registrerte), `aud` (R4), et gyldig launch-token, PKCE (`code_challenge`/`code_challenge_method=S256`), riktig scope-liste. Epics egen autorisasjonsserver svarte likevel med:
+
+```
+OAuth2 Error
+Something went wrong trying to authorize the client. Please try logging in again.
+```
+
+**Diagnostisert:**
+1. Bekreftet at appen vår sendte en fullstendig korrekt forespørsel — feilen oppstår altså i Epics egen `/oauth2/authorize`-behandling, ikke hos oss.
+2. Mistanke om scope-mismatch: scope-listen ba om `patient/Observation.read` (aldri valgt som Incoming API ved registrering) og både v1-stilen `patient/DocumentReference.write` og v2-stilen `patient/DocumentReference.c` samtidig, mens appen er registrert med **SMART Scope Version: v1** (som ikke har noe eget `.c`/create-scope). Fjernet begge og gjentok testen med en scope-liste som matcher registreringen nøyaktig (se separat PR for kodeendringen) — **samme feil, uendret**. Scope var altså ikke rotårsaken.
+3. Søkte opp den eksakte feilteksten — samme melding er kjent fra andre Epic-sandkasseutviklere ([smart-on-fhir Google Group-tråd](https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s)). Der ble den aldri definitivt rotårsaksforklart; utvikleren rapporterte at den «begynte å virke igjen etter noen dager, uten noen endring på min side», og mistenkte cache/synk på Epics infrastruktur.
+
+**Vurdering:** dette ser ut som en beslektet, men separat, synk-/cache-forsinkelse på Epics side — trolig i et annet internt system enn det som styrer LaunchPad-verktøyet (som nå fungerer), siden appens konfigurasjon åpenbart ikke har nådd frem til autorisasjonstjenesten ennå. Konsistent med både Epics egen «opptil 1 time»-synk-advarsel (§2) og mønsteret fra den offentlige diskusjonstråden.
+
+**Anbefalt neste steg:** vent og prøv igjen (timer/neste dag), og vurder å sende Epic support et raskt oppfølgingssvar med dette funnet (LaunchPad-tokenet er nå korrekt, men selve autorisasjonssteget feiler fortsatt generisk) — de har allerede bekreftet at de har et synk-problem, så dette er trolig samme rotårsak i en annen del av systemet deres.
+
 ## 10. Feilmelding sendt til Epic support
 
 Sendt til `open@epic.com` 2026-09-08 (Johann sitt eget navn/organisasjon og faktiske non-production client_id satt inn i den faktiske e-posten, utelatt her):
@@ -219,5 +250,26 @@ Sendt til `open@epic.com` 2026-09-08 (Johann sitt eget navn/organisasjon og fakt
 > **Actual:** the generated URL always has an empty `launch=` parameter and `iss` always points at `.../api/FHIR/DSTU2`, regardless of the app's registered FHIR version. The underlying `POST /Developer/GetLaunchUrl` call returns `"Success":true` with no error message, and an empty `Data.url` launch token.
 >
 > **Key point:** we reproduced the exact same result using Epic's own built-in "SMART on FHIR test" app, not just our own — so this doesn't appear to be specific to our app's configuration.
+
+**Svar fra Epic support (mottatt 2026-09-09):** bekreftet at det var et driftsproblem på deres side — synkroniseringsproblemer i testmiljøene deres (samme "opptil 1 time"-synk-mekanisme omtalt i §3, men her var selve synken feilet, ikke bare treg). Epic ba oss prøve på nytt.
+
+Gjentatt launch-forsøk (§9, 2026-09-09) bekreftet at `launch`-token og `iss` nå er korrekte (R4, ikke DSTU2, faktisk ikke-tomt token) — men avdekket en ny, separat feil lenger inn i flyten (Epics eget `/oauth2/authorize` gir en generisk autorisasjonsfeil, se §9). Sendt oppfølgingssvar til `open@epic.com` 2026-09-09:
+
+> **Subject:** Re: SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — LaunchPad fixed, but /oauth2/authorize now fails
+>
+> Following up on the ticket from 2026-09-08 (empty `launch=` token, `iss` always pointing to DSTU2 instead of our app's registered R4).
+>
+> Good news: the LaunchPad tool is now generating a correct, non-empty launch token with the correct R4 `iss`. Thank you for the fix.
+>
+> However, when we take that token all the way through a real end-to-end launch (redirecting to Epic's own `/oauth2/authorize` with our app's client_id, the correct redirect_uri, `aud=.../api/FHIR/R4`, the launch token, and PKCE), Epic's authorization server responds with:
+>
+> > OAuth2 Error
+> > Something went wrong trying to authorize the client. Please try logging in again.
+>
+> We've confirmed our request itself is correct (client_id, redirect_uri, aud, scopes all match what's registered), and we ruled out a scope mismatch by retesting with a scope list that exactly matches our app's registered Incoming APIs — same error persists either way.
+>
+> We also found a public smart-on-fhir discussion (https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s) reporting the identical error text, which the reporter said resolved itself after a few days with no change on their end — so this looks like it could be the same kind of sandbox sync/cache issue you mentioned, just affecting a different part of the pipeline (the authorize step, not LaunchPad token generation).
+>
+> Could you check whether our app's registration has fully synced to the authorization service? Happy to provide a fresh trace/timestamp if useful.
 
 **Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
