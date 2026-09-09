@@ -12,6 +12,13 @@
         }
       },
       {
+        "id": "punkt1-info",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "help.punkt1"
+        }
+      },
+      {
         "id": "grid-pasient",
         "type": "Grid",
         "rows": [
@@ -45,8 +52,7 @@
         },
         "readOnly": true,
         "textResourceBindings": {
-          "title": "field.pasient.fnr",
-          "help": "help.punkt1"
+          "title": "field.pasient.fnr"
         }
       },
       {
@@ -207,6 +213,13 @@
         }
       },
       {
+        "id": "punkt2-info",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "help.punkt2"
+        }
+      },
+      {
         "id": "Henvisning_UtvidetStonad",
         "type": "Checkboxes",
         "dataModelBindings": {
@@ -219,8 +232,7 @@
           }
         ],
         "textResourceBindings": {
-          "title": "checkboxgroup.utvidetstonad.title",
-          "help": "help.punkt2"
+          "title": "checkboxgroup.utvidetstonad.title"
         }
       },
       {

@@ -323,14 +323,20 @@
         }
       },
       {
+        "id": "punkt5-info",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "help.punkt5"
+        }
+      },
+      {
         "id": "Henvisning_Merknad",
         "type": "TextArea",
         "dataModelBindings": {
           "simpleBinding": "Henvisning_Merknad"
         },
         "textResourceBindings": {
-          "title": "field.henvisning.merknad",
-          "help": "help.punkt5"
+          "title": "field.henvisning.merknad"
         }
       },
       {
