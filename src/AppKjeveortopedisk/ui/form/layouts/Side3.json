@@ -12,6 +12,13 @@
         }
       },
       {
+        "id": "gruppec-instruks",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "text.gruppec.instruks"
+        }
+      },
+      {
         "id": "GruppeC_Kode11",
         "type": "Checkboxes",
         "dataModelBindings": {

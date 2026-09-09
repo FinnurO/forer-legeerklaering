@@ -97,6 +97,13 @@
         }
       },
       {
+        "id": "egenerklaering",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "text.egenerklaering"
+        }
+      },
+      {
         "id": "header-virksomhet",
         "type": "Header",
         "size": "L",
