@@ -13,18 +13,19 @@
 4. [Implementeringsdetaljer](#4-implementeringsdetaljer)
 5. [Skjemastruktur IS-2569](#5-skjemastruktur-is-2569)
 6. [Skjemastruktur - henvisning til kjeveortopedisk vurdering](#6-skjemastruktur---henvisning-til-kjeveortopedisk-vurdering)
-7. [Pasientflyt](#7-pasientflyt)
-8. [Åpne beslutninger](#8-åpne-beslutninger)
-9. [Risikoregister](#9-risikoregister)
-10. [Veikart](#10-veikart)
-11. [Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App](#11-sammenligning-forer-vs-syk-inn-vs-nhn-førerrett-app)
-12. [NHN-dokumentasjon](#12-nhn-dokumentasjon)
-13. [Kartlegging av rapporteringsplikter](#13-kartlegging-av-rapporteringsplikter)
-14. [Strategi](#14-strategi)
-15. [Norwegian FHIR Hackathon 2026 - forberedelse](#15-norwegian-fhir-hackathon-2026---forberedelse)
-16. [Testguide: SMART EHR Launch mot launch.smarthealthit.org](#16-testguide-smart-ehr-launch-mot-launchsmarthealthitorg)
-17. [nav-epj som lokalt SMART on FHIR-testmiljo](#17-nav-epj-som-lokalt-smart-on-fhir-testmiljo)
-18. [Epic on FHIR som testmiljo (Helseplattformen)](#18-epic-on-fhir-som-testmiljo-helseplattformen)
+7. [SmartFhir.Common - delt SMART on FHIR-bibliotek](#7-smartfhircommon---delt-smart-on-fhir-bibliotek)
+8. [Pasientflyt](#8-pasientflyt)
+9. [Åpne beslutninger](#9-åpne-beslutninger)
+10. [Risikoregister](#10-risikoregister)
+11. [Veikart](#11-veikart)
+12. [Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App](#12-sammenligning-forer-vs-syk-inn-vs-nhn-førerrett-app)
+13. [NHN-dokumentasjon](#13-nhn-dokumentasjon)
+14. [Kartlegging av rapporteringsplikter](#14-kartlegging-av-rapporteringsplikter)
+15. [Strategi](#15-strategi)
+16. [Norwegian FHIR Hackathon 2026 - forberedelse](#16-norwegian-fhir-hackathon-2026---forberedelse)
+17. [Testguide: SMART EHR Launch mot launch.smarthealthit.org](#17-testguide-smart-ehr-launch-mot-launchsmarthealthitorg)
+18. [nav-epj som lokalt SMART on FHIR-testmiljo](#18-nav-epj-som-lokalt-smart-on-fhir-testmiljo)
+19. [Epic on FHIR som testmiljo (Helseplattformen)](#19-epic-on-fhir-som-testmiljo-helseplattformen)
 
 ---
 
@@ -2787,7 +2788,14 @@ namespace Altinn.App.Models
 
 ---
 
-## Åpent spørsmål: appstruktur
+## Appstruktur (avklart 2026-09-09)
+
+**Besluttet av Johann:** ny app-mappe i samme repo — «dette blir jo en egen Altinn Studio app, men kan sikkert ligge som en egen mappe i dette repoet... repoet er førererklæring og mye om smart on fhir, men det vil bli lagt ned etterhvert.» Altså alternativ 1 fra listen under, med den presiseringen at `forer-legeerklaering`-repoet selv har en planlagt sluttdato — det er ikke ment som et permanent hjem for et voksende antall Altinn-caser, bare et praktisk sted å bevise mønsteret videre før neste steg (eget repo/mal) blir aktuelt.
+
+Implementert som `src/AppKjeveortopedisk` (egen `App.csproj`, `Program.cs`, datamodell, layout, `applicationmetadata.json`, prosessdefinisjon — lagt til i `src/App.sln`). Se [SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md) for hvordan SMART on FHIR-launch/-prefill ble skilt ut til et delt `SmartFhir.Common`-klassebibliotek i samme slag, slik at denne og fremtidige apper i repoet ikke dupliserer den logikken.
+
+<details>
+<summary>Opprinnelig åpent spørsmål (før avklaring)</summary>
 
 Dette blir det **andre** skjemaet i prosjektet. `src/App` er i dag én enkelt Altinn Studio-app (`forer-legeerklaering`) — det finnes ikke noe presedens i repoet for flere apper side om side. Før jeg går videre til selve Altinn Studio-skjemaet (layout, `applicationmetadata.json`, prosessdefinisjon), trengs et valg:
 
@@ -2797,14 +2805,68 @@ Dette blir det **andre** skjemaet i prosjektet. `src/App` er i dag én enkelt Al
 
 Altinn Studio-skjema (layout.json, layout-sets, applicationmetadata.json m.m.) er normalt noe Altinn Studio sitt eget designer-verktøy/CLI genererer — jeg vil helst vite hvor det skal bo før jeg begynner å håndskrive den strukturen, for å unngå å måtte flytte alt i etterkant.
 
-## Åpent spørsmål: FHIR-tilgjengelighet fra tannlege-EPJ
+</details>
 
-Johann avklarer hvilke FHIR-ressurser et tannlege-EPJ faktisk eksponerer. Foreløpig antatt (basert på samme mønster som førerrett-caset): `Patient`, `Practitioner` (via `fhirUser`), `Organization` (via `Encounter.serviceProvider` eller tilsvarende). Selve den kliniske klassifiseringen i §3/§4 er høyst sannsynlig **ikke** noe et generisk tannlege-EPJ har strukturert FHIR-data for (dette er en Helfo-spesifikk vurdering, ikke en diagnosekode) — den delen av skjemaet må trolig alltid fylles ut manuelt av tannlegen/tannpleieren, uavhengig av EPJ-tilkobling.
+## FHIR-tilgjengelighet fra tannlege-EPJ (delvis avklart 2026-09-09)
+
+**Besluttet av Johann:** i påvente av den fulle avklaringen («jeg skal få avklart hva som ligger tilgjengelig i ressurser») settes standardfeltene opp nå — de som uansett er felles på tvers av EPJ-er og caser. Dette ble den konkrete anledningen til å skille ut `SmartFhir.Common` (se [SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md)): `Patient` (inkl. adresse), `Practitioner` (via `fhirUser`, inkl. `PractitionerRole`-oppslag), `Organization` er nå delt kode brukt av begge apper i repoet, ikke noe som må skrives på nytt her.
+
+Fortsatt ubekreftet/manuelt:
+- Om et faktisk tannlege-EPJ eksponerer disse ressursene i praksis (venter på Johanns avklaring) — `AppKjeveortopedisk` sin `SmartLaunchController` bruker placeholder-testdata (`test-pasient-1`/`enc-test-001`/`Practitioner/tannlege-test`) inntil et reelt testmiljø finnes.
+- Den kliniske klassifiseringen i §3/§4 er, som antatt, **ikke** noe et generisk tannlege-EPJ har strukturert FHIR-data for (dette er en Helfo-spesifikk vurdering, ikke en diagnosekode) — `KjeveortopediskFhirPrefillService` fyller derfor bevisst ikke ut disse feltene. Skjemaet er fullt utfyllbart manuelt for §2–§5 uavhengig av EPJ-tilkobling, i tråd med «dobbel inngangsmodus»-kravet.
 
 
 ---
 
-# 7. Pasientflyt
+# 7. SmartFhir.Common - delt SMART on FHIR-bibliotek
+
+# SmartFhir.Common — delt SMART on FHIR-launch/-prefill for flere Altinn-apper i dette repoet
+
+**Lagt til 2026-09-09**, sammen med det andre caset i repoet ([SKJEMA-KJEVEORTOPEDISK.md](SKJEMA-KJEVEORTOPEDISK.md) / `src/AppKjeveortopedisk`). Første gang repoet faktisk har to Altinn Studio-apper side om side — se «Åpent spørsmål: appstruktur» i det dokumentet for hvorfor de bor i samme repo.
+
+## Hvorfor nå, og hvorfor ikke en NuGet-pakke ennå
+
+[VEIKART.md, Fase 4](VEIKART.md) beskriver en fremtidig NuGet-pakke `Digdir.SmartOnFhir`, uttrykkelig **etter** at mønsteret er bevist i produksjon (*"NAV ekstraherte `@navikt/smart-on-fhir` etter at `syk-inn` var i produksjon — samme sekvens gjelder her"*). `SmartFhir.Common` er **ikke** den pakken — det er et internt `ProjectReference`-klassebibliotek i samme repo, ikke noe publisert/versjonert utenfor det. Det mangler bevisst det fase 4 lister som pakkens fulle omfang:
+
+- `TokenValidator` (JWKS-validering av access token) — finnes ikke.
+- `SmartTokenStore` med Redis-støtte — vi bruker fortsatt kun session + `IMemoryCache`, uendret fra før.
+- `SmartOptions`/`AddSmartOnFhir()` som ferdig DI-extension — hver app registrerer fortsatt tjenestene manuelt i `Program.cs`.
+- Konvensjonsmønsteret for «dobbel inngangsmodus» (se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md)) — ikke del av dette biblioteket ennå; hver app må fortsatt løse det selv.
+
+Grunnen til at vi likevel gjør denne mindre utskillingen nå, foran fase 4, er at den ble **fremtvunget av en reell andre forbruker** (kjeveortopedisk-caset), ikke gjettet på forhånd — den samme rekkefølgen VEIKART.md etterlyser (bevis mønsteret med to reelle brukssteder, ekstraher deretter det som faktisk er felles), bare i miniatyr og internt i repoet. Når/hvis dette skal bli den faktiske `Digdir.SmartOnFhir`-pakken i fase 4, er `SmartFhir.Common` et konkret utgangspunkt — ikke et blankt ark.
+
+## Hva som faktisk ble flyttet
+
+Den opprinnelige `SmartLaunchController.cs` og `FhirPrefillService.cs` i `src/App` viste seg, ved gjennomgang, å **allerede være ~100 % app-nøytrale** — `SmartLaunchController` hadde ingen referanse til `ForerLegeerklaeringModel` i det hele tatt, og FHIR-hentingen/-parsingen i `FhirPrefillService` var kun koblet til modellen i selve feltildelingen. Utskillingen var derfor i praksis en ren omplassering av eksisterende, allerede testet kode — ikke en omskriving.
+
+| Flyttet til `SmartFhir.Common` | Ble værende app-spesifikt |
+|---|---|
+| `SmartLaunchControllerBase` — hele OAuth2/PKCE/discovery/token-exchange/session-mekanikken | Fallback-`ClientId`, testdata (patient/encounter/practitioner-id) for `test-prefill`/`dev-login`, hvilke scopes appen ber om — satt via `protected override`-hooks i hver apps tynne `SmartLaunchController` |
+| `SmartFhirPrefillClient` — henter/parser Patient, Practitioner (+PractitionerRole), Organization, Encounter, Condition inn i en nøytral `StandardFhirPrefillData` | Mapping fra `StandardFhirPrefillData` til appens egen datamodell (feltnavn varierer: `Lege_HPR` i ForerLegeerklaering vs. `Henviser_HPR` i kjeveortopedisk) |
+| `SmartSessionReader` — leser token+kontekst fra session/`IMemoryCache` | Alt som ikke er FHIR-prefill: `ForerKonklusjonModel`-avledningen (`End`/`DeriveKonklusjon`) i ForerLegeerklaering finnes ikke i kjeveortopedisk-caset og ligger fortsatt kun der |
+| `NorwegianHealthOids` — Fnr/HPR/Orgnr/HerId-OID-ene | — |
+| `FhirLaunchContext`/`TokenData`/`CachedFhirData`/`SmartSessionKeys` — session-DTO-er og nøkler | — |
+
+**Merk om navngiving:** `StandardFhirPrefillData` bruker `Henviser_*` (ikke `Lege_*`) som feltprefiks for behandleren, fordi HPR-nummeret dekker all autorisert helsepersonell — bekreftet på tvers av lege (ForerLegeerklaering) og tannlege/tannpleier (kjeveortopedisk). Hver app mapper selv videre til sitt eget feltnavn.
+
+**Nytt felt lagt til i samme slag:** `Pasient_Adresse` (fra `Patient.address`) — kjeveortopedisk-caset trengte det (ForerLegeerklaering gjorde ikke), men det er generisk nok til å være med i standardsettet for senere caser også.
+
+## Hvordan en ny app i repoet bruker biblioteket
+
+1. `<ProjectReference Include="..\SmartFhir.Common\SmartFhir.Common.csproj" />` i appens `.csproj`.
+2. Egen `SmartLaunchController : SmartLaunchControllerBase` — implementer `DefaultClientId`, `DefaultTestPatientId`, `DefaultTestEncounterId`, `DefaultTestPractitionerPath`; overstyr `GetScopes()` kun hvis appen trenger andre FHIR-scopes enn standardsettet.
+3. Egen `FhirPrefillService : IDataProcessor` — kall `SmartSessionReader.TryReadAsync(...)` og `new SmartFhirPrefillClient(logger).FetchAsync(...)`, map `StandardFhirPrefillData` til appens egen modell. Alt som IKKE er et av standardfeltene (f.eks. en klinisk klassifisering som ikke finnes strukturert i noe EPJ) fylles bevisst ikke ut herfra — se hver apps egen prefill-tjeneste for begrunnelse.
+
+## Bevisste avgrensninger (per 2026-09-09)
+
+- Ingen automatiserte tester for noen av delene — samme status som resten av repoet (se [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md)).
+- Ingen `AddSmartOnFhir()`-DI-extension — `Program.cs` i hver app registrerer `IHttpClientFactory`/`IMemoryCache`/session manuelt, uendret oppsett fra før utskillingen.
+- Testdataene i `AppKjeveortopedisk` sin `SmartLaunchController` (patient-/encounter-/practitioner-id) er placeholder — det finnes ennå ikke noe tannlege-EPJ-testmiljø koblet til dette caset (se SKJEMA-KJEVEORTOPEDISK.md).
+
+
+---
+
+# 8. Pasientflyt
 
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
@@ -3114,7 +3176,7 @@ Pasient (fnr 01039012345)
 
 ---
 
-# 8. Åpne beslutninger
+# 9. Åpne beslutninger
 
 # Åpne beslutninger og uavklarte designvalg
 
@@ -3354,7 +3416,7 @@ Forsikringsbransjen er en stor og manuell konsument av legeerklæringer (ved teg
 
 ---
 
-# 9. Risikoregister
+# 10. Risikoregister
 
 # Risikoregister — `forer-legeerklaering`
 
@@ -3395,7 +3457,7 @@ Se også [BESLUTNINGER.md](BESLUTNINGER.md) for beslutningsdetaljer og [VEIKART.
 
 ---
 
-# 10. Veikart
+# 11. Veikart
 
 # Veikart — `forer-legeerklaering` og SMART on FHIR på Altinn
 
@@ -3578,7 +3640,7 @@ Nasjonal fase 4: SMART som standard integrasjonsmønster i Altinn
 
 ---
 
-# 11. Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App
+# 12. Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App
 
 # Sammenligning: `forer-legeerklaering` vs. `syk-inn` vs. NHN Førerrett-App
 
@@ -3762,7 +3824,7 @@ Uavhengig av plattformvalg gjelder veikartets fase 1–3 (tokenvalidering, refre
 
 ---
 
-# 12. NHN-dokumentasjon
+# 13. NHN-dokumentasjon
 
 # NHN-dokumentasjon — SMART App Launch + Førerrett-App
 
@@ -3929,7 +3991,7 @@ Spørsmålet om hvilken plattform som er riktig for fremtidige helseskjemaer (Al
 
 ---
 
-# 13. Kartlegging av rapporteringsplikter
+# 14. Kartlegging av rapporteringsplikter
 
 # Kartlegging av rapporteringsplikter for helsepersonell
 
@@ -4311,7 +4373,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 
 ---
 
-# 14. Strategi
+# 15. Strategi
 
 # Strategi — SMART on FHIR for Altinn Studio
 
@@ -4514,7 +4576,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) for alle åpne beslutninger. De mest strat
 
 ---
 
-# 15. Norwegian FHIR Hackathon 2026 - forberedelse
+# 16. Norwegian FHIR Hackathon 2026 - forberedelse
 
 # Norwegian FHIR Hackathon 2026 (EHiN pre-konferanse) — forberedelse og gap-analyse
 
@@ -4643,7 +4705,7 @@ Sporet lenker til to NAV-repoer (samme team som `syk-inn`, jf. [SAMMENLIGNING-sy
 
 ---
 
-# 16. Testguide: SMART EHR Launch mot launch.smarthealthit.org
+# 17. Testguide: SMART EHR Launch mot launch.smarthealthit.org
 
 # Testguide: SMART EHR Launch mot launch.smarthealthit.org
 
@@ -4834,7 +4896,7 @@ Det denne testrunden **ikke** beviser:
 
 ---
 
-# 17. nav-epj som lokalt SMART on FHIR-testmiljo
+# 18. nav-epj som lokalt SMART on FHIR-testmiljo
 
 # nav-epj som lokalt SMART on FHIR-testmiljø
 
@@ -5057,7 +5119,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 
 ---
 
-# 18. Epic on FHIR som testmiljo (Helseplattformen)
+# 19. Epic on FHIR som testmiljo (Helseplattformen)
 
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
