@@ -4,11 +4,21 @@
     "hidden": false,
     "layout": [
       {
-        "id": "header-gruppec",
+        "id": "header-gruppec-normal",
         "type": "Header",
         "size": "L",
+        "hidden": ["equals", ["dataModel", "Henvisning_UtvidetStonad"], true],
         "textResourceBindings": {
-          "title": "header.gruppec"
+          "title": "header.gruppec.normal"
+        }
+      },
+      {
+        "id": "header-gruppec-utvidet",
+        "type": "Header",
+        "size": "L",
+        "hidden": ["not", ["equals", ["dataModel", "Henvisning_UtvidetStonad"], true]],
+        "textResourceBindings": {
+          "title": "header.gruppec.utvidet"
         }
       },
       {
@@ -20,14 +30,22 @@
       },
       {
         "id": "GruppeC_Kode11",
-        "type": "Checkboxes",
-        "dataModelBindings": {
-          "simpleBinding": "GruppeC_Kode11"
-        },
-        "options": [
+        "type": "Header",
+        "size": "S",
+        "textResourceBindings": {
+          "title": "field.gruppec.kode11"
+        }
+      },
+      {
+        "id": "grid-kode11",
+        "type": "Grid",
+        "rows": [
           {
-            "value": "true",
-            "label": "field.gruppec.kode11"
+            "cells": [
+              { "component": "GruppeC_Kode11_A" },
+              { "component": "GruppeC_Kode11_B" },
+              { "component": "GruppeC_Kode11_C" }
+            ]
           }
         ]
       },
@@ -72,14 +90,22 @@
       },
       {
         "id": "GruppeC_Kode12",
-        "type": "Checkboxes",
-        "dataModelBindings": {
-          "simpleBinding": "GruppeC_Kode12"
-        },
-        "options": [
+        "type": "Header",
+        "size": "S",
+        "textResourceBindings": {
+          "title": "field.gruppec.kode12"
+        }
+      },
+      {
+        "id": "grid-kode12",
+        "type": "Grid",
+        "rows": [
           {
-            "value": "true",
-            "label": "field.gruppec.kode12"
+            "cells": [
+              { "component": "GruppeC_Kode12_A" },
+              { "component": "GruppeC_Kode12_B" },
+              { "component": "GruppeC_Kode12_C" }
+            ]
           }
         ]
       },
@@ -124,14 +150,22 @@
       },
       {
         "id": "GruppeC_Kode13",
-        "type": "Checkboxes",
-        "dataModelBindings": {
-          "simpleBinding": "GruppeC_Kode13"
-        },
-        "options": [
+        "type": "Header",
+        "size": "S",
+        "textResourceBindings": {
+          "title": "field.gruppec.kode13"
+        }
+      },
+      {
+        "id": "grid-kode13",
+        "type": "Grid",
+        "rows": [
           {
-            "value": "true",
-            "label": "field.gruppec.kode13"
+            "cells": [
+              { "component": "GruppeC_Kode13_A" },
+              { "component": "GruppeC_Kode13_B" },
+              { "component": "GruppeC_Kode13_C" }
+            ]
           }
         ]
       },
@@ -176,29 +210,20 @@
       },
       {
         "id": "GruppeC_Kode14",
-        "type": "Checkboxes",
-        "dataModelBindings": {
-          "simpleBinding": "GruppeC_Kode14"
-        },
-        "options": [
-          {
-            "value": "true",
-            "label": "field.gruppec.kode14"
-          }
-        ]
+        "type": "Header",
+        "size": "S",
+        "textResourceBindings": {
+          "title": "field.gruppec.kode14"
+        }
       },
       {
-        "id": "GruppeC_Kode14_PlassoverskuddMm",
-        "type": "Input",
-        "dataModelBindings": {
-          "simpleBinding": "GruppeC_Kode14_PlassoverskuddMm"
-        },
-        "formatting": {
-          "number": {}
-        },
-        "textResourceBindings": {
-          "title": "field.gruppec.kode14.mm"
-        }
+        "id": "grid-kode14",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [{ "component": "GruppeC_Kode14_A" }, { "component": "GruppeC_Kode14_B" }]
+          }
+        ]
       },
       {
         "id": "GruppeC_Kode14_A",
@@ -228,14 +253,18 @@
       },
       {
         "id": "GruppeC_Kode15",
-        "type": "Checkboxes",
-        "dataModelBindings": {
-          "simpleBinding": "GruppeC_Kode15"
-        },
-        "options": [
+        "type": "Header",
+        "size": "S",
+        "textResourceBindings": {
+          "title": "field.gruppec.kode15"
+        }
+      },
+      {
+        "id": "grid-kode15",
+        "type": "Grid",
+        "rows": [
           {
-            "value": "true",
-            "label": "field.gruppec.kode15"
+            "cells": [{ "component": "GruppeC_Kode15_A" }, { "component": "GruppeC_Kode15_B" }]
           }
         ]
       },
@@ -272,6 +301,18 @@
         "textResourceBindings": {
           "title": "header.annentilstand"
         }
+      },
+      {
+        "id": "grid-annentilstand",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [{ "component": "AnnenTilstand_Kode1" }, { "component": "AnnenTilstand_Kode2" }]
+          },
+          {
+            "cells": [{ "component": "AnnenTilstand_Kode3" }, { "component": "AnnenTilstand_Kode4" }]
+          }
+        ]
       },
       {
         "id": "AnnenTilstand_Kode1",
@@ -347,7 +388,11 @@
       {
         "id": "navigation-side3",
         "type": "NavigationButtons",
-        "showBackButton": true
+        "showBackButton": true,
+        "textResourceBindings": {
+          "next": "general.neste",
+          "back": "general.tilbake"
+        }
       }
     ]
   }

@@ -37,7 +37,11 @@
       {
         "id": "navigation-oppsummering",
         "type": "NavigationButtons",
-        "showBackButton": true
+        "showBackButton": true,
+        "textResourceBindings": {
+          "next": "general.neste",
+          "back": "general.tilbake"
+        }
       },
       {
         "id": "submit-button",

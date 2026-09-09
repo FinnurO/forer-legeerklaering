@@ -4,6 +4,9 @@
   "resources": [
     { "id": "appName", "value": "Henvisning til kjeveortopedisk vurdering" },
 
+    { "id": "general.neste", "value": "Neste" },
+    { "id": "general.tilbake", "value": "Tilbake" },
+
     {
       "id": "help.punkt1",
       "value": "Oppgi den henviste pasientens personalia under dette punktet. Du må også oppgi HPR-nummeret ditt og underskrive henvisningsskjemaet."
@@ -37,6 +40,7 @@
     { "id": "field.virksomhet.orgnr", "value": "Organisasjonsnummer" },
 
     { "id": "header.stonad", "value": "2. Utvidet stønad" },
+    { "id": "checkboxgroup.utvidetstonad.title", "value": "Utvidet stønad" },
     {
       "id": "field.henvisning.utvidetstonad",
       "value": "Kryss av hvis pasienten har krav på utvidet stønad til kjeveortopedisk behandling"
@@ -50,7 +54,8 @@
       "value": "8a3: bittavvik som er så alvorlig at pasienten må ha ortognatisk-kirurgisk behandling"
     },
 
-    { "id": "header.gruppeb", "value": "Gruppe b 75 prosent / 90 prosent ved utvidet stønad" },
+    { "id": "header.gruppeb.normal", "value": "Gruppe b 75 prosent" },
+    { "id": "header.gruppeb.utvidet", "value": "Gruppe b 90 prosent ved utvidet stønad" },
     { "id": "field.gruppeb.kode1", "value": "1 Horisontalt overbitt, 9 mm eller mer." },
     {
       "id": "field.gruppeb.kode2",
@@ -83,7 +88,8 @@
       "value": "10 Agenesi av enkelttenner i sidesegmentene (hvis luker lukkes) og/eller hypoplastisk molar."
     },
 
-    { "id": "header.gruppec", "value": "Gruppe c 40 prosent / 60 prosent ved utvidet stønad" },
+    { "id": "header.gruppec.normal", "value": "Gruppe c 40 prosent" },
+    { "id": "header.gruppec.utvidet", "value": "Gruppe c 60 prosent ved utvidet stønad" },
     { "id": "text.gruppec.instruks", "value": "Kryss av for aktuelle punkter som a), b) og/eller c)" },
     { "id": "field.gruppec.kode11", "value": "11 Horisontalt overbitt, 6-9 mm" },
     { "id": "field.gruppec.kode11.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
@@ -104,7 +110,6 @@
       "id": "field.gruppec.kode14",
       "value": "14 Diastema mediale som er 3 mm eller større, større, eller markert generelt plassoverskudd i '' (angis i mm)."
     },
-    { "id": "field.gruppec.kode14.mm", "value": "Angis i mm" },
     { "id": "field.gruppec.kode14.a", "value": "a) Pasienten har dokumenterte funksjonelle avvik." },
     { "id": "field.gruppec.kode14.b", "value": "b) Pasienten har store vansker med psykisk og sosial mestring." },
     { "id": "field.gruppec.kode15", "value": "15 Åpent bitt som omfatter tre eller flere tannpar." },

@@ -12,6 +12,19 @@
         }
       },
       {
+        "id": "grid-gruppea",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [
+              { "component": "GruppeA_Kode8a1" },
+              { "component": "GruppeA_Kode8a2" },
+              { "component": "GruppeA_Kode8a3" }
+            ]
+          }
+        ]
+      },
+      {
         "id": "GruppeA_Kode8a1",
         "type": "Checkboxes",
         "dataModelBindings": {
@@ -51,12 +64,43 @@
         ]
       },
       {
-        "id": "header-gruppeb",
+        "id": "header-gruppeb-normal",
         "type": "Header",
         "size": "L",
+        "hidden": ["equals", ["dataModel", "Henvisning_UtvidetStonad"], true],
         "textResourceBindings": {
-          "title": "header.gruppeb"
+          "title": "header.gruppeb.normal"
         }
+      },
+      {
+        "id": "header-gruppeb-utvidet",
+        "type": "Header",
+        "size": "L",
+        "hidden": ["not", ["equals", ["dataModel", "Henvisning_UtvidetStonad"], true]],
+        "textResourceBindings": {
+          "title": "header.gruppeb.utvidet"
+        }
+      },
+      {
+        "id": "grid-gruppeb",
+        "type": "Grid",
+        "rows": [
+          {
+            "cells": [{ "component": "GruppeB_Kode1" }, { "component": "GruppeB_Kode2" }]
+          },
+          {
+            "cells": [{ "component": "GruppeB_Kode3" }, { "component": "GruppeB_Kode4" }]
+          },
+          {
+            "cells": [{ "component": "GruppeB_Kode5" }, { "component": "GruppeB_Kode6" }]
+          },
+          {
+            "cells": [{ "component": "GruppeB_Kode7" }, { "component": "GruppeB_Kode8" }]
+          },
+          {
+            "cells": [{ "component": "GruppeB_Kode9" }, { "component": "GruppeB_Kode10" }]
+          }
+        ]
       },
       {
         "id": "GruppeB_Kode1",
@@ -191,7 +235,11 @@
       {
         "id": "navigation-side2",
         "type": "NavigationButtons",
-        "showBackButton": true
+        "showBackButton": true,
+        "textResourceBindings": {
+          "next": "general.neste",
+          "back": "general.tilbake"
+        }
       }
     ]
   }

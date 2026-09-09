@@ -17,10 +17,20 @@
         "rows": [
           {
             "cells": [
+              { "labelFrom": "Pasient_Etternavn" },
+              { "labelFrom": "Pasient_Fornavn" },
+              { "labelFrom": "Pasient_Fnr" }
+            ]
+          },
+          {
+            "cells": [
               { "component": "Pasient_Etternavn" },
               { "component": "Pasient_Fornavn" },
               { "component": "Pasient_Fnr" }
             ]
+          },
+          {
+            "cells": [{ "labelFrom": "Pasient_Adresse" }]
           },
           {
             "cells": [{ "component": "Pasient_Adresse" }]
@@ -86,6 +96,13 @@
         "rows": [
           {
             "cells": [
+              { "labelFrom": "Henviser_Etternavn" },
+              { "labelFrom": "Henviser_Fornavn" },
+              { "labelFrom": "Henviser_HPR" }
+            ]
+          },
+          {
+            "cells": [
               { "component": "Henviser_Etternavn" },
               { "component": "Henviser_Fornavn" },
               { "component": "Henviser_HPR" }
@@ -147,6 +164,12 @@
         "rows": [
           {
             "cells": [
+              { "labelFrom": "Virksomhet_Navn" },
+              { "labelFrom": "Virksomhet_Orgnr" }
+            ]
+          },
+          {
+            "cells": [
               { "component": "Virksomhet_Navn" },
               { "component": "Virksomhet_Orgnr" }
             ]
@@ -196,13 +219,17 @@
           }
         ],
         "textResourceBindings": {
+          "title": "checkboxgroup.utvidetstonad.title",
           "help": "help.punkt2"
         }
       },
       {
         "id": "navigation-side1",
         "type": "NavigationButtons",
-        "showBackButton": false
+        "showBackButton": false,
+        "textResourceBindings": {
+          "next": "general.neste"
+        }
       }
     ]
   }
