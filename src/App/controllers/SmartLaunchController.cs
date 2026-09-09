@@ -42,13 +42,15 @@ namespace Altinn.App.Controllers
                 yield return scope;
 
             yield return "patient/Condition.read";
-            yield return "patient/Observation.read";
 
-            // VEIKART.md fase 2 (writeback til EPJ) — v1-stil (.write) og v2-stil (.c, create)
-            // sendt begge, se hvilken(e) som faktisk innvilges i token-responsens "scope"-felt
-            // (jf. "Sølv: scope-detektivarbeid" i HACKATHON-EHIN-2026.md).
+            // Ryddet 2026-09-09: droppet Observation.read (aldri valgt som Incoming API ved
+            // appregistrering, se docs/EPIC-TESTMILJO.md §9 2026-08-27) og v2-stil
+            // DocumentReference.c (appen er registrert med "SMART Scope Version: v1", som ikke
+            // har noe eget ".c"/create-scope). Denne opprydningen var IKKE rotårsaken til
+            // "OAuth2 Error: Something went wrong trying to authorize the client" på selve
+            // /oauth2/authorize — feilen vedvarte identisk med denne snevrere scope-listen også
+            // (se §9 2026-09-09). Beholdt likevel siden den nå matcher registreringen nøyaktig.
             yield return "patient/DocumentReference.write";
-            yield return "patient/DocumentReference.c";
         }
     }
 }
