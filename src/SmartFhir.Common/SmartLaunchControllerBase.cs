@@ -83,6 +83,17 @@ namespace SmartFhir.Common
         protected abstract string DefaultTestPractitionerPath { get; }
 
         /// <summary>
+        /// Altinn localtest-userId brukt av /smart/dev-login når ingen userId er oppgitt i
+        /// spørringen. Default (12345 = Ola Nordmann) er den generiske localtest-testbrukeren —
+        /// overstyr hvis appens naturlige "hvem logger inn" er en annen navngitt testperson
+        /// (se App/wwwroot/testData.json).
+        /// </summary>
+        protected virtual int DefaultUserId => 12345;
+
+        /// <summary>Altinn localtest-partyId som hører sammen med <see cref="DefaultUserId"/>.</summary>
+        protected virtual int DefaultPartyId => 512345;
+
+        /// <summary>
         /// SMART-scopes appen ber om. Default dekker de standard-ressursene
         /// SmartFhirPrefillClient henter (Patient/Practitioner/PractitionerRole/Organization/
         /// Encounter). Overstyr for å legge til/fjerne app-spesifikke scopes (f.eks.
@@ -226,8 +237,8 @@ namespace SmartFhir.Common
         /// </summary>
         [HttpGet("dev-login")]
         public async Task<IActionResult> DevLogin(
-            [FromQuery] int userId = 12345,
-            [FromQuery] int partyId = 512345,
+            [FromQuery] int? userId = null,
+            [FromQuery] int? partyId = null,
             [FromQuery] string patientId = null,
             [FromQuery] string encounterId = null
         )
@@ -235,10 +246,12 @@ namespace SmartFhir.Common
             if (!_env.IsDevelopment())
                 return NotFound();
 
+            userId ??= DefaultUserId;
+            partyId ??= DefaultPartyId;
             patientId ??= DefaultTestPatientId;
             encounterId ??= DefaultTestEncounterId;
 
-            var loginOk = await EstablishLocaltestAltinnSessionAsync(userId, partyId);
+            var loginOk = await EstablishLocaltestAltinnSessionAsync(userId.Value, partyId.Value);
             if (!loginOk)
                 return StatusCode(502, $"Kunne ikke hente token fra localtest for userId={userId}");
 
@@ -496,7 +509,7 @@ namespace SmartFhir.Common
                 _logger.LogInformation(
                     "Callback: ingen Altinn-sesjon funnet — etablerer localtest-testbruker (kun dev)"
                 );
-                await EstablishLocaltestAltinnSessionAsync(userId: 12345, partyId: 512345);
+                await EstablishLocaltestAltinnSessionAsync(DefaultUserId, DefaultPartyId);
             }
 
             return Redirect($"/{org}/{app}");

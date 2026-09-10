@@ -12,12 +12,158 @@
         }
       },
       {
-        "id": "oppsummering-form",
+        "id": "oppsummering-side1",
         "type": "Summary2",
         "target": {
-          "type": "layoutSet",
-          "id": "form"
-        }
+          "type": "page",
+          "id": "Side1"
+        },
+        "overrides": [
+          {
+            "componentId": "Henvisning_UtvidetStonad",
+            "displayType": "string"
+          }
+        ]
+      },
+      {
+        "id": "oppsummering-side2",
+        "type": "Summary2",
+        "target": {
+          "type": "page",
+          "id": "Side2"
+        },
+        "overrides": [
+          {
+            "componentId": "GruppeA_Kode8a1",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeA_Kode8a2",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeA_Kode8a3",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode1",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode2",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode3",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode4",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode5",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode6",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode7",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode8",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode9",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeB_Kode10",
+            "displayType": "string"
+          }
+        ]
+      },
+      {
+        "id": "oppsummering-side3",
+        "type": "Summary2",
+        "target": {
+          "type": "page",
+          "id": "Side3"
+        },
+        "overrides": [
+          {
+            "componentId": "GruppeC_Kode11_A",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode11_B",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode11_C",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode12_A",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode12_B",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode12_C",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode13_A",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode13_B",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode13_C",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode14_A",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode14_B",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode15_A",
+            "displayType": "string"
+          },
+          {
+            "componentId": "GruppeC_Kode15_B",
+            "displayType": "string"
+          },
+          {
+            "componentId": "AnnenTilstand_Kode1",
+            "displayType": "string"
+          },
+          {
+            "componentId": "AnnenTilstand_Kode2",
+            "displayType": "string"
+          },
+          {
+            "componentId": "AnnenTilstand_Kode3",
+            "displayType": "string"
+          },
+          {
+            "componentId": "AnnenTilstand_Kode4",
+            "displayType": "string"
+          }
+        ]
       },
       {
         "id": "header-info-pasient",

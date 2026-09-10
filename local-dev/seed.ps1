@@ -212,6 +212,54 @@ Put-Resource "Encounter" "enc-sartmaskin-001" @{
     period = @{ start = "2026-08-11T09:00:00+02:00"; end = "2026-08-11T09:30:00+02:00" }
 }
 
+# --- Kjeveortopedisk-caset (docs/SKJEMA-KJEVEORTOPEDISK.md, src/AppKjeveortopedisk): egen
+# --- henviser (tannlege, ikke lege) og egen virksomhet, slik at test-prefill/dev-login har en
+# --- navngitt behandler å velge i stedet for placeholder-IDer ("tannlege-test").
+Put-Resource "Practitioner" "tannlege-tina" @{
+    resourceType = "Practitioner"
+    id = "tannlege-tina"
+    identifier = @(
+        @{ system = "urn:oid:2.16.578.1.12.4.1.4.4"; value = "7654321" },
+        @{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "15068012345" }
+    )
+    name = @(@{ family = "Tannlege"; given = @("Tina") })
+}
+
+Put-Resource "Organization" "sentrum-tannklinikk" @{
+    resourceType = "Organization"
+    id = "sentrum-tannklinikk"
+    identifier = @(
+        @{ system = "urn:oid:2.16.578.1.12.4.1.4.101"; value = "912345678" },
+        @{ system = "urn:oid:2.16.578.1.12.4.1.2"; value = "8123456" }
+    )
+    name = "Sentrum Tannklinikk"
+}
+
+Put-Resource "Patient" "kaja-kviss" @{
+    resourceType = "Patient"
+    id = "kaja-kviss"
+    identifier = @(@{ system = "urn:oid:2.16.578.1.12.4.1.4.1"; value = "10120912345" })
+    name = @(@{ family = "Kviss"; given = @("Kaja") })
+    birthDate = "2012-12-10"
+    gender = "female"
+    address = @(@{
+        line = @("Tannregulering 3")
+        postalCode = "1337"
+        city = "SANDVIKA"
+    })
+}
+
+Put-Resource "Encounter" "enc-kaja-001" @{
+    resourceType = "Encounter"
+    id = "enc-kaja-001"
+    status = "finished"
+    class = @{ system = "http://terminology.hl7.org/CodeSystem/v3-ActCode"; code = "AMB" }
+    subject = @{ reference = "Patient/kaja-kviss" }
+    participant = @(@{ individual = @{ reference = "Practitioner/tannlege-tina" } })
+    serviceProvider = @{ reference = "Organization/sentrum-tannklinikk" }
+    period = @{ start = "2026-09-01T09:00:00+02:00"; end = "2026-09-01T09:30:00+02:00" }
+}
+
 Write-Host "`nFerdig! Pasienter seeded:" -ForegroundColor Green
 Write-Host "  sophie-salt  (enc-sophie-001)"
 Write-Host "  per-hansen   (enc-per-001)"
@@ -220,3 +268,5 @@ Write-Host "  kari-larsen  (enc-kari-001)"
 Write-Host "  olav-berg    (enc-olav-001)"
 Write-Host "  hoy-hai      (enc-hoyhai-001) - ekte Tenor-verifisert fnr, for test mot eksterne NHN-miljoer"
 Write-Host "  Practitioner: lege-ola | Org: sandvika-legesenter"
+Write-Host "  kaja-kviss   (enc-kaja-001) - kjeveortopedisk-caset"
+Write-Host "  Practitioner: tannlege-tina | Org: sentrum-tannklinikk"
