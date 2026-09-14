@@ -27,7 +27,7 @@ En Altinn-instans har alltid én «part» (party) som eier instansen. I dag star
 
 ## C-2: HelseID — når skal BFF-siden validere tokenet?
 
-**Problemstilling:**  
+**Problemstilling:**  <!-- KOMMENTAR (geirhan, PR #1): forventer at HelseID-tokenet må valideres FØR det mappes til et Altinn-internt token, ikke etter. -->
 I dag stoler BFF-en (ASP.NET Core) på access token fra SMART-mock uten å validere signaturen. I produksjon med HelseID må tokenet valideres. Spørsmålet er *når* dette skal innføres og *hva* som kreves:
 
 - JWT Bearer-validering mot HelseID sitt JWKS-endepunkt
@@ -108,7 +108,7 @@ Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rø
 | Alternativ | Beskrivelse | Avhengigheter |
 |---|---|---|
 | **A — Digdir (nåværende)** | Digdir eier tjenesten, placeholder for PoC | Ingen nye avtaler. Men Digdir er ikke naturlig mottaker. |
-| **B — Statens vegvesen** | SVV som tjenesteeier; abonnerer på Altinn Events | Krever avtale om Events-abonnement og mottakssystem hos SVV. |
+| **B — Statens vegvesen** | SVV som tjenesteeier; abonnerer på Altinn Events | Krever avtale om Events-abonnement og mottakssystem hos SVV. <!-- KOMMENTAR (geirhan, PR #1): for førerrett-tjenesten bør SVV være tjenesteeier, siden det er de som har ansvaret for å utstede førerrett — allerede reflektert i dette alternativet. --> |
 | **C — Helsedirektoratet** | Hdir som nasjonal koordinator med FINT Arkiv-routing | Mulig felles mottakslag for helseattester på tvers av fagsystemer. |
 
 **Avhengigheter:** Valget påvirker `applicationmetadata.json` (`org`-felt), `policy.xml` (tjenesteeier-regel), og Maskinporten-scope for mottakssystemets henting av instansdata.

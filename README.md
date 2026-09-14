@@ -10,7 +10,7 @@
 
 Dette prosjektet viser at **Altinn Studio kan fungere som en generisk SMART on FHIR-plattform for offentlig sektor** — der helsefaglige skjemaer fylles ut automatisk fra EPJ (elektronisk pasientjournal) uten dobbeltregistrering.
 
-**Demonstrasjonscaset er legeerklæring for førerrett (IS-2569)**, men arkitekturen er generisk og kan gjenbrukes direkte for sykmelding, henvisninger, attester, refusjonskrav og andre helseskjemaer der legen allerede har dataene i EPJ-et.
+**Demonstrasjonscaset er legeerklæring for førerrett (IS-2569)**, men arkitekturen er generisk og kan gjenbrukes direkte for sykmelding <!-- KOMMENTAR (geirhan, PR #1): Dette er løst av NAV allerede, og de har allerede etablert et mønster for det — se NAV syk-inn-referansen under Standarder og referanser. -->, henvisninger, attester, refusjonskrav og andre helseskjemaer der legen allerede har dataene i EPJ-et.
 
 Se [STRATEGI.md](docs/STRATEGI.md) for produktvisjon, samarbeidsmodell og nasjonal roadmap.
 
