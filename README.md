@@ -10,7 +10,7 @@
 
 Dette prosjektet viser at **Altinn Studio kan fungere som en generisk SMART on FHIR-plattform for offentlig sektor** — der helsefaglige skjemaer fylles ut automatisk fra EPJ (elektronisk pasientjournal) uten dobbeltregistrering.
 
-**Demonstrasjonscaset er legeerklæring for førerrett (IS-2569)**, men arkitekturen er generisk og kan gjenbrukes direkte for sykmelding, henvisninger, attester, refusjonskrav og andre helseskjemaer der legen allerede har dataene i EPJ-et.
+**Demonstrasjonscaset er legeerklæring for førerrett (IS-2569)**, men arkitekturen er generisk og kan gjenbrukes direkte for sykmelding <!-- KOMMENTAR (geirhan, PR #1): Dette er løst av NAV allerede, og de har allerede etablert et mønster for det — se NAV syk-inn-referansen under Standarder og referanser. -->, henvisninger, attester, refusjonskrav og andre helseskjemaer der legen allerede har dataene i EPJ-et.
 
 Se [STRATEGI.md](docs/STRATEGI.md) for produktvisjon, samarbeidsmodell og nasjonal roadmap.
 
@@ -62,6 +62,8 @@ Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJ
 | [KRAVSPESIFIKASJON-v0.6.md](docs/KRAVSPESIFIKASJON-v0.6.md) | Krav, arkitektur, datamodell, SMART-krav, kodeverk, referanser |
 | [IMPLEMENTERING.md](docs/IMPLEMENTERING.md) | Komponentguide, beste praksis, fallgruver, referanser |
 | [SKJEMA-IS2569.md](docs/SKJEMA-IS2569.md) | Fullstendig feltstruktur for blankett IS-2569 (Helseattest førerett) med implementeringsstatus |
+| [SKJEMA-KJEVEORTOPEDISK.md](docs/SKJEMA-KJEVEORTOPEDISK.md) | Nytt case (2026-09-09): Helfo-blankett for henvisning til kjeveortopedisk vurdering — feltstruktur, datamodell, henviser er tannlege/tannpleier (ikke lege). Implementert som `src/AppKjeveortopedisk` |
+| [SMARTFHIR-COMMON.md](docs/SMARTFHIR-COMMON.md) | Delt SMART on FHIR-launch/-prefill-klassebibliotek (`src/SmartFhir.Common`) brukt av alle apper i repoet — hvorfor nå, hva som ble flyttet, forhold til VEIKART.md sin fremtidige `Digdir.SmartOnFhir`-pakke |
 | [PASIENTFLYT.md](docs/PASIENTFLYT.md) | Arkitekturforslag for digital egenerklæring (NA-0201) med Dialogporten og helsenorge.no — pasientens del av flyten |
 | [BESLUTNINGER.md](docs/BESLUTNINGER.md) | Åpne beslutninger som krever menneskelig avklaring: autorisasjonsmodell, HelseID-validering, mottaksarkitektur, DPIA, full IS-2569 |
 | [RISIKOREGISTER.md](docs/RISIKOREGISTER.md) | Konsolidert risikooversikt med eier, tiltak og prioritert lukkerekkefølge — samler risikoene fra BESLUTNINGER.md, VEIKART.md og STRATEGI.md |
@@ -73,6 +75,7 @@ Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJ
 | [HACKATHON-EHIN-2026.md](docs/HACKATHON-EHIN-2026.md) | Forberedelse til Norwegian FHIR Hackathon 2026 (EHiN-pre-konferanse, 9. nov) — gap-analyse mot SMART-sporets bronse/sølv/gull-krav |
 | [TESTGUIDE-SMARTHEALTHIT.md](docs/TESTGUIDE-SMARTHEALTHIT.md) | Hvordan reprodusere alle SMART-launch-testene mot launch.smarthealthit.org selv: klienttyper, secrets, Simulated Error-scenarioer, og status på automatiske tester (ingen finnes) |
 | [NAV-EPJ-TESTMILJO.md](docs/NAV-EPJ-TESTMILJO.md) | Hvordan sette opp `navikt/nav-epj` lokalt som et Norway-tilpasset SMART on FHIR-testmiljø (korrekte fnr/HPR-OID-er) — inkl. seks bugs som må rettes, miljø-fallgruver, og hvordan teste både automatisert og som menneske i en nettleser |
+| [EPIC-TESTMILJO.md](docs/EPIC-TESTMILJO.md) | Epic on FHIR-sandkassen som testmiljø — relevant fordi Helseplattformen kjører Epic. Registrerings-URL, sandkasse-detaljer, teknisk sammenligning mot det vi allerede har testet, og sjekkliste klar til bruk når konto er registrert |
 
 ---
 

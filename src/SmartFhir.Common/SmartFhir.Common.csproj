@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Delt "standard pakkeutvidelse" for SMART on FHIR-launch og -prefill, brukt av alle
+    Altinn Studio-apper i dette repoet (App = legeerklæring førerrett, AppKjeveortopedisk =
+    henvisning til kjeveortopedisk vurdering, m.fl.). Se docs/SMARTFHIR-COMMON.md.
+
+    Skilt ut 2026-09-09 fra src/App/controllers/SmartLaunchController.cs og
+    src/App/services/FhirPrefillService.cs — den koden var allerede 100% app-agnostisk
+    (ingen referanse til ForerLegeerklaeringModel i SmartLaunchController, og FhirPrefillService
+    sin FHIR-henting/parsing var kun koblet til modellen i selve tildelingen av feltverdier).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>SmartFhir.Common</RootNamespace>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;1998</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Trenger ASP.NET Core MVC-typer (ControllerBase, IActionResult, HttpContext) for
+         SmartLaunchControllerBase, uten å dra inn Altinn.App.Api/Core her — de er kun
+         relevante for det konkrete appen som arver denne klassen. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+</Project>

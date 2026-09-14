@@ -1,0 +1,61 @@
+{
+  "$schema": "https://altinncdn.no/toolkits/altinn-app-frontend/4/schemas/json/application/application-metadata.schema.v1.json",
+  "id": "digdir/kjeveortopedisk-henvisning",
+  "org": "digdir",
+  "title": {
+    "nb": "Henvisning til kjeveortopedisk vurdering",
+    "nn": "Tilvising til kjeveortopedisk vurdering",
+    "en": "Referral for Orthodontic Assessment"
+  },
+  "dataTypes": [
+    {
+      "id": "ref-data-as-pdf",
+      "allowedContentTypes": ["application/pdf"],
+      "maxCount": 0,
+      "minCount": 0,
+      "enablePdfCreation": true,
+      "enableFileScan": false,
+      "validationErrorOnPendingFileScan": false,
+      "enabledFileAnalysers": [],
+      "enabledFileValidators": []
+    },
+    {
+      "id": "KjeveortopediskHenvisning",
+      "allowedContentTypes": ["application/xml"],
+      "appLogic": {
+        "autoCreate": true,
+        "classRef": "Altinn.App.Models.KjeveortopediskHenvisningModel",
+        "allowAnonymousOnStateless": false,
+        "autoDeleteOnProcessEnd": false
+      },
+      "taskId": "Task_1",
+      "maxCount": 1,
+      "minCount": 1,
+      "enablePdfCreation": true,
+      "enableFileScan": false,
+      "validationErrorOnPendingFileScan": false,
+      "enabledFileAnalysers": [],
+      "enabledFileValidators": []
+    },
+    {
+      "id": "signatur",
+      "allowedContentTypes": ["application/json"],
+      "taskId": "Task_1",
+      "maxCount": 1,
+      "minCount": 0,
+      "allowedContributors": ["app:owned"],
+      "enablePdfCreation": false,
+      "enableFileScan": false,
+      "validationErrorOnPendingFileScan": false,
+      "enabledFileAnalysers": [],
+      "enabledFileValidators": []
+    }
+  ],
+  "partyTypesAllowed": {
+    "bankruptcyEstate": false,
+    "organisation": false,
+    "person": true,
+    "subUnit": false
+  },
+  "autoDeleteOnProcessEnd": false
+}

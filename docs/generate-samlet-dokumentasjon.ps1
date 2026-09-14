@@ -26,6 +26,8 @@ $sections = @(
     @{ File = "KRAVSPESIFIKASJON-v0.6.md";      Title = "Kravspesifikasjon v0.6" }
     @{ File = "IMPLEMENTERING.md";               Title = "Implementeringsdetaljer" }
     @{ File = "SKJEMA-IS2569.md";                Title = "Skjemastruktur IS-2569" }
+    @{ File = "SKJEMA-KJEVEORTOPEDISK.md";       Title = "Skjemastruktur - henvisning til kjeveortopedisk vurdering" }
+    @{ File = "SMARTFHIR-COMMON.md";             Title = "SmartFhir.Common - delt SMART on FHIR-bibliotek" }
     @{ File = "PASIENTFLYT.md";                  Title = "Pasientflyt" }
     @{ File = "BESLUTNINGER.md";                 Title = "Åpne beslutninger" }
     @{ File = "RISIKOREGISTER.md";               Title = "Risikoregister" }
@@ -37,6 +39,7 @@ $sections = @(
     @{ File = "HACKATHON-EHIN-2026.md";           Title = "Norwegian FHIR Hackathon 2026 - forberedelse" }
     @{ File = "TESTGUIDE-SMARTHEALTHIT.md";       Title = "Testguide: SMART EHR Launch mot launch.smarthealthit.org" }
     @{ File = "NAV-EPJ-TESTMILJO.md";             Title = "nav-epj som lokalt SMART on FHIR-testmiljo" }
+    @{ File = "EPIC-TESTMILJO.md";                Title = "Epic on FHIR som testmiljo (Helseplattformen)" }
 )
 
 function Get-Slug([int]$Number, [string]$Title) {

@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Altinn.Application</AssemblyName>
     <RootNamespace>Altinn.App</RootNamespace>
-    <UserSecretsId>b5405b1e-fe65-4c41-9854-0efbfb838d2c</UserSecretsId>
+    <UserSecretsId>d1c3f9a2-6b7e-4a0d-9e1c-8f4b0a2d5c31</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Altinn.App.Api" Version="8.6.4">
@@ -22,9 +22,6 @@
   <ItemGroup>
     <None Update="config\process\process.bpmn">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="JWTValidationCert.cer">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="**\RuleHandler.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

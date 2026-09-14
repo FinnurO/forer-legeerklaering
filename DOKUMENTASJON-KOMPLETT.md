@@ -1,6 +1,6 @@
 ﻿# forer-legeerklaering — Samlet dokumentasjon
 
-**Generert:** 2026-09-07
+**Generert:** 2026-09-14
 **Kilde:** `docs/` — rekkefølge etter tabell i README.md. Generert av `docs/generate-samlet-dokumentasjon.ps1` — kjør skriptet på nytt etter endringer i docs/*.md, rediger ikke denne filen direkte.
 
 ---
@@ -12,17 +12,20 @@
 3. [Kravspesifikasjon v0.6](#3-kravspesifikasjon-v06)
 4. [Implementeringsdetaljer](#4-implementeringsdetaljer)
 5. [Skjemastruktur IS-2569](#5-skjemastruktur-is-2569)
-6. [Pasientflyt](#6-pasientflyt)
-7. [Åpne beslutninger](#7-åpne-beslutninger)
-8. [Risikoregister](#8-risikoregister)
-9. [Veikart](#9-veikart)
-10. [Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App](#10-sammenligning-forer-vs-syk-inn-vs-nhn-førerrett-app)
-11. [NHN-dokumentasjon](#11-nhn-dokumentasjon)
-12. [Kartlegging av rapporteringsplikter](#12-kartlegging-av-rapporteringsplikter)
-13. [Strategi](#13-strategi)
-14. [Norwegian FHIR Hackathon 2026 - forberedelse](#14-norwegian-fhir-hackathon-2026---forberedelse)
-15. [Testguide: SMART EHR Launch mot launch.smarthealthit.org](#15-testguide-smart-ehr-launch-mot-launchsmarthealthitorg)
-16. [nav-epj som lokalt SMART on FHIR-testmiljo](#16-nav-epj-som-lokalt-smart-on-fhir-testmiljo)
+6. [Skjemastruktur - henvisning til kjeveortopedisk vurdering](#6-skjemastruktur---henvisning-til-kjeveortopedisk-vurdering)
+7. [SmartFhir.Common - delt SMART on FHIR-bibliotek](#7-smartfhircommon---delt-smart-on-fhir-bibliotek)
+8. [Pasientflyt](#8-pasientflyt)
+9. [Åpne beslutninger](#9-åpne-beslutninger)
+10. [Risikoregister](#10-risikoregister)
+11. [Veikart](#11-veikart)
+12. [Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App](#12-sammenligning-forer-vs-syk-inn-vs-nhn-førerrett-app)
+13. [NHN-dokumentasjon](#13-nhn-dokumentasjon)
+14. [Kartlegging av rapporteringsplikter](#14-kartlegging-av-rapporteringsplikter)
+15. [Strategi](#15-strategi)
+16. [Norwegian FHIR Hackathon 2026 - forberedelse](#16-norwegian-fhir-hackathon-2026---forberedelse)
+17. [Testguide: SMART EHR Launch mot launch.smarthealthit.org](#17-testguide-smart-ehr-launch-mot-launchsmarthealthitorg)
+18. [nav-epj som lokalt SMART on FHIR-testmiljo](#18-nav-epj-som-lokalt-smart-on-fhir-testmiljo)
+19. [Epic on FHIR som testmiljo (Helseplattformen)](#19-epic-on-fhir-som-testmiljo-helseplattformen)
 
 ---
 
@@ -2480,7 +2483,390 @@ Total estimert utvidelse: fra 18 til ~70 felt i datamodellen.
 
 ---
 
-# 6. Pasientflyt
+# 6. Skjemastruktur - henvisning til kjeveortopedisk vurdering
+
+# Henvisning til kjeveortopedisk vurdering — Skjemastruktur og feltanalyse
+
+## Blankett Helfo 05-06.10 (Helfo, endret 01.2026)
+
+**Kilde:** [Henvisning til kjeveortopedisk vurdering (PDF)](https://www.helfo.no/skjema/Henvisning%20til%20kjeveortopedisk%20behandling-05-06.10-bokm%C3%A5l.pdf/_/attachment/inline/4b72a31f-7046-4b69-8384-2e1c218a1d52:9aef015d0999649a31177af9af939c1c2d152411/Henvisning%20til%20kjeveortopedisk%20vurdering-05-06.10-bokm%C3%A5l.pdf)
+**Juridisk hjemmel:** Folketrygdloven — stønad til kjeveortopedisk behandling (tannregulering) etter takster fastsatt av Helse- og omsorgsdepartementet.
+**Formål:** Henvisning fra tannlege/tannpleier til kjeveortoped, med selvstendig vurdering av om pasientens bittavvik kvalifiserer for stønad (gruppe a/b/c, ulik dekningsprosent).
+
+**Nytt case, lagt til 2026-09-09.** Dette er det andre skjemaet i prosjektet (etter IS-2569/legeerklæring førerrett) — og et nyttig sannhetstest for «helse-template»-visjonen (STRATEGI.md Spor B): henviseren her er en **tannlege/tannpleier**, ikke en lege. Samme FHIR/HPR/SMART-mønster skal i prinsippet gjelde uendret, bare med en annen behandlerkategori.
+
+**Presisert av Johann:** hvilken informasjon som faktisk kan hentes fra et tannlege-EPJ via FHIR er ikke avklart ennå. Skjemaet skal uansett kunne fylles ut **helt manuelt, uten EPJ-kontekst** — altså samme "dobbel inngangsmodus"-krav som er dokumentert for førerrett-caset i [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md), bare at det her er en *forutsetning fra start* snarere enn noe lagt til senere.
+
+---
+
+## Feltoversikt
+
+### 1a. Informasjon om pasienten
+
+| Felt | Type | Mulig FHIR-kilde | Merknad |
+|---|---|---|---|
+| Etternavn, fornavn | Tekst | `Patient.name` | |
+| Fødselsnummer | Tekst | `Patient.identifier` (OID `2.16.578.1.12.4.1.4.1`) | Samme OID som førerrett-caset |
+| Adresse | Tekst (flerlinjer) | `Patient.address` | **Nytt felt** — adresse er ikke modellert i `ForerLegeerklaeringModel` fra før |
+
+### 1b. Informasjon om henvisende behandler
+
+| Felt | Type | Mulig FHIR-kilde | Merknad |
+|---|---|---|---|
+| Navn på henvisende tannlege/tannpleier | Tekst | `Practitioner.name` | |
+| Henviserens HPR-nummer | Tekst | `Practitioner.identifier` (OID `2.16.578.1.12.4.1.4.4`) | Samme OID — HPR dekker alt autorisert helsepersonell, ikke bare leger |
+| Dato og underskrift | Dato + signatur | — | Ikke FHIR-kilde; genereres ved signering (samme «signer og send inn»-mønster som førerrett) |
+| *(implisitt)* Egenerklæring | — | — | Skjemaet har en fast erklæringstekst («Jeg har foretatt en selvstendig vurdering...») rett under 1b — bør trolig bli en obligatorisk bekreftelse i det digitale skjemaet, ikke bare trykt tekst |
+
+**Åpent spørsmål:** kan vi skille tannlege fra tannpleier ut fra HPR-oppslag alene (autorisasjonskategori), eller må skjemaet spørre eksplisitt?
+
+### 2. Utvidet stønad
+
+| Felt | Type |
+|---|---|
+| Kryss av hvis pasienten har krav på utvidet stønad | Boolsk (checkbox) |
+
+### 3. Hvilken bittanomali henvises det for? — hovedklassifisering
+
+Tre grupper, med ulik dekningsprosent. Skjemaet håndhever ikke eksplisitt at kun én gruppe kan velges — det er trolig underforstått av regelverket (hver bittanomali-kode hører til én gruppe), men **ikke bekreftet**.
+
+**Gruppe a — 100 %** (3 alternativer, ingen underpunkter)
+
+| Kode | Beskrivelse |
+|---|---|
+| 8a1 | Leppe-kjeve-ganespalte |
+| 8a2 | Medfødt og ervervet kraniofacial lidelse |
+| 8a3 | Bittavvik som er så alvorlig at pasienten må ha ortognatisk-kirurgisk behandling |
+
+**Gruppe b — 75 % / 90 % ved utvidet stønad** (10 alternativer, ingen underpunkter)
+
+| Kode | Beskrivelse |
+|---|---|
+| 1 | Horisontalt overbitt, 9 mm eller mer |
+| 2 | Enkeltsidig kryss- eller sakse-bitt (≥3 tannpar) med tvangsføring og/eller asymmetrier |
+| 3 | Åpent bitt hvor det bare er okklusjonskontakt på molarene |
+| 4 | Retinerte fortenner, hjørnetenner og premolarer med behov for aktiv fremføring |
+| 5 | Underbitt som omfatter alle fire incisiver, med eller uten tvangsføring |
+| 6 | Agenesi eller tanntap i fronten (fortenner og hjørnetenner) |
+| 7 | Dypt bitt med buccal/palatinal påbitning av slimhinnen (≥2 tenner) |
+| 8 | Dobbeltsidig saksebitt (≥2 tannpar på hver side) |
+| 9 | Agenesi av ≥2 tenner i samme sidesegment (3. molarer unntatt) |
+| 10 | Agenesi av enkelttenner i sidesegmentene (ved lukkede luker) og/eller hypoplastisk molar |
+
+**Gruppe c — 40 % / 60 % ved utvidet stønad** (5 hovedkoder, de fleste med underpunkter a/b/(c))
+
+| Kode | Beskrivelse | Underpunkter |
+|---|---|---|
+| 11 | Horisontalt overbitt, 6–9 mm | a) funksjonelle avvik · b) psykisk/sosial mestring · c) kombinert med c12 |
+| 12 | Stor plassmangel i fronten (≥4 mm) med kontaktbrudd (≥2 mm) | a) funksjonelle avvik · b) psykisk/sosial mestring · c) kombinert med c11 eller c13 |
+| 13 | Inverteringer i fronten (fortenner og hjørnetenner) | a) funksjonelle avvik · b) psykisk/sosial mestring · c) kombinert med c12 |
+| 14 | Diastema mediale ≥3 mm, eller markert generelt plassoverskudd (**angis i mm** — tallfelt) | a) funksjonelle avvik · b) psykisk/sosial mestring |
+| 15 | Åpent bitt som omfatter ≥3 tannpar | a) funksjonelle avvik · b) psykisk/sosial mestring |
+
+### 4. Fyll ut hvis henvisningen gjelder annen tilstand
+
+Alternativ til §3 — egen boks, egne koder. Hver refererer til et paragrafpunkt i regelverket (ikke gjengitt her — trenger avklaring av selve forskriftsteksten hvis vi skal bygge veiledningstekst i appen).
+
+| Kode | Beskrivelse | Regelverksreferanse |
+|---|---|---|
+| 1 | Kjeveortopedisk behandling ved marginal periodontitt | punkt 6 b |
+| 2 | Preprotetisk kjeveortopedisk behandling — tannskade ved godkjent yrkesskade | punkt 12 |
+| 3 | Preprotetisk kjeveortopedisk behandling ved tannagenesi | punkt 7 c |
+| 4 | Preprotetisk kjeveortopedisk behandling — tannskade ved ulykke, ikke godkjent yrkesskade | punkt 13 |
+
+### 5. Merknader fra henvisende tannlege/tannpleier
+
+Fritekst.
+
+---
+
+## Utkast til datamodell
+
+**Status: utkast, ikke koblet til noen app ennå** — se «Åpent spørsmål: appstruktur» nederst. Følger samme stil som `ForerLegeerklaeringModel.cs` (flate felt, `Xxx_Yyy`-navngiving per gruppe, `[XmlElement]`/`[JsonProperty]`/`[JsonPropertyName]` for Altinn-kompatibilitet).
+
+```csharp
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
+using Newtonsoft.Json;
+
+namespace Altinn.App.Models
+{
+    [XmlRoot(ElementName = "KjeveortopediskHenvisning")]
+    public class KjeveortopediskHenvisningModel
+    {
+        // --- Pasient (fra FHIR Patient) ---
+        [XmlElement("Pasient_Fnr", Order = 1)]
+        [JsonProperty("Pasient_Fnr")] [JsonPropertyName("Pasient_Fnr")]
+        public string Pasient_Fnr { get; set; }
+
+        [XmlElement("Pasient_Fornavn", Order = 2)]
+        [JsonProperty("Pasient_Fornavn")] [JsonPropertyName("Pasient_Fornavn")]
+        public string Pasient_Fornavn { get; set; }
+
+        [XmlElement("Pasient_Etternavn", Order = 3)]
+        [JsonProperty("Pasient_Etternavn")] [JsonPropertyName("Pasient_Etternavn")]
+        public string Pasient_Etternavn { get; set; }
+
+        [XmlElement("Pasient_Adresse", Order = 4)]
+        [JsonProperty("Pasient_Adresse")] [JsonPropertyName("Pasient_Adresse")]
+        public string Pasient_Adresse { get; set; }
+
+        // --- Henviser: tannlege/tannpleier (fra FHIR Practitioner via fhirUser) ---
+        [XmlElement("Henviser_HPR", Order = 10)]
+        [JsonProperty("Henviser_HPR")] [JsonPropertyName("Henviser_HPR")]
+        public string Henviser_HPR { get; set; }
+
+        [XmlElement("Henviser_Fornavn", Order = 11)]
+        [JsonProperty("Henviser_Fornavn")] [JsonPropertyName("Henviser_Fornavn")]
+        public string Henviser_Fornavn { get; set; }
+
+        [XmlElement("Henviser_Etternavn", Order = 12)]
+        [JsonProperty("Henviser_Etternavn")] [JsonPropertyName("Henviser_Etternavn")]
+        public string Henviser_Etternavn { get; set; }
+
+        // --- Virksomhet (fra FHIR Organization via Encounter.serviceProvider) ---
+        [XmlElement("Virksomhet_Navn", Order = 20)]
+        [JsonProperty("Virksomhet_Navn")] [JsonPropertyName("Virksomhet_Navn")]
+        public string Virksomhet_Navn { get; set; }
+
+        [XmlElement("Virksomhet_Orgnr", Order = 21)]
+        [JsonProperty("Virksomhet_Orgnr")] [JsonPropertyName("Virksomhet_Orgnr")]
+        public string Virksomhet_Orgnr { get; set; }
+
+        [XmlElement("Virksomhet_HerId", Order = 22)]
+        [JsonProperty("Virksomhet_HerId")] [JsonPropertyName("Virksomhet_HerId")]
+        public string Virksomhet_HerId { get; set; }
+
+        // --- §2: Utvidet stønad ---
+        [XmlElement("Henvisning_UtvidetStonad", Order = 30)]
+        [JsonProperty("Henvisning_UtvidetStonad")] [JsonPropertyName("Henvisning_UtvidetStonad")]
+        public bool? Henvisning_UtvidetStonad { get; set; }
+
+        // --- §3 Gruppe a (100%) ---
+        [XmlElement("GruppeA_Kode8a1", Order = 40)]
+        [JsonProperty("GruppeA_Kode8a1")] [JsonPropertyName("GruppeA_Kode8a1")]
+        public bool? GruppeA_Kode8a1 { get; set; }
+
+        [XmlElement("GruppeA_Kode8a2", Order = 41)]
+        [JsonProperty("GruppeA_Kode8a2")] [JsonPropertyName("GruppeA_Kode8a2")]
+        public bool? GruppeA_Kode8a2 { get; set; }
+
+        [XmlElement("GruppeA_Kode8a3", Order = 42)]
+        [JsonProperty("GruppeA_Kode8a3")] [JsonPropertyName("GruppeA_Kode8a3")]
+        public bool? GruppeA_Kode8a3 { get; set; }
+
+        // --- §3 Gruppe b (75% / 90%) — Kode1..10 ---
+        [XmlElement("GruppeB_Kode1", Order = 50)]
+        [JsonProperty("GruppeB_Kode1")] [JsonPropertyName("GruppeB_Kode1")]
+        public bool? GruppeB_Kode1 { get; set; }
+
+        [XmlElement("GruppeB_Kode2", Order = 51)]
+        [JsonProperty("GruppeB_Kode2")] [JsonPropertyName("GruppeB_Kode2")]
+        public bool? GruppeB_Kode2 { get; set; }
+
+        [XmlElement("GruppeB_Kode3", Order = 52)]
+        [JsonProperty("GruppeB_Kode3")] [JsonPropertyName("GruppeB_Kode3")]
+        public bool? GruppeB_Kode3 { get; set; }
+
+        [XmlElement("GruppeB_Kode4", Order = 53)]
+        [JsonProperty("GruppeB_Kode4")] [JsonPropertyName("GruppeB_Kode4")]
+        public bool? GruppeB_Kode4 { get; set; }
+
+        [XmlElement("GruppeB_Kode5", Order = 54)]
+        [JsonProperty("GruppeB_Kode5")] [JsonPropertyName("GruppeB_Kode5")]
+        public bool? GruppeB_Kode5 { get; set; }
+
+        [XmlElement("GruppeB_Kode6", Order = 55)]
+        [JsonProperty("GruppeB_Kode6")] [JsonPropertyName("GruppeB_Kode6")]
+        public bool? GruppeB_Kode6 { get; set; }
+
+        [XmlElement("GruppeB_Kode7", Order = 56)]
+        [JsonProperty("GruppeB_Kode7")] [JsonPropertyName("GruppeB_Kode7")]
+        public bool? GruppeB_Kode7 { get; set; }
+
+        [XmlElement("GruppeB_Kode8", Order = 57)]
+        [JsonProperty("GruppeB_Kode8")] [JsonPropertyName("GruppeB_Kode8")]
+        public bool? GruppeB_Kode8 { get; set; }
+
+        [XmlElement("GruppeB_Kode9", Order = 58)]
+        [JsonProperty("GruppeB_Kode9")] [JsonPropertyName("GruppeB_Kode9")]
+        public bool? GruppeB_Kode9 { get; set; }
+
+        [XmlElement("GruppeB_Kode10", Order = 59)]
+        [JsonProperty("GruppeB_Kode10")] [JsonPropertyName("GruppeB_Kode10")]
+        public bool? GruppeB_Kode10 { get; set; }
+
+        // --- §3 Gruppe c (40% / 60%) — Kode11..15, med underpunkter ---
+        [XmlElement("GruppeC_Kode11", Order = 70)]
+        [JsonProperty("GruppeC_Kode11")] [JsonPropertyName("GruppeC_Kode11")]
+        public bool? GruppeC_Kode11 { get; set; }
+        [XmlElement("GruppeC_Kode11_A", Order = 71)]
+        [JsonProperty("GruppeC_Kode11_A")] [JsonPropertyName("GruppeC_Kode11_A")]
+        public bool? GruppeC_Kode11_A { get; set; }
+        [XmlElement("GruppeC_Kode11_B", Order = 72)]
+        [JsonProperty("GruppeC_Kode11_B")] [JsonPropertyName("GruppeC_Kode11_B")]
+        public bool? GruppeC_Kode11_B { get; set; }
+        [XmlElement("GruppeC_Kode11_C", Order = 73)]
+        [JsonProperty("GruppeC_Kode11_C")] [JsonPropertyName("GruppeC_Kode11_C")]
+        public bool? GruppeC_Kode11_C { get; set; }
+
+        [XmlElement("GruppeC_Kode12", Order = 80)]
+        [JsonProperty("GruppeC_Kode12")] [JsonPropertyName("GruppeC_Kode12")]
+        public bool? GruppeC_Kode12 { get; set; }
+        [XmlElement("GruppeC_Kode12_A", Order = 81)]
+        [JsonProperty("GruppeC_Kode12_A")] [JsonPropertyName("GruppeC_Kode12_A")]
+        public bool? GruppeC_Kode12_A { get; set; }
+        [XmlElement("GruppeC_Kode12_B", Order = 82)]
+        [JsonProperty("GruppeC_Kode12_B")] [JsonPropertyName("GruppeC_Kode12_B")]
+        public bool? GruppeC_Kode12_B { get; set; }
+        [XmlElement("GruppeC_Kode12_C", Order = 83)]
+        [JsonProperty("GruppeC_Kode12_C")] [JsonPropertyName("GruppeC_Kode12_C")]
+        public bool? GruppeC_Kode12_C { get; set; }
+
+        [XmlElement("GruppeC_Kode13", Order = 90)]
+        [JsonProperty("GruppeC_Kode13")] [JsonPropertyName("GruppeC_Kode13")]
+        public bool? GruppeC_Kode13 { get; set; }
+        [XmlElement("GruppeC_Kode13_A", Order = 91)]
+        [JsonProperty("GruppeC_Kode13_A")] [JsonPropertyName("GruppeC_Kode13_A")]
+        public bool? GruppeC_Kode13_A { get; set; }
+        [XmlElement("GruppeC_Kode13_B", Order = 92)]
+        [JsonProperty("GruppeC_Kode13_B")] [JsonPropertyName("GruppeC_Kode13_B")]
+        public bool? GruppeC_Kode13_B { get; set; }
+        [XmlElement("GruppeC_Kode13_C", Order = 93)]
+        [JsonProperty("GruppeC_Kode13_C")] [JsonPropertyName("GruppeC_Kode13_C")]
+        public bool? GruppeC_Kode13_C { get; set; }
+
+        [XmlElement("GruppeC_Kode14", Order = 100)]
+        [JsonProperty("GruppeC_Kode14")] [JsonPropertyName("GruppeC_Kode14")]
+        public bool? GruppeC_Kode14 { get; set; }
+        [XmlElement("GruppeC_Kode14_PlassoverskuddMm", Order = 101)]
+        [JsonProperty("GruppeC_Kode14_PlassoverskuddMm")] [JsonPropertyName("GruppeC_Kode14_PlassoverskuddMm")]
+        public decimal? GruppeC_Kode14_PlassoverskuddMm { get; set; }
+        [XmlElement("GruppeC_Kode14_A", Order = 102)]
+        [JsonProperty("GruppeC_Kode14_A")] [JsonPropertyName("GruppeC_Kode14_A")]
+        public bool? GruppeC_Kode14_A { get; set; }
+        [XmlElement("GruppeC_Kode14_B", Order = 103)]
+        [JsonProperty("GruppeC_Kode14_B")] [JsonPropertyName("GruppeC_Kode14_B")]
+        public bool? GruppeC_Kode14_B { get; set; }
+
+        [XmlElement("GruppeC_Kode15", Order = 110)]
+        [JsonProperty("GruppeC_Kode15")] [JsonPropertyName("GruppeC_Kode15")]
+        public bool? GruppeC_Kode15 { get; set; }
+        [XmlElement("GruppeC_Kode15_A", Order = 111)]
+        [JsonProperty("GruppeC_Kode15_A")] [JsonPropertyName("GruppeC_Kode15_A")]
+        public bool? GruppeC_Kode15_A { get; set; }
+        [XmlElement("GruppeC_Kode15_B", Order = 112)]
+        [JsonProperty("GruppeC_Kode15_B")] [JsonPropertyName("GruppeC_Kode15_B")]
+        public bool? GruppeC_Kode15_B { get; set; }
+
+        // --- §4: Annen tilstand (alternativ til §3) ---
+        [XmlElement("AnnenTilstand_Kode1", Order = 120)]
+        [JsonProperty("AnnenTilstand_Kode1")] [JsonPropertyName("AnnenTilstand_Kode1")]
+        public bool? AnnenTilstand_Kode1 { get; set; }
+        [XmlElement("AnnenTilstand_Kode2", Order = 121)]
+        [JsonProperty("AnnenTilstand_Kode2")] [JsonPropertyName("AnnenTilstand_Kode2")]
+        public bool? AnnenTilstand_Kode2 { get; set; }
+        [XmlElement("AnnenTilstand_Kode3", Order = 122)]
+        [JsonProperty("AnnenTilstand_Kode3")] [JsonPropertyName("AnnenTilstand_Kode3")]
+        public bool? AnnenTilstand_Kode3 { get; set; }
+        [XmlElement("AnnenTilstand_Kode4", Order = 123)]
+        [JsonProperty("AnnenTilstand_Kode4")] [JsonPropertyName("AnnenTilstand_Kode4")]
+        public bool? AnnenTilstand_Kode4 { get; set; }
+
+        // --- §5: Merknader ---
+        [XmlElement("Henvisning_Merknad", Order = 130)]
+        [JsonProperty("Henvisning_Merknad")] [JsonPropertyName("Henvisning_Merknad")]
+        public string Henvisning_Merknad { get; set; }
+    }
+}
+```
+
+**Bevisst utelatt fra dette utkastet:**
+- Egen boolsk «egenerklæring bekreftet»-flagg for erklæringsteksten under 1b — bør trolig legges til som et obligatorisk felt i selve Altinn-skjemaet, ikke bare i datamodellen.
+- Enum/kodeverk-representasjon i stedet for individuelle boolske felt per kode — flate booleans matcher stilen i `ForerLegeerklaeringModel`, men en `List<string>`/kodeverk-tabell kunne vært mer kompakt. Ikke byttet ut uten videre avklaring, siden det påvirker layout-bindingen i Altinn Studio.
+- Avledet «hvilken gruppe/dekningsprosent gjelder» — tilsvarende `ForerKonklusjonModel`-mønsteret fra førerrett-caset (se [BESLUTNINGER.md C-3](BESLUTNINGER.md)). Naturlig å legge til når selve forretningsregelen (kan flere grupper kombineres, eller er de gjensidig utelukkende?) er bekreftet.
+
+---
+
+## Appstruktur (avklart 2026-09-09)
+
+**Besluttet av Johann:** ny app-mappe i samme repo — «dette blir jo en egen Altinn Studio app, men kan sikkert ligge som en egen mappe i dette repoet... repoet er førererklæring og mye om smart on fhir, men det vil bli lagt ned etterhvert.» Altså alternativ 1 fra listen under, med den presiseringen at `forer-legeerklaering`-repoet selv har en planlagt sluttdato — det er ikke ment som et permanent hjem for et voksende antall Altinn-caser, bare et praktisk sted å bevise mønsteret videre før neste steg (eget repo/mal) blir aktuelt.
+
+Implementert som `src/AppKjeveortopedisk` (egen `App.csproj`, `Program.cs`, datamodell, layout, `applicationmetadata.json`, prosessdefinisjon — lagt til i `src/App.sln`). Se [SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md) for hvordan SMART on FHIR-launch/-prefill ble skilt ut til et delt `SmartFhir.Common`-klassebibliotek i samme slag, slik at denne og fremtidige apper i repoet ikke dupliserer den logikken.
+
+<details>
+<summary>Opprinnelig åpent spørsmål (før avklaring)</summary>
+
+Dette blir det **andre** skjemaet i prosjektet. `src/App` er i dag én enkelt Altinn Studio-app (`forer-legeerklaering`) — det finnes ikke noe presedens i repoet for flere apper side om side. Før jeg går videre til selve Altinn Studio-skjemaet (layout, `applicationmetadata.json`, prosessdefinisjon), trengs et valg:
+
+1. **Ny app-mappe i samme repo** (f.eks. `src/AppKjeveortopedisk`), egen `App.csproj`/datamodell/layout, delt `App.sln`.
+2. **Eget repo** for dette caset.
+3. Noe annet du har i tankene.
+
+Altinn Studio-skjema (layout.json, layout-sets, applicationmetadata.json m.m.) er normalt noe Altinn Studio sitt eget designer-verktøy/CLI genererer — jeg vil helst vite hvor det skal bo før jeg begynner å håndskrive den strukturen, for å unngå å måtte flytte alt i etterkant.
+
+</details>
+
+## FHIR-tilgjengelighet fra tannlege-EPJ (delvis avklart 2026-09-09)
+
+**Besluttet av Johann:** i påvente av den fulle avklaringen («jeg skal få avklart hva som ligger tilgjengelig i ressurser») settes standardfeltene opp nå — de som uansett er felles på tvers av EPJ-er og caser. Dette ble den konkrete anledningen til å skille ut `SmartFhir.Common` (se [SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md)): `Patient` (inkl. adresse), `Practitioner` (via `fhirUser`, inkl. `PractitionerRole`-oppslag), `Organization` er nå delt kode brukt av begge apper i repoet, ikke noe som må skrives på nytt her.
+
+Fortsatt ubekreftet/manuelt:
+- Om et faktisk tannlege-EPJ eksponerer disse ressursene i praksis (venter på Johanns avklaring) — `AppKjeveortopedisk` sin `SmartLaunchController` bruker placeholder-testdata (`test-pasient-1`/`enc-test-001`/`Practitioner/tannlege-test`) inntil et reelt testmiljø finnes.
+- Den kliniske klassifiseringen i §3/§4 er, som antatt, **ikke** noe et generisk tannlege-EPJ har strukturert FHIR-data for (dette er en Helfo-spesifikk vurdering, ikke en diagnosekode) — `KjeveortopediskFhirPrefillService` fyller derfor bevisst ikke ut disse feltene. Skjemaet er fullt utfyllbart manuelt for §2–§5 uavhengig av EPJ-tilkobling, i tråd med «dobbel inngangsmodus»-kravet.
+
+
+---
+
+# 7. SmartFhir.Common - delt SMART on FHIR-bibliotek
+
+# SmartFhir.Common — delt SMART on FHIR-launch/-prefill for flere Altinn-apper i dette repoet
+
+**Lagt til 2026-09-09**, sammen med det andre caset i repoet ([SKJEMA-KJEVEORTOPEDISK.md](SKJEMA-KJEVEORTOPEDISK.md) / `src/AppKjeveortopedisk`). Første gang repoet faktisk har to Altinn Studio-apper side om side — se «Åpent spørsmål: appstruktur» i det dokumentet for hvorfor de bor i samme repo.
+
+## Hvorfor nå, og hvorfor ikke en NuGet-pakke ennå
+
+[VEIKART.md, Fase 4](VEIKART.md) beskriver en fremtidig NuGet-pakke `Digdir.SmartOnFhir`, uttrykkelig **etter** at mønsteret er bevist i produksjon (*"NAV ekstraherte `@navikt/smart-on-fhir` etter at `syk-inn` var i produksjon — samme sekvens gjelder her"*). `SmartFhir.Common` er **ikke** den pakken — det er et internt `ProjectReference`-klassebibliotek i samme repo, ikke noe publisert/versjonert utenfor det. Det mangler bevisst det fase 4 lister som pakkens fulle omfang:
+
+- `TokenValidator` (JWKS-validering av access token) — finnes ikke.
+- `SmartTokenStore` med Redis-støtte — vi bruker fortsatt kun session + `IMemoryCache`, uendret fra før.
+- `SmartOptions`/`AddSmartOnFhir()` som ferdig DI-extension — hver app registrerer fortsatt tjenestene manuelt i `Program.cs`.
+- Konvensjonsmønsteret for «dobbel inngangsmodus» (se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md)) — ikke del av dette biblioteket ennå; hver app må fortsatt løse det selv.
+
+Grunnen til at vi likevel gjør denne mindre utskillingen nå, foran fase 4, er at den ble **fremtvunget av en reell andre forbruker** (kjeveortopedisk-caset), ikke gjettet på forhånd — den samme rekkefølgen VEIKART.md etterlyser (bevis mønsteret med to reelle brukssteder, ekstraher deretter det som faktisk er felles), bare i miniatyr og internt i repoet. Når/hvis dette skal bli den faktiske `Digdir.SmartOnFhir`-pakken i fase 4, er `SmartFhir.Common` et konkret utgangspunkt — ikke et blankt ark.
+
+## Hva som faktisk ble flyttet
+
+Den opprinnelige `SmartLaunchController.cs` og `FhirPrefillService.cs` i `src/App` viste seg, ved gjennomgang, å **allerede være ~100 % app-nøytrale** — `SmartLaunchController` hadde ingen referanse til `ForerLegeerklaeringModel` i det hele tatt, og FHIR-hentingen/-parsingen i `FhirPrefillService` var kun koblet til modellen i selve feltildelingen. Utskillingen var derfor i praksis en ren omplassering av eksisterende, allerede testet kode — ikke en omskriving.
+
+| Flyttet til `SmartFhir.Common` | Ble værende app-spesifikt |
+|---|---|
+| `SmartLaunchControllerBase` — hele OAuth2/PKCE/discovery/token-exchange/session-mekanikken | Fallback-`ClientId`, testdata (patient/encounter/practitioner-id) for `test-prefill`/`dev-login`, hvilke scopes appen ber om — satt via `protected override`-hooks i hver apps tynne `SmartLaunchController` |
+| `SmartFhirPrefillClient` — henter/parser Patient, Practitioner (+PractitionerRole), Organization, Encounter, Condition inn i en nøytral `StandardFhirPrefillData` | Mapping fra `StandardFhirPrefillData` til appens egen datamodell (feltnavn varierer: `Lege_HPR` i ForerLegeerklaering vs. `Henviser_HPR` i kjeveortopedisk) |
+| `SmartSessionReader` — leser token+kontekst fra session/`IMemoryCache` | Alt som ikke er FHIR-prefill: `ForerKonklusjonModel`-avledningen (`End`/`DeriveKonklusjon`) i ForerLegeerklaering finnes ikke i kjeveortopedisk-caset og ligger fortsatt kun der |
+| `NorwegianHealthOids` — Fnr/HPR/Orgnr/HerId-OID-ene | — |
+| `FhirLaunchContext`/`TokenData`/`CachedFhirData`/`SmartSessionKeys` — session-DTO-er og nøkler | — |
+
+**Merk om navngiving:** `StandardFhirPrefillData` bruker `Henviser_*` (ikke `Lege_*`) som feltprefiks for behandleren, fordi HPR-nummeret dekker all autorisert helsepersonell — bekreftet på tvers av lege (ForerLegeerklaering) og tannlege/tannpleier (kjeveortopedisk). Hver app mapper selv videre til sitt eget feltnavn.
+
+**Nytt felt lagt til i samme slag:** `Pasient_Adresse` (fra `Patient.address`) — kjeveortopedisk-caset trengte det (ForerLegeerklaering gjorde ikke), men det er generisk nok til å være med i standardsettet for senere caser også.
+
+## Hvordan en ny app i repoet bruker biblioteket
+
+1. `<ProjectReference Include="..\SmartFhir.Common\SmartFhir.Common.csproj" />` i appens `.csproj`.
+2. Egen `SmartLaunchController : SmartLaunchControllerBase` — implementer `DefaultClientId`, `DefaultTestPatientId`, `DefaultTestEncounterId`, `DefaultTestPractitionerPath`; overstyr `GetScopes()` kun hvis appen trenger andre FHIR-scopes enn standardsettet.
+3. Egen `FhirPrefillService : IDataProcessor` — kall `SmartSessionReader.TryReadAsync(...)` og `new SmartFhirPrefillClient(logger).FetchAsync(...)`, map `StandardFhirPrefillData` til appens egen modell. Alt som IKKE er et av standardfeltene (f.eks. en klinisk klassifisering som ikke finnes strukturert i noe EPJ) fylles bevisst ikke ut herfra — se hver apps egen prefill-tjeneste for begrunnelse.
+
+## Bevisste avgrensninger (per 2026-09-09)
+
+- Ingen automatiserte tester for noen av delene — samme status som resten av repoet (se [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md)).
+- Ingen `AddSmartOnFhir()`-DI-extension — `Program.cs` i hver app registrerer `IHttpClientFactory`/`IMemoryCache`/session manuelt, uendret oppsett fra før utskillingen.
+- Testdataene i `AppKjeveortopedisk` sin `SmartLaunchController` (patient-/encounter-/practitioner-id) er placeholder — det finnes ennå ikke noe tannlege-EPJ-testmiljø koblet til dette caset (se SKJEMA-KJEVEORTOPEDISK.md).
+
+
+---
+
+# 8. Pasientflyt
 
 # Pasientflyt: Egenerklæring og legeattestprosessen — førerrett
 
@@ -2790,7 +3176,7 @@ Pasient (fnr 01039012345)
 
 ---
 
-# 7. Åpne beslutninger
+# 9. Åpne beslutninger
 
 # Åpne beslutninger og uavklarte designvalg
 
@@ -2821,7 +3207,7 @@ En Altinn-instans har alltid én «part» (party) som eier instansen. I dag star
 
 ## C-2: HelseID — når skal BFF-siden validere tokenet?
 
-**Problemstilling:**  
+**Problemstilling:**  <!-- KOMMENTAR (geirhan, PR #1): forventer at HelseID-tokenet må valideres FØR det mappes til et Altinn-internt token, ikke etter. -->
 I dag stoler BFF-en (ASP.NET Core) på access token fra SMART-mock uten å validere signaturen. I produksjon med HelseID må tokenet valideres. Spørsmålet er *når* dette skal innføres og *hva* som kreves:
 
 - JWT Bearer-validering mot HelseID sitt JWKS-endepunkt
@@ -2902,7 +3288,7 @@ Den eksisterende digitale løsningen overfører **kun konklusjonen** (grønt/rø
 | Alternativ | Beskrivelse | Avhengigheter |
 |---|---|---|
 | **A — Digdir (nåværende)** | Digdir eier tjenesten, placeholder for PoC | Ingen nye avtaler. Men Digdir er ikke naturlig mottaker. |
-| **B — Statens vegvesen** | SVV som tjenesteeier; abonnerer på Altinn Events | Krever avtale om Events-abonnement og mottakssystem hos SVV. |
+| **B — Statens vegvesen** | SVV som tjenesteeier; abonnerer på Altinn Events | Krever avtale om Events-abonnement og mottakssystem hos SVV. <!-- KOMMENTAR (geirhan, PR #1): for førerrett-tjenesten bør SVV være tjenesteeier, siden det er de som har ansvaret for å utstede førerrett — allerede reflektert i dette alternativet. --> |
 | **C — Helsedirektoratet** | Hdir som nasjonal koordinator med FINT Arkiv-routing | Mulig felles mottakslag for helseattester på tvers av fagsystemer. |
 
 **Avhengigheter:** Valget påvirker `applicationmetadata.json` (`org`-felt), `policy.xml` (tjenesteeier-regel), og Maskinporten-scope for mottakssystemets henting av instansdata.
@@ -3030,7 +3416,7 @@ Forsikringsbransjen er en stor og manuell konsument av legeerklæringer (ved teg
 
 ---
 
-# 8. Risikoregister
+# 10. Risikoregister
 
 # Risikoregister — `forer-legeerklaering`
 
@@ -3072,7 +3458,7 @@ Se også [BESLUTNINGER.md](BESLUTNINGER.md) for beslutningsdetaljer og [VEIKART.
 
 ---
 
-# 9. Veikart
+# 11. Veikart
 
 # Veikart — `forer-legeerklaering` og SMART on FHIR på Altinn
 
@@ -3255,7 +3641,7 @@ Nasjonal fase 4: SMART som standard integrasjonsmønster i Altinn
 
 ---
 
-# 10. Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App
+# 12. Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App
 
 # Sammenligning: `forer-legeerklaering` vs. `syk-inn` vs. NHN Førerrett-App
 
@@ -3439,7 +3825,7 @@ Uavhengig av plattformvalg gjelder veikartets fase 1–3 (tokenvalidering, refre
 
 ---
 
-# 11. NHN-dokumentasjon
+# 13. NHN-dokumentasjon
 
 # NHN-dokumentasjon — SMART App Launch + Førerrett-App
 
@@ -3606,7 +3992,7 @@ Spørsmålet om hvilken plattform som er riktig for fremtidige helseskjemaer (Al
 
 ---
 
-# 12. Kartlegging av rapporteringsplikter
+# 14. Kartlegging av rapporteringsplikter
 
 # Kartlegging av rapporteringsplikter for helsepersonell
 
@@ -3988,7 +4374,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 
 ---
 
-# 13. Strategi
+# 15. Strategi
 
 # Strategi — SMART on FHIR for Altinn Studio
 
@@ -4191,7 +4577,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) for alle åpne beslutninger. De mest strat
 
 ---
 
-# 14. Norwegian FHIR Hackathon 2026 - forberedelse
+# 16. Norwegian FHIR Hackathon 2026 - forberedelse
 
 # Norwegian FHIR Hackathon 2026 (EHiN pre-konferanse) — forberedelse og gap-analyse
 
@@ -4320,7 +4706,7 @@ Sporet lenker til to NAV-repoer (samme team som `syk-inn`, jf. [SAMMENLIGNING-sy
 
 ---
 
-# 15. Testguide: SMART EHR Launch mot launch.smarthealthit.org
+# 17. Testguide: SMART EHR Launch mot launch.smarthealthit.org
 
 # Testguide: SMART EHR Launch mot launch.smarthealthit.org
 
@@ -4511,7 +4897,7 @@ Det denne testrunden **ikke** beviser:
 
 ---
 
-# 16. nav-epj som lokalt SMART on FHIR-testmiljo
+# 18. nav-epj som lokalt SMART on FHIR-testmiljo
 
 # nav-epj som lokalt SMART on FHIR-testmiljø
 
@@ -4730,5 +5116,286 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 - Bekreft faktisk FHIR-prefill ved å gå gjennom en full Altinn-instansopprettelse (ikke bare launch+callback).
 - Vurder en mer robust erstatning for `isRealExternalIssuer`-heuristikken i vår egen `SmartLaunchController.cs` (§6.3) — den fungerer i dag kun fordi vi visste å sette `FhirBaseUrlOverride` manuelt for denne testen.
 - Vurder å bygge/kjøre `nav-epj` sitt React-frontend for en fullstendig admin-UI-opplevelse (pasientoppslag, konsultasjonshistorikk) — ikke nødvendig for SMART-launch-testing, men nyttig hvis man vil utforske EPJ-simulatoren mer grundig.
+
+
+---
+
+# 19. Epic on FHIR som testmiljo (Helseplattformen)
+
+# Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
+
+**Status (2026-09-09): delvis løst.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Ser ut som en beslektet, men separat, synk-forsinkelse i en annen del av Epics infrastruktur. Se §9 for full diagnostikk og §10 for e-postutvekslingen med Epic support.
+
+## Innhold
+
+1. [Hvorfor Epic er relevant for oss](#1-hvorfor-epic-er-relevant-for-oss)
+2. [Registrering — dette må et menneske gjøre](#2-registrering--dette-må-et-menneske-gjøre)
+3. [Sandkassen](#3-sandkassen)
+4. [Teknisk oppsummering: SMART-flytene Epic støtter](#4-teknisk-oppsummering-smart-flytene-epic-støtter)
+5. [To Epic-spesifikke avvik fra det vi allerede har testet](#5-to-epic-spesifikke-avvik-fra-det-vi-allerede-har-testet)
+6. [Sjekkliste: når du har fått et client_id](#6-sjekkliste-når-du-har-fått-et-client_id)
+7. [Veien til en reell Helseplattformen-integrasjon](#7-veien-til-en-reell-helseplattformen-integrasjon)
+8. [Referanser](#8-referanser)
+9. [Testlogg](#9-testlogg)
+10. [Feilmelding sendt til Epic support](#10-feilmelding-sendt-til-epic-support)
+
+---
+
+## 1. Hvorfor Epic er relevant for oss
+
+**Helseplattformen — Norges Epic-installasjon — er ikke bare sykehus.** Kontrakten (Helse Midt-Norge, inngått 2018, ca. 3,3 mrd. kr) dekker St. Olavs hospital, Helse Møre og Romsdal, Helse Nord-Trøndelag **og 38 kommuner** i regionen. Det betyr at kommunal helsetjeneste — inkludert fastleger — i Trøndelag/Møre og Romsdal reelt sett bruker Epic. En fastlege der som brukte `forer-legeerklaering`, ville møtt nøyaktig samme grensesnitt vi kan teste mot i sandkassen.
+
+Dette er den tredje EPJ-simulatoren/testmiljøet vi undersøker i dette prosjektet, etter [launch.smarthealthit.org](TESTGUIDE-SMARTHEALTHIT.md) (generisk, amerikanske Synthea-data) og [nav-epj](NAV-EPJ-TESTMILJO.md) (Norway-tilpasset, men et NAV-internt testverktøy). Epic sin sandkasse er forskjellig fra begge: det er en **ekte leverandørs offisielle, produksjonslike testmiljø** — samme protokollimplementasjon en reell Helseplattformen-installasjon kjører, ikke en forenklet simulator.
+
+## 2. Registrering — dette må et menneske gjøre
+
+**Registrerings-URL: https://fhir.epic.com/Developer/Index**
+
+Dette er «Sign Up to Access»-siden — bekreftet ved å inspisere den faktiske DOM-en (registreringsskjemaets `Submit`-knapp poster til denne URL-en selv).
+
+**Hva skjemaet spør om** (organisasjonstilknyttet, ikke rent personlig):
+- Fornavn, etternavn
+- Firma-e-post, telefon, firmanavn, nettside
+- Land, forretningsadresse, by, delstat/fylke, postnummer
+
+**Prosess:** gratis, selvbetjent. E-postverifisering kreves («We have sent you an email... Follow the instructions in the email to verify your email address»). Etter verifisering får du tilgang til tre ting: **Testing Sandbox**, **Client Registration**, og **Documentation**.
+
+**Én registrering av appen gir automatisk to client_id-er samtidig** — ett for non-production (sandkasse) og ett for production. Du oppgir bl.a. én eller flere `redirect_uri`-er ved registrering.
+
+**Synkroniseringstid — to ulike tall i Epics egen dokumentasjon, det høyeste er det pålitelige:** OAuth 2.0-spesifikasjonen nevner «rolling sync between the Build Apps page and the Sandbox... up to 30 minutes». Developer Testing Guide sier derimot eksplisitt: **«The FHIR Developer Sandbox may take up to 1 hour to sync changes you make to technical settings for your app, such as endpoint URIs and selected APIs.»** Planlegg med **1 time**, ikke 30 minutter — bekreftet i praksis 2026-08-27 (se §9): et forsøk på å generere en launch-URL kort tid etter lagring ga et tomt launch-token og feil FHIR-versjon.
+
+**Jeg kan ikke gjøre denne registreringen for deg** — å opprette kontoer er noe jeg aldri gjør på andres vegne, uavhengig av hvem det gjelder. Så snart du har et client_id (non-production), ta det videre herfra — se §6.
+
+## 3. Sandkassen
+
+**Base-URL:** `https://fhir.epic.com/interconnect-fhir-oauth/`
+
+Sikret utelukkende med OAuth 2.0. Massiv FHIR-ressursflate (R4/STU3/DSTU2) — bl.a. `DocumentReference (Clinical Notes)` med **Create**-støtte i både R4 og STU3, direkte relevant for vår writeback-flyt.
+
+### Testbrukere (behandler, for Standalone Launch)
+
+| Navn | Brukernavn | Passord | Merknad |
+|---|---|---|---|
+| FHIR, USER | `FHIR` | `EpicFhir11!` | Ingen tilknyttet `PractitionerRole` |
+| FHIRTWO, USER | `FHIRTWO` | `EpicFhir11!` | Har en tilknyttet `PractitionerRole`-ressurs |
+
+### Testpasienter (utvalg — se full liste under «Sandbox Test Data» på fhir.epic.com)
+
+| Pasient | FHIR-ID | MyChart-innlogging | Ressurser tilgjengelig |
+|---|---|---|---|
+| Camila Lopez | `erXuFYUfucBZaryVksYEcMg3` | `fhircamila` / `epicepic1` | DiagnosticReport, Goal, Medication(Order/Request/Statement), Observation (Labs), Procedure |
+| Derrick Lin | `eq081-VQEgP8drUUqCWzHfw3` | `fhirderrick` / `epicepic1` | CarePlan, Condition, Goal, Medication*, Observation (Smoking History) |
+| Elijah Davis | `egqBHVfQlt4Bw3XGXoxVxHg3` | (ingen) | AllergyIntolerance, Binary, Condition, DocumentReference, Medication* |
+| Warren McGinnis | `e0w0LEDCYtfckT6N.CkJKCw3` | (ingen) | AllergyIntolerance, Binary, Condition, DiagnosticReport, DocumentReference, Observation (Labs/Vitals), Procedure |
+
+For EHR Launch spesifikt (den flyten vi bruker) trenger man ikke MyChart-innlogging — pasient og behandler-kontekst velges av sandkassens egen launch-simulator (analogt med launch.smarthealthit.org sin "App Launch Options"-side), som man får tilgang til fra "Build Apps"-siden etter innlogging.
+
+## 4. Teknisk oppsummering: SMART-flytene Epic støtter
+
+Alle tre matcher det vi allerede har implementert og verifisert mot launch.smarthealthit.org.
+
+### EHR Launch (det vi bruker i produksjon)
+
+```
+GET {redirect_uri}?iss={fhir_base}&launch={launch_token}
+```
+
+Discovery: `GET {iss}/metadata` (XML/FHIR-format) eller `GET {iss}/.well-known/smart-configuration` (JSON, støttet fra Epic august 2021+).
+
+```
+GET https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize
+    ?scope=launch&response_type=code
+    &redirect_uri={redirect_uri}&client_id={client_id}
+    &launch={launch_token}&state={state}
+    &aud={fhir_base}
+    &code_challenge={challenge}&code_challenge_method=S256   ← valgfritt, PKCE
+```
+
+Token-exchange: `POST {iss}/oauth2/token`, `grant_type=authorization_code` — identisk med det vi allerede sender.
+
+**Merknader fra Epics egen dokumentasjon, verdt å kjenne til:**
+- `aud`-parameteren er **påkrevd** siden Epic mai 2023 (vi sender den allerede).
+- POST i stedet for GET til `/oauth2/authorize` støttes (fra Epic november 2020+) og anbefales for EHR-launches for å unngå URL-lengdebegrensninger — vi bruker i dag kun GET, fungerer men verdt å vurdere.
+- `state` bør holdes kort (Epic anbefaler en ren UUID, ikke innbakt applikasjonstilstand) — lange `state`-verdier kombinert med JWT-baserte launch-tokens kan i sjeldne tilfeller sprenge webserverens max query-string-lengde.
+
+### Standalone Launch
+
+Samme mønster, men appen starter selv mot `/oauth2/authorize` uten `launch`-parameter, med `scope=openid` som minimum (påkrevd for sandkasse-testing).
+
+### Backend Services (`private_key_jwt`) — allerede implementert hos oss
+
+Epics eget eksempel matcher **nøyaktig** vår egen `BuildClientAssertionJwt`-implementasjon fra forrige runde (se [IMPLEMENTERING.md §13](IMPLEMENTERING.md)): `iss=sub=client_id`, `aud={token_endpoint}`, `jti`, kort levetid, signert med `RS384`.
+
+```
+POST https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token
+grant_type=client_credentials
+&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
+&client_assertion={vår signerte JWT}
+```
+
+**Viktig forskjell fra tidligere tester, se §5.**
+
+## 5. To Epic-spesifikke avvik fra det vi allerede har testet
+
+### 5.1 `Epic-Client-ID`-header kan være nødvendig på selve discovery-kallet
+
+Epic støtter at FHIR-serverens endepunkt-URL (`iss`) overstyres per client_id. Uten en `Epic-Client-ID`-header i kallet mot `/metadata` eller `/.well-known/smart-configuration`, kan man få feil `authorize`/`token`-endepunkter tilbake. Vår `DiscoverSmartConfiguration()` i `SmartLaunchController.cs` sender i dag **ingen** ekstra headere — kun en ren `GET`. **Handling når vi tester:** legg til `client.DefaultRequestHeaders.Add("Epic-Client-ID", clientId)` på discovery-kallet, og bekreft at det ikke er nødvendig for sandkassen (det er mest relevant for spesifikt konfigurerte Epic-kunder) før man antar det er trygt å utelate i produksjon.
+
+### 5.2 `private_key_jwt` mot Epic krever en ekte hostet JWKS (JKU), ikke en limt-inn statisk nøkkel
+
+Forrige runde limte vi en statisk offentlig JWK inn i launch.smarthealthit.org sitt registreringsskjema — det holdt for å bevise at vår signerte JWT var strukturelt korrekt. **Epic tillater ikke lenger dette i sandkassen** («Vendor Services and Epic on FHIR websites no longer allow static key uploads for use in the sandbox» — gjeldende fra februar 2026 for nye apper). Vi må i stedet **verte en ekte, offentlig tilgjengelig JWKS-URL** som Epic kan hente den offentlige nøkkelen fra (en JSON Web Key Set URL, «JKU»). Dette er en reell, litt større jobb enn tidligere: appen vår må eksponere et `/.well-known/jwks.json`-lignende endepunkt (eller tilsvarende), tilgjengelig fra internett, ikke bare `localhost`.
+
+## 6. Sjekkliste: når du har fått et client_id
+
+1. Vent til synkroniseringen mot sandkassen er fullført (**opptil 1 time** etter lagring — se §2, ikke 30 minutter).
+2. Sett `SmartOnFhir:ClientId` til det utstedte **non-production** client_id-et via `dotnet user-secrets` i `src/App` (ikke i en committet appsettings-fil — samme mønster som tidligere runder). Fjern eventuelle `FhirBaseUrlOverride`/`DefaultIss`-overstyringer fra tidligere EPJ-testrunder (nav-epj) — de peker feil for Epic.
+3. **Finn launch-simulatoren** (bekreftet fungerende sti, ikke opplagt fra navigasjonen):
+   - Logg inn på fhir.epic.com, gå til `https://fhir.epic.com/Documentation?docId=launching`.
+   - Klikk fanen **«SMART on FHIR (OAuth 2.0)»**, deretter **«Try It»** rett under.
+   - Et skjema åpnes: **«Choose an app to test with»** (velg vår app), **«Select a patient»**, **«Enter launch URL to receive the request to your app»** — bruk `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch`.
+   - Klikk **«Generate URL Only»** (ikke «Launch» — det prøver å navigere direkte, og `local.altinn.cloud` er ikke nåbar fra en vanlig nettleser utenfor det lokale miljøet/en sandkassemaskin uten VPN/hosts-oppsett). Den genererte URL-en vises i et modal-vindu.
+4. Kjør gjennom hele launch → authorize → callback-kjeden med den genererte URL-en, samme fremgangsmåte (curl med cookie-jar, eller direkte i nettleser) som er dokumentert for de to andre testmiljøene.
+5. Sjekk om §5.1 (Epic-Client-ID-header) faktisk er nødvendig i praksis, eller om sandkassen fungerer uten.
+6. Hvis `private_key_jwt` skal testes: sett opp en offentlig JWKS-URL (§5.2) før forsøk på backend-services-flyten — statisk nøkkel vil ikke fungere.
+7. Dokumenter resultatet i §9, samme mønster som IMPLEMENTERING.md §13 for launch.smarthealthit.org.
+
+## 7. Veien til en reell Helseplattformen-integrasjon
+
+Samme mønster som NHN (Helsenorge EksternAPI) og NAV (`nav-epj`): sandkasse-testing er rent teknisk og kan gjøres selvstendig, men **å gå live hos en ekte kunde er en organisatorisk henvendelse**, ikke noe som løses ved koding alene.
+
+Epics prosess: appen må først merkes **«Ready for Production»** av utvikleren (etter sandkasse-verifisering), deretter må **Helseplattformen selv** («Epic community member») aktivt laste ned/be om appen via Epics «Showroom»-plattform (tidligere «App Orchard») og signere en «open.epic API Subscription Agreement». Dette er utelukkende kundedrevet — vi kan ikke selv trigge en produksjonsdistribusjon hos Helseplattformen, uansett hvor godt sandkasse-testingen går.
+
+**Praktisk konsekvens:** sandkasse-verifiseringen (§6) beviser at protokollen fungerer mot en ekte Epic-instans — verdifullt i seg selv, og direkte sammenlignbart med det vi allerede har gjort mot launch.smarthealthit.org og nav-epj. Et faktisk samarbeid med Helseplattformen er et eget, senere skritt, trolig gjennom Helse Midt-Norge/Helseplattformen AS direkte snarere enn en kald henvendelse via Epics Showroom.
+
+## 8. Referanser
+
+- [fhir.epic.com](https://fhir.epic.com/) — Epic on FHIR, hovedside
+- [fhir.epic.com/Developer/Index](https://fhir.epic.com/Developer/Index) — registrering
+- [TESTGUIDE-SMARTHEALTHIT.md](TESTGUIDE-SMARTHEALTHIT.md) og [NAV-EPJ-TESTMILJO.md](NAV-EPJ-TESTMILJO.md) — de to andre testmiljøene, samme metodikk
+- [IMPLEMENTERING.md §13](IMPLEMENTERING.md) — vår eksisterende `private_key_jwt`-implementasjon (`BuildClientAssertionJwt`), direkte gjenbrukbar
+
+## 9. Testlogg
+
+### 2026-08-27 — app registrert, første launch-forsøk
+
+**Registrering fullført:** app **"Legeerklæring førerrett (Digdir)"** opprettet av Johann, med:
+- Application Audience: Clinicians or Administrative Users
+- Is Confidential Client: Nei (Public, for det første, enkleste testforsøket — samme fasede tilnærming som launch.smarthealthit.org: public → client_secret → private_key_jwt)
+- SMART on FHIR Version: R4
+- SMART Scope Version: v1
+- FHIR ID Generation Scheme: 64-Character-Limited FHIR IDs for USCDI FHIR Resources
+- Redirect URI: `http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/callback` (eksplisitt `http://`, feltet tillot å overstyre en `https://`-hint)
+- Incoming APIs valgt ut fra faktisk kode i `FhirPrefillService.cs` (ikke gjettet fra scope-strengen): Patient.Read (R4), Practitioner.Read (Organizational Directory), PractitionerRole.Search (Organizational Directory), Encounter.Read (Patient Chart), Organization.Read (Organizational Directory), Condition.Search (Problems), DocumentReference.Create (Clinical Notes). Observation bevisst utelatt — `FillObservation` er ikke implementert ennå.
+- Lagret med «Save & Ready for Sandbox».
+- Non-production client_id satt lokalt via `dotnet user-secrets set "SmartOnFhir:ClientId" "..."` i `src/App` (ikke committet — se §6).
+
+**Første forsøk på å generere en launch-URL** (via LaunchPad-verktøyet, se §6 steg 3), kort tid etter lagring:
+
+```
+http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch?iss=https%3A%2F%2Ffhir.epic.com%2Finterconnect-fhir-oauth%2Fapi%2FFHIR%2FDSTU2&launch=
+```
+
+**To avvik fra forventet:**
+1. `launch=` er tomt — ingen faktisk launch-token ble generert.
+2. `iss` peker på `DSTU2`, ikke `R4` som registrert.
+
+**Vurdering (den gang):** antatt sandkasse-synkroniseringsforsinkelse (§2). **Denne teorien viste seg å være feil — se oppfølgingen 2026-09-08 under.**
+
+### 2026-09-08 — rotårsak funnet: feil i Epics eget LaunchPad-verktøy, ikke noe på vår side
+
+Gjentok forsøket >1 uke etter registrering (godt utenfor enhver rimelig synk-forsinkelse). Samme resultat: tomt `launch=`, `iss` fortsatt `DSTU2`.
+
+**Systematisk feilsøking, i rekkefølge:**
+
+1. **Bekreftet at appens R4-innstilling faktisk er lagret** — inspiserte radioknappene direkte i DOM-en (`PrimaryFHIRVersion`, verdi `R4`, `checked: true`). Ikke et lagringsproblem.
+2. **Klikket «Save & Ready for Sandbox» på nytt** for å utelukke at en tidligere lagring var ufullstendig. Ingen endring i resultatet.
+3. **Fanget selve nettverkskallet** LaunchPad-verktøyet gjør (`POST /Developer/GetLaunchUrl`) med en JS-interceptor for både request og response, i stedet for å gjette ut fra det synlige skjemaet:
+   - **Request:** `{"launchUrl":"...","tokens":"dob=%DOB%&user=%SYSLOGIN%","eptId":"Z4529","wprId":"","appId":"60326","aesKey":"shhh","ssoMethod":"1"}` — bekreftet at riktig `appId` (vår app) faktisk ble sendt. `wprId` (et skjult felt, viste seg å være "Select a MyChart user" — irrelevant for en behandler-app, korrekt tomt).
+   - **Response:** `{"Success":true,"Title":null,"Message":null,"Data":{"url":"...iss=...DSTU2&launch=","error":""}}` — serveren selv rapporterer suksess, ingen feilmelding, men leverer et tomt launch-token.
+4. **Bekreftet at R4-discovery fungerer, men DSTU2-discovery ikke gjør det**, direkte mot sandkassen med `curl`:
+   - `GET .../api/FHIR/R4/.well-known/smart-configuration` → `200 OK`
+   - `GET .../api/FHIR/DSTU2/.well-known/smart-configuration` → **`404 Not Found`**
+   - `GET .../api/FHIR/DSTU2/metadata` → `200 OK` (den eldre XML-baserte discovery-mekanismen virker for DSTU2, men ikke den nyere `.well-known`-en appen vår bruker)
+   
+   Dette forklarer *hvorfor* appen vår konkret feiler med «Could not retrieve SMART configuration from EPJ» når den mottar en DSTU2-`iss`: DSTU2 støtter rett og slett ikke discovery-mekanismen SMART App Launch IG (og vår kode) forutsetter — DSTU2 er eldre enn den spesifikasjonen.
+5. **Avgjørende test: reproduserte identisk feil med Epics EGET offisielle eksempelapp** («SMART on FHIR test», appId `-121`, med sin egen standard launch-URL `https://fhir.epic.com/Test/Smart`) — samme tomme `launch=`, samme `DSTU2`. Dette utelukker *alt* på vår side (redirect-URI, API-liste, FHIR-versjon-innstilling, klienttype) som mulig årsak.
+6. **Vurderte "HTTP Get LaunchPad" som alternativ** — forkastet: det er en helt annen, eldre SSO-mekanisme («HTTP GET with encrypted querystring»), ikke SMART on FHIR. Epics egen dokumentasjon sier eksplisitt: «Only use this method if SMART on FHIR is not an option. Epic recommends that new implementations use SMART on FHIR for SSO.» Å teste den ville ikke validert vår faktiske SMART-integrasjon.
+
+**Konklusjon:** dette er en feil i Epics eget sandkasse-LaunchPad-verktøy — ikke noe i vår appregistrering, kode, eller sandkasse-synkronisering. Meldt til Epic support (`open@epic.com`) 2026-09-08 — se §10 for e-postens innhold. **Venter på svar fra Epic** før videre testing kan fortsette gjennom dette verktøyet.
+
+**Mulige veier videre, ikke forsøkt ennå:**
+- Vent på svar fra Epic support.
+- Prøv igjen etter neste ukentlige sandkasse-refresh (søndag ca. 20:00 amerikansk sentraltid, se §3/§6).
+- Vurder å bygge launch-URL-en manuelt (samme teknikk som for launch.smarthealthit.org og nav-epj: konstruer `iss`/`launch` selv) — trolig ikke mulig her siden `launch` er et EHR-generert, opakt token vi ikke kan forfalske selv, i motsetning til `iss`.
+
+### 2026-09-09 — bekreftet løst etter Epics svar
+
+Epic support svarte (se §10) at det var et driftsproblem — synkroniseringsproblemer i testmiljøene deres — og ba oss prøve på nytt. Gjentok nøyaktig samme forsøk som 2026-08-27/2026-09-08 (LaunchPad, app "Legeerklæring førerrett (Digdir)", samme launch-URL), med samme JS-interceptor på `POST /Developer/GetLaunchUrl` som avdekket feilen sist:
+
+- **Request:** `{"launchUrl":"http://local.altinn.cloud:8000/digdir/forer-legeerklaering/smart/launch",...,"appId":"60326",...}` — samme som før.
+- **Response:** `{"Success":true,...,"Data":{"url":"...iss=https%3A%2F%2Ffhir.epic.com%2Finterconnect-fhir-oauth%2Fapi%2FFHIR%2FR4&launch=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...","error":""}}`
+
+**Begge avvikene fra 2026-08-27/2026-09-08 er borte:**
+1. `launch=` er nå et faktisk, ikke-tomt JWT — dekodet payload viser `"epic.tokentype":"launch"`, `"client_id":"fe9e031b-b4f1-49ad-9a84-59f8e05475e5"` (vår registrerte non-production client_id — riktig app), 5 minutters levetid (`exp` − `iat` = 300s).
+2. `iss` peker nå på `.../api/FHIR/R4`, ikke `DSTU2` — riktig, matcher appens registrerte FHIR-versjon.
+
+**Konklusjon:** Epics driftsfeil på LaunchPad-verktøyet er bekreftet rettet. LaunchPad-verktøyet fungerer nå som forventet for vår app.
+
+### 2026-09-09 (samme dag) — ny feil lenger inn i flyten: Epics eget `/oauth2/authorize` gir generisk autorisasjonsfeil
+
+Johann gjennomførte selve ende-til-ende-testen: startet `src/App` lokalt (port 5005), fikk en fersk launch-URL fra LaunchPad, trykket **Launch** (ikke bare Generate URL Only). Appen vår bygde og sendte en korrekt redirect til Epics `/oauth2/authorize` — riktig `client_id`, `redirect_uri` (matcher det registrerte), `aud` (R4), et gyldig launch-token, PKCE (`code_challenge`/`code_challenge_method=S256`), riktig scope-liste. Epics egen autorisasjonsserver svarte likevel med:
+
+```
+OAuth2 Error
+Something went wrong trying to authorize the client. Please try logging in again.
+```
+
+**Diagnostisert:**
+1. Bekreftet at appen vår sendte en fullstendig korrekt forespørsel — feilen oppstår altså i Epics egen `/oauth2/authorize`-behandling, ikke hos oss.
+2. Mistanke om scope-mismatch: scope-listen ba om `patient/Observation.read` (aldri valgt som Incoming API ved registrering) og både v1-stilen `patient/DocumentReference.write` og v2-stilen `patient/DocumentReference.c` samtidig, mens appen er registrert med **SMART Scope Version: v1** (som ikke har noe eget `.c`/create-scope). Fjernet begge og gjentok testen med en scope-liste som matcher registreringen nøyaktig (se separat PR for kodeendringen) — **samme feil, uendret**. Scope var altså ikke rotårsaken.
+3. Søkte opp den eksakte feilteksten — samme melding er kjent fra andre Epic-sandkasseutviklere ([smart-on-fhir Google Group-tråd](https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s)). Der ble den aldri definitivt rotårsaksforklart; utvikleren rapporterte at den «begynte å virke igjen etter noen dager, uten noen endring på min side», og mistenkte cache/synk på Epics infrastruktur.
+
+**Vurdering:** dette ser ut som en beslektet, men separat, synk-/cache-forsinkelse på Epics side — trolig i et annet internt system enn det som styrer LaunchPad-verktøyet (som nå fungerer), siden appens konfigurasjon åpenbart ikke har nådd frem til autorisasjonstjenesten ennå. Konsistent med både Epics egen «opptil 1 time»-synk-advarsel (§2) og mønsteret fra den offentlige diskusjonstråden.
+
+**Anbefalt neste steg:** vent og prøv igjen (timer/neste dag), og vurder å sende Epic support et raskt oppfølgingssvar med dette funnet (LaunchPad-tokenet er nå korrekt, men selve autorisasjonssteget feiler fortsatt generisk) — de har allerede bekreftet at de har et synk-problem, så dette er trolig samme rotårsak i en annen del av systemet deres.
+
+## 10. Feilmelding sendt til Epic support
+
+Sendt til `open@epic.com` 2026-09-08 (Johann sitt eget navn/organisasjon og faktiske non-production client_id satt inn i den faktiske e-posten, utelatt her):
+
+> **Subject:** SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — reproducible with Epic's own sample app
+>
+> We're testing a SMART on FHIR EHR Launch integration against the sandbox and have hit what looks like a bug in the "SMART on FHIR (OAuth 2.0)" LaunchPad tool (`fhir.epic.com/Documentation?docId=launching` → "Try It").
+>
+> **Steps to reproduce:** log in, go to the LaunchPad, choose an app (we tried both our own registered app and Epic's own built-in "SMART on FHIR test" sample app), select any patient, enter a launch URL, and click "Generate URL Only" (or "Launch" — same result either way).
+>
+> **Expected:** a real, one-time `launch` token, with `iss` pointing at the FHIR version registered for the app (our app is registered as R4).
+>
+> **Actual:** the generated URL always has an empty `launch=` parameter and `iss` always points at `.../api/FHIR/DSTU2`, regardless of the app's registered FHIR version. The underlying `POST /Developer/GetLaunchUrl` call returns `"Success":true` with no error message, and an empty `Data.url` launch token.
+>
+> **Key point:** we reproduced the exact same result using Epic's own built-in "SMART on FHIR test" app, not just our own — so this doesn't appear to be specific to our app's configuration.
+
+**Svar fra Epic support (mottatt 2026-09-09):** bekreftet at det var et driftsproblem på deres side — synkroniseringsproblemer i testmiljøene deres (samme "opptil 1 time"-synk-mekanisme omtalt i §3, men her var selve synken feilet, ikke bare treg). Epic ba oss prøve på nytt.
+
+Gjentatt launch-forsøk (§9, 2026-09-09) bekreftet at `launch`-token og `iss` nå er korrekte (R4, ikke DSTU2, faktisk ikke-tomt token) — men avdekket en ny, separat feil lenger inn i flyten (Epics eget `/oauth2/authorize` gir en generisk autorisasjonsfeil, se §9). Sendt oppfølgingssvar til `open@epic.com` 2026-09-09:
+
+> **Subject:** Re: SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — LaunchPad fixed, but /oauth2/authorize now fails
+>
+> Following up on the ticket from 2026-09-08 (empty `launch=` token, `iss` always pointing to DSTU2 instead of our app's registered R4).
+>
+> Good news: the LaunchPad tool is now generating a correct, non-empty launch token with the correct R4 `iss`. Thank you for the fix.
+>
+> However, when we take that token all the way through a real end-to-end launch (redirecting to Epic's own `/oauth2/authorize` with our app's client_id, the correct redirect_uri, `aud=.../api/FHIR/R4`, the launch token, and PKCE), Epic's authorization server responds with:
+>
+> > OAuth2 Error
+> > Something went wrong trying to authorize the client. Please try logging in again.
+>
+> We've confirmed our request itself is correct (client_id, redirect_uri, aud, scopes all match what's registered), and we ruled out a scope mismatch by retesting with a scope list that exactly matches our app's registered Incoming APIs — same error persists either way.
+>
+> We also found a public smart-on-fhir discussion (https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s) reporting the identical error text, which the reporter said resolved itself after a few days with no change on their end — so this looks like it could be the same kind of sandbox sync/cache issue you mentioned, just affecting a different part of the pipeline (the authorize step, not LaunchPad token generation).
+>
+> Could you check whether our app's registration has fully synced to the authorization service? Happy to provide a fresh trace/timestamp if useful.
+
+**Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
 
 

@@ -1,0 +1,229 @@
+{
+  "$schema": "https://altinncdn.no/toolkits/altinn-app-frontend/4/schemas/json/layout/layout.schema.v1.json",
+  "data": {
+    "hidden": false,
+    "layout": [
+      {
+        "id": "header-gruppea",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": {
+          "title": "header.gruppea"
+        }
+      },
+      {
+        "id": "GruppeA_Kode8a1",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeA_Kode8a1"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppea.8a1"
+          }
+        ]
+      },
+      {
+        "id": "GruppeA_Kode8a2",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeA_Kode8a2"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppea.8a2"
+          }
+        ]
+      },
+      {
+        "id": "GruppeA_Kode8a3",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeA_Kode8a3"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppea.8a3"
+          }
+        ]
+      },
+      {
+        "id": "header-gruppeb-normal",
+        "type": "Header",
+        "size": "L",
+        "hidden": [
+          "equals",
+          [
+            "dataModel",
+            "Henvisning_UtvidetStonad"
+          ],
+          true
+        ],
+        "textResourceBindings": {
+          "title": "header.gruppeb.normal"
+        }
+      },
+      {
+        "id": "header-gruppeb-utvidet",
+        "type": "Header",
+        "size": "L",
+        "hidden": [
+          "not",
+          [
+            "equals",
+            [
+              "dataModel",
+              "Henvisning_UtvidetStonad"
+            ],
+            true
+          ]
+        ],
+        "textResourceBindings": {
+          "title": "header.gruppeb.utvidet"
+        }
+      },
+      {
+        "id": "GruppeB_Kode1",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode1"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode1"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode2",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode2"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode2"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode3",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode3"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode3"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode4",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode4"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode4"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode5",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode5"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode5"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode6",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode6"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode6"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode7",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode7"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode7"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode8",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode8"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode8"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode9",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode9"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode9"
+          }
+        ]
+      },
+      {
+        "id": "GruppeB_Kode10",
+        "type": "Checkboxes",
+        "dataModelBindings": {
+          "simpleBinding": "GruppeB_Kode10"
+        },
+        "options": [
+          {
+            "value": "true",
+            "label": "field.gruppeb.kode10"
+          }
+        ]
+      },
+      {
+        "id": "navigation-side2",
+        "type": "NavigationButtons",
+        "showBackButton": true,
+        "textResourceBindings": {
+          "next": "general.neste",
+          "back": "general.tilbake"
+        }
+      }
+    ]
+  }
+}
