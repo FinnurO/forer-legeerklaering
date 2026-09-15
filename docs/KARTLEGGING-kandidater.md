@@ -46,7 +46,7 @@ behandlerens flyt) gir derfor mest verdi der kliniker fortsatt fyller ut en stru
 | A2 | Kommunalt pasient- og brukerregister (KPR), inkl. IPLOS | Primær | FHI | Fagsystem-uttrekk; KUHR daglig; IPLOS-registrering | KPR-forskriften | Delvis | Middels |
 | A3 | Medisinsk fødselsregister (MFR) | Sekundær | FHI | Elektronisk melding | hpl §35; MFR-forskriften | Automatisk | Lav |
 | A4 | Dødsmelding / Dødsårsaksregisteret (eDÅR) | Begge | FHI | Elektronisk dødsmelding | hpl §36; DÅR-forskriften | Automatisk | Lav |
-| A5 | MSIS – smittsom sykdom (klinikermelding) | Begge | FHI + kommunelege | MSIS-skjema / elektronisk | smittevernloven §2-3; hpl §37 | Delvis | Middels |
+| A5 | MSIS – smittsom sykdom (klinikermelding) | Begge | FHI + kommunelege | MSIS-skjema / elektronisk | smittevernloven §2-3; hpl §37 | Delvis | **Høy** (bekreftet i EPJ, se note) |
 | A6 | MSIS-labdatabasen | Sekundær | FHI | Elektronisk | MSIS-forskriften | Automatisk | Lav |
 | A7 | Tuberkuloseregister | Begge | FHI + TB-koordinator | Skjema | Tuberkuloseforskriften | Manuell | Middels |
 | A8 | SYSVAK – vaksinasjonsregister | Begge | FHI | Elektronisk fra EPJ/vaksinemodul | SYSVAK-forskriften | Automatisk | Lav |
@@ -56,6 +56,8 @@ behandlerens flyt) gir derfor mest verdi der kliniker fortsatt fyller ut en stru
 | A12 | Abortregisteret | Sekundær | FHI (MFR) | Skjema / elektronisk | abortloven | Delvis | Lav |
 | A13 | NOIS / NORM / RAVN (infeksjon/resistens) | Sekundær | FHI | Elektronisk / uttrekk | resp. forskrifter | Automatisk | Lav |
 | A14 | Helsearkivregisteret | Begge | Norsk helsearkiv | Avlevering | helsearkivforskriften | Manuell | Lav |
+
+**Note til A5, lagt til 2026-09-16:** MSIS-klinikermelding er ikke bare en teoretisk kandidat — FHI bekrefter (e-post fra `msis.drift@fhi.no`, v/Astrid Løvlie, Fagkoordinator MSIS, 2026-09-14) at MSIS-klinikermelding **allerede er integrert med SMART on FHIR i minst ett EPJ-system**, at integrasjonen «fungerer veldig fint», og at FHI aktivt ønsker å utvide til flere EPJ-leverandører, men at dette «stopper litt opp av ulike grunner» per leverandør. Dette er trolig det sterkeste konkrete, produksjonssatte eksempelet så langt på **EPJ-modellen** i [STRATEGI.md, «Fire leveransemodeller»](STRATEGI.md) — se der for hvordan A5 nå fyller den tidligere åpne «(varierer per leverandør)»-cellen. Ikke undersøkt videre ennå: hvilket EPJ-system, hvilke leverandører FHI har vært i kontakt med, eller hva som konkret «stopper det opp».
 
 ## B. Medisinske kvalitetsregistre
 
