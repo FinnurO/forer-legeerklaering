@@ -4114,7 +4114,7 @@ behandlerens flyt) gir derfor mest verdi der kliniker fortsatt fyller ut en stru
 | A2 | Kommunalt pasient- og brukerregister (KPR), inkl. IPLOS | Primær | FHI | Fagsystem-uttrekk; KUHR daglig; IPLOS-registrering | KPR-forskriften | Delvis | Middels |
 | A3 | Medisinsk fødselsregister (MFR) | Sekundær | FHI | Elektronisk melding | hpl §35; MFR-forskriften | Automatisk | Lav |
 | A4 | Dødsmelding / Dødsårsaksregisteret (eDÅR) | Begge | FHI | Elektronisk dødsmelding | hpl §36; DÅR-forskriften | Automatisk | Lav |
-| A5 | MSIS – smittsom sykdom (klinikermelding) | Begge | FHI + kommunelege | MSIS-skjema / elektronisk | smittevernloven §2-3; hpl §37 | Delvis | Middels |
+| A5 | MSIS – smittsom sykdom (klinikermelding) | Begge | FHI + kommunelege | MSIS-skjema / elektronisk | smittevernloven §2-3; hpl §37 | Delvis | **Høy** (bekreftet i EPJ, se note) |
 | A6 | MSIS-labdatabasen | Sekundær | FHI | Elektronisk | MSIS-forskriften | Automatisk | Lav |
 | A7 | Tuberkuloseregister | Begge | FHI + TB-koordinator | Skjema | Tuberkuloseforskriften | Manuell | Middels |
 | A8 | SYSVAK – vaksinasjonsregister | Begge | FHI | Elektronisk fra EPJ/vaksinemodul | SYSVAK-forskriften | Automatisk | Lav |
@@ -4124,6 +4124,8 @@ behandlerens flyt) gir derfor mest verdi der kliniker fortsatt fyller ut en stru
 | A12 | Abortregisteret | Sekundær | FHI (MFR) | Skjema / elektronisk | abortloven | Delvis | Lav |
 | A13 | NOIS / NORM / RAVN (infeksjon/resistens) | Sekundær | FHI | Elektronisk / uttrekk | resp. forskrifter | Automatisk | Lav |
 | A14 | Helsearkivregisteret | Begge | Norsk helsearkiv | Avlevering | helsearkivforskriften | Manuell | Lav |
+
+**Note til A5, lagt til 2026-09-16:** MSIS-klinikermelding er ikke bare en teoretisk kandidat — FHI bekrefter (e-post fra `msis.drift@fhi.no`, v/Astrid Løvlie, Fagkoordinator MSIS, 2026-09-14) at MSIS-klinikermelding **allerede er integrert med SMART on FHIR i minst ett EPJ-system**, at integrasjonen «fungerer veldig fint», og at FHI aktivt ønsker å utvide til flere EPJ-leverandører, men at dette «stopper litt opp av ulike grunner» per leverandør. Dette er trolig det sterkeste konkrete, produksjonssatte eksempelet så langt på **EPJ-modellen** i [STRATEGI.md, «Fire leveransemodeller»](STRATEGI.md) — se der for hvordan A5 nå fyller den tidligere åpne «(varierer per leverandør)»-cellen. Ikke undersøkt videre ennå: hvilket EPJ-system, hvilke leverandører FHI har vært i kontakt med, eller hva som konkret «stopper det opp».
 
 ## B. Medisinske kvalitetsregistre
 
@@ -4523,7 +4525,7 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 | Lages | Egen stack/repo | Helsenorge-plattformen | Inne i EPJ-produktet | Altinn Studio |
 | Kjøres | Egen infrastruktur | Helsenorge-plattformen | I/ved siden av EPJ | Altinn 3 |
 | Data lagres | Eget lager | Helsenorge/NHN (innen Normen) | EPJ/leverandørens sky | Altinn Storage (i denne PoC-en: FHIR-data kun i minne, ikke persistert) |
-| Levende eksempel | `syk-inn` (NAV) | NHN Førerrett-App | (varierer per leverandør) | `forer-legeerklaering` (denne PoC) |
+| Levende eksempel | `syk-inn` (NAV) | NHN Førerrett-App | MSIS-klinikermelding (FHI, ≥1 EPJ — se note) | `forer-legeerklaering` (denne PoC) |
 
 **Hva som faktisk avgjør fart og utbredelse:** ikke skjemaet i seg selv, men hvor mange ganger *integrasjonslaget* (SMART Launch + FHIR + HelseID + signering + audit) må bygges på nytt. NAV-modellen krever *N* reimplementasjoner (én per virksomhet). EPJ-modellen krever *N × M* (leverandører × skjemaer). NHN-modellen bygger laget én gang, men alt køer bak NHNs kapasitet og roadmap. Altinn-modellen bygger laget én gang som en delt komponent (`Digdir.SmartOnFhir`), og tjenesteeierne bygger skjemaene selv — selvbetjent.
 
@@ -4535,6 +4537,8 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 - **Altinn-modellen** — selvbetjening for enhver tjenesteeier, tverrsektor, allerede DPG-registrert; men ikke nativt en helseplattform (Normen-spørsmålet må klareres, se [RISIKOREGISTER.md](RISIKOREGISTER.md)), HelseID er ikke innebygd, og legen bytter kontekst ut av EPJ.
 
 **Syntese — modellene utelukker ikke hverandre.** Det sterkeste grepet er å **standardisere integrasjonslaget** og la *hostingmodellen* velges per case, ut fra tre variabler: (1) hvem er mottaker — helsemottaker eller tverrsektor-mottaker, (2) trengs innbyggerkanal (→ vanskelig å unngå Helsenorge), (3) hvor høy er den kliniske UX-terskelen. Posisjoneringen blir da: **Altinn-modellen er selvbetjenings-, tverrsektor- og DPG-laget**; **NHN-modellen er det helse-native laget med innbyggerkanal**; **EPJ-modellen gir best klinisk UX der den finnes**; **NAV-modellen passer virksomheter med tung egen utviklingskapasitet**. Gevinsten for nasjonen ligger i at de deler samme integrasjonsstandard — ikke i at én modell vinner.
+
+**Note til EPJ-modellens «levende eksempel», lagt til 2026-09-16:** FHI bekrefter (e-post fra `msis.drift@fhi.no`, 2026-09-14) at MSIS-klinikermelding allerede kjører SMART on FHIR i produksjon i minst ett EPJ-system, og at FHI ønsker å utvide til flere leverandører. Dette er ikke lenger en hypotetisk plassholder — det er det konkrete beviset på at EPJ-modellen fungerer i norsk helsesektor i dag, om enn per-leverandør og uten en delt, gjenbrukbar komponent (nøyaktig det problemet Altinn-modellen løser annerledes). Se [KARTLEGGING-kandidater.md, note til A5](KARTLEGGING-kandidater.md) for detaljer.
 
 **Tilleggsdifferensiator, lagt til 2026-08-12 — dobbel inngangsmodus:** ikke alle EPJ-leverandører har, eller vil, implementere SMART on FHIR. NAV-modellen (`syk-inn`), NHN-modellen (Førerrett-App) og EPJ-modellen har alle *dedikerte* apper som forutsetter sin respektive integrasjon og ikke fungerer uten. **Altinn-modellen er den eneste som kan tilby samme skjema uavhengig av om EPJ-en støtter SMART eller ikke** — legen kan komme inn via SMART EHR Launch *eller* logge inn i Altinn normalt (ID-porten) som en hvilken som helst annen Altinn-tjeneste, i samme app. Se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md) for full analyse av hva dette krever teknisk, og hvorfor det bør bli en eksplisitt del av «helse-template»-visjonen i Spor B.
 
