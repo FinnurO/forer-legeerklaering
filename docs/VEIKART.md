@@ -124,6 +124,8 @@ Applikasjonslogikk (prefill-mapping, FHIR-ressursmodeller, skjemastruktur). Pakk
 
 **Estimat:** 2–3 uker for v0.1 (etter at fase 1-koden er stabil nok å ekstrahere fra).
 
+**Lagt til 2026-09-15 — profilretting mot HelseAPI:** [NHN-DOKUMENTASJON.md §5](NHN-DOKUMENTASJON.md) vurderer `HL7Norway/HelseAPI` (samme brukstilfelle, samme HPR-slice-konvensjon, men dormant siden mai 2024). Når `Digdir.SmartOnFhir` skal defineres formelt, bør `FhirHttpClientFactory`/prefill-mappingen vurdere å style seg eksplisitt mot `no-helseapi-Patient`/`-Practitioner`/`-DocumentReference` der de allerede overlapper — gir pakken forankring i en (om enn stalled) navngitt norsk fagstandard fremfor en ad-hoc-tolkning av `no-basis`. Ikke en blokkerende avhengighet — kun en anbefalt justering av profilvalg når pakken uansett skal spesifiseres.
+
 ---
 
 ## Fase 5 — Full IS-2569 og HelseID
