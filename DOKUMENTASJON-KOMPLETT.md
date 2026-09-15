@@ -5200,7 +5200,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-09-09): delvis løst.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Ser ut som en beslektet, men separat, synk-forsinkelse i en annen del av Epics infrastruktur. Se §9 for full diagnostikk og §10 for e-postutvekslingen med Epic support.
+**Status (2026-09-16): uendret blokkert, avventer Epic-eskalering.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Epic support sitt siste svar var generisk self-service-dokumentasjon som ikke adresserer den spesifikke feilen — **ikke** en bekreftelse på at feilen ligger hos oss (se vurdering i §10). Alt som kan verifiseres fra klientsiden er verifisert; gjenstår er at Epic ser på egen request-logg. Se §9 for full diagnostikk og §10 for e-postutvekslingen og utkast til presist oppfølgingssvar.
 
 ## Innhold
 
@@ -5472,6 +5472,43 @@ Gjentatt launch-forsøk (§9, 2026-09-09) bekreftet at `launch`-token og `iss` n
 >
 > Could you check whether our app's registration has fully synced to the authorization service? Happy to provide a fresh trace/timestamp if useful.
 
-**Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
+**Svar fra Epic support (mottatt, logget 2026-09-16):**
+
+> I have verified that your app is synced to our sandbox environment.
+>
+> Our open.epic resources are designed to be self-service. The App Creation and Request Process, the OAuth 2.0 Tutorial, the Developer Testing Guide, and the FHIR Tutorial are common resources referenced by developers. If you're having issues, check out our Troubleshooting documentation, including help with OAuth 2.0 errors.
+>
+> You can test many FHIR APIs using the "Try It" feature on the spec that will pre-fill an example of a patient with that data.
+>
+> Within the troubleshooting document, we specifically have a JWT Auth Troubleshooting document that I recommend referencing if applicable.
+> https://fhir.epic.com/Documentation?docId=epiconfhirrequestprocess
+> https://fhir.epic.com/Documentation?docId=oauth2
+> https://fhir.epic.com/Documentation?docId=testingguide
+> https://fhir.epic.com/Documentation?docId=fhir
+> https://fhir.epic.com/Documentation?docId=troubleshooting_eof
+> https://fhir.epic.com/Documentation?docId=jwtAuthTroubleshooting
+
+**Vurdering:** dette er ikke en konklusjon om at feilen ligger hos oss — det er et generisk førstelinjesvar. Alle seks lenkene ble sjekket (innhold hentet 2026-09-16): ingen av dem nevner den spesifikke feilteksten («Something went wrong trying to authorize the client»), og ingen navngir en spesifikk årsak eller løsning knyttet til `/oauth2/authorize`-steget. Svaret gjentar i praksis bare det generelle self-service-tilbudet, uten å referere til vår konkrete sak, vårt client_id, eller den spesifikke feilteksten vi rapporterte.
+
+De vanligste kjente årsakene til nettopp denne feilteksten (bekreftet via uavhengig websøk mot andre Epic-sandkasse-utviklere) er: (1) client ikke ferdig synkronisert — **eksplisitt utelukket av Epic selv** i dette svaret; (2) redirect_uri-mismatch — **allerede bekreftet korrekt** via serverlogg i §9 (2026-09-09-testen); (3) scope-mismatch — **allerede utelukket** via scope-innsnevringen i [PR #19](https://github.com/FinnurO/forer-legeerklaering/pull/19), retestet uten effekt; (4) feil endepunkt for en backend-app (bytte `/authorize` mot `/token`) — ikke relevant, dette er en EHR Launch, ikke en Backend Services-klient. Gjennomgang av `BuildAuthorizationUrl` i [`SmartLaunchControllerBase.cs`](../src/SmartFhir.Common/SmartLaunchControllerBase.cs) bekrefter at alle påkrevde parametere (`response_type`, `client_id`, `redirect_uri`, `scope`, `state`, `aud=iss`, `launch`, PKCE `code_challenge`/`code_challenge_method=S256`) bygges korrekt og URL-encodes riktig — ingen ny mistanke funnet ved denne gjennomgangen.
+
+**Konklusjon:** alt som kan verifiseres fra klientsiden er nå verifisert minst én gang. Det gjenstående sporet er at Epic selv ser på request-loggen for et konkret, tidsstemplet forsøk — noe et generisk self-service-svar ikke gjør. Se forslag til presist oppfølgingssvar under.
+
+**Utkast til oppfølgingssvar (ikke sendt — send fra din egen open.epic-konto når du er klar):**
+
+> **Subject:** Re: SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — /oauth2/authorize error persists, self-service docs don't cover this specific error
+>
+> Thanks for confirming the sync status. I want to flag that the six resources you linked (App Creation Process, OAuth 2.0 Tutorial, Developer Testing Guide, FHIR Tutorial, Troubleshooting index, JWT Auth Troubleshooting) are all general entry-point documentation — none of them names or discusses the specific error we're seeing (`OAuth2 Error: Something went wrong trying to authorize the client. Please try logging in again.` from `/oauth2/authorize`), so I wasn't able to find anything new to try from them.
+>
+> To be precise about what's already been ruled out on our end, so we don't go in circles:
+> - **Sync**: you've now confirmed this directly.
+> - **redirect_uri**: confirmed byte-for-byte identical to our registered value via our own server logs on the actual failing request.
+> - **client_id / aud**: confirmed correct (non-production client_id, `aud` = our app's registered R4 FHIR base URL) via the same server logs.
+> - **scope**: retested with a scope list narrowed to exactly match our app's registered Incoming APIs — same error, so this isn't a scope issue either.
+> - **PKCE**: `code_challenge`/`code_challenge_method=S256` present and correctly formed.
+>
+> Since all client-side variables are confirmed correct, could someone on your side look at the actual request log for our client_id around [INSETT TIDSPUNKT FOR ET FERSKT FORSØK, UTC] and tell us what specifically the authorization server rejected? We're happy to generate a fresh, timestamped reproduction on request. We also want to flag that a public smart-on-fhir Google Group thread reports the identical error text with no root cause ever identified (https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s) — if this is a known, recurring sandbox issue, knowing that would help us decide whether to keep retrying or wait it out.
+
+**Status:** ikke sendt. Avvent bekreftelse fra Johann på om/når dette skal sendes fra hans egen open.epic-konto.
 
 
