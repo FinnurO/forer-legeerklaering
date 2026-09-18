@@ -189,9 +189,11 @@ NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget p
 
 **Ny innsikt (2026-08-11):** Under teknisk verifisering av Helsenorge EksternAPI (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md)) ble det klart at videre fremdrift på dette sporet ikke lenger er et kodeproblem, men krever formell NHN-leverandørkontakt. Ifølge [Hvordan komme i gang](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1348174733/Hvordan+komme+i+gang) gis tilgang til Helsenorge sine testmiljøer (portal/nettsted, og trolig provisjonering av testpersoner som «digitalt aktive») kun etter at en leverandør har tatt kontakt (`ide-ogbestillingsmottak@nhn.no` eller etablert Slack-kanal) og fått veiledning — det er ikke selvbetjent slik EksternAPI sin token-basert autentisering er. Dette er trolig samme kontaktpunkt som `ext-utv-hn-forerrett`-kanalen nevnt over. **Konkret handling:** ta kontakt for å (a) få testpersoner provisjonert som digitalt aktive, og/eller (b) få formell testmiljøtilgang til portalen, som del av den bredere avklaringen om samarbeid vs. parallell utvikling.
 
+**Ny innsikt (2026-09-18):** blokkeren fra 2026-08-11 (testmiljøtilgang) er løst — NHN åpnet IP-sperren på citizen-portalen, og et Oppgave-kall (`Task`, `focus.type = "Communication"`) er nå bekreftet levert ende-til-ende til en ekte testpersons Helsenorge-innboks (TEST02) — se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og [local-dev/helsenorge-oppgave-test/README.md](../local-dev/helsenorge-oppgave-test/README.md). Dette de-risikerer alternativ B/C betydelig: den tekniske usikkerheten som gjorde at C-6 sto uavklart er nå i stor grad fjernet for pasientsporet. Selve plattformvalget (Altinn vs. Helsenorge vs. hybrid) er fortsatt en organisatorisk/strategisk beslutning, ikke en teknisk — men grunnlaget for å ta den er nå sterkere.
+
 **Beslutter:** Programleder + NHN + Statens vegvesen.
 
-**Status:** Ny åpen beslutning — uavklart.
+**Status:** Åpen beslutning — teknisk usikkerhet om alternativ B/C betydelig redusert 2026-09-18, men selve plattformvalget uavklart.
 
 ---
 

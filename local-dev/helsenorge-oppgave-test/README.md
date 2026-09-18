@@ -4,7 +4,38 @@ Sender en minimal FHIR `Task` ("Oppgave") til Helsenorge EksternAPI TEST02, som 
 [local-dev/helseid-token-test/](../helseid-token-test/) (som kun bekreftet token-utveksling).
 Dette verktøyet tester **selve API-kallet**.
 
-## Status: strukturelt verifisert 2026-08-11, blokkert på testdata
+## Status: fullstendig ende-til-ende verifisert 2026-09-18
+
+**Oppdatering 2026-09-18 — blokkeren fra 2026-08-11 er løst.** NHN åpnet IP-sperren på
+citizen-portalen (`tjenester.hn2.test.nhn.no`). Johann logget selv inn på ekte, produksjonslik
+helsenorge.no som vanlig innbygger, og det åpnet muligheten for å teste «bakdør»-varianten
+(`?pnr=<fnr>`) mot **TEST02** for en av de to testpersonene som tidligere feilet
+(`21814497167`, Høy Hai). Høy Hai hadde aldri fullført samtykke-flyten («Hvordan vil du bruke
+Helsenorge?») siden portalen inntil nå var IP-sperret for oss — det var trolig selve årsaken til
+«ikke digitalt aktiv»-feilen, ikke en permanent provisjoneringsbeslutning hos NHN. Etter å ha
+fullført samtykket (nivå «Full») direkte på portalen for Høy Hai, ga nøyaktig samme `POST
+.../oppgave/v1/Task`-kall som tidligere feilet nå:
+
+```
+HTTP 201 Created
+{"resourceType":"Task","id":"f25e035b-ec7e-4258-b92d-ae2a79c53bb0", ...}
+```
+
+**Bekreftet i selve portalen** (`GET /proxy/oppgaveinternal/innbygger/oppgave/v2/aktive` og
+UI på `/oppgaver`): oppgaven vises for Høy Hai som «TEST — teknisk tilkoblingstest», avsender
+«LAV MODIG TIGER AS», status «Ikke startet» / «Ulest», frist 18.10.2026 — nøyaktig payloaden
+`Program.cs` sender. Dette er første gang hele kjeden — HelseID-autentisering, FHIR
+`Task`-strukturen, EksternAPI-kallet, **og selve leveransen til en innbyggers Helsenorge-innboks**
+— er bekreftet fungerende ende-til-ende, ikke bare strukturelt.
+
+`OwnerFnr` er derfor endret til Høy Hai (`21814497167`) igjen, siden hun nå er den bekreftet
+fungerende testpersonen. Sart Maskin (`26908896636`) er ikke retestet — anta samme «ikke
+digitalt aktiv»-status til hun også har fullført samtykke-flyten på portalen minst én gang.
+
+---
+
+<details>
+<summary>Historikk: status før 2026-09-18 (strukturelt verifisert, blokkert på testdata)</summary>
 
 Alle tekniske lag er nå bekreftet fungerende, i denne rekkefølgen av feil vi løste underveis:
 
@@ -19,6 +50,8 @@ Alle tekniske lag er nå bekreftet fungerende, i denne rekkefølgen av feil vi l
 **Konklusjon:** Hele den tekniske kjeden — HelseID multi-tenant client_credentials-autentisering,
 DPoP, riktig FHIR `Task`-struktur — er verifisert korrekt mot en ekte NHN-tjeneste. Det gjenstående
 hinderet er rent data-/provisjoneringsmessig, ikke noe som kan løses med mer kode.
+
+</details>
 
 ## Faktisk fungerende Task-payload (strukturelt godkjent av API-et)
 
@@ -55,20 +88,20 @@ dotnet run
 
 ## Neste steg
 
-**Oppdatert 2026-08-11 — ikke lenger et kodeproblem.** Testet med to uavhengige, Tenor-verifiserte
-testpersoner (Høy Hai og Sart Maskin) — samme "ikke digitalt aktiv"-feil begge ganger. Samtidig er
-citizen-portalen (`helsenorge.hn2.test.nhn.no` og «bakdør»-varianten `tjenester.hn2.test.nhn.no`)
-IP-sperret uansett URL. Ifølge [Hvordan komme i gang](https://helsenorge.atlassian.net/wiki/spaces/HELSENORGE/pages/1348174733/Hvordan+komme+i+gang)
-gis testmiljøtilgang og provisjonering av testpersoner kun etter formell leverandørkontakt med NHN
-— ikke selvbetjent slik EksternAPI-token-autentiseringen er.
+**Oppdatert 2026-09-18.** Ende-til-ende-leveransen for `focus.type = "Communication"` er nå
+bekreftet (se status øverst). Gjenstående arbeid:
 
-- **Konkret handling:** ta kontakt via `ext-utv-hn-forerrett`-Slack-kanalen eller
-  `ide-ogbestillingsmottak@nhn.no` for å få (a) testpersoner provisjonert som digitalt aktive,
-  og (b) ev. formell testmiljøtilgang til portalen. Se [BESLUTNINGER.md C-6](../../docs/BESLUTNINGER.md)
-  og [RISIKOREGISTER.md R9](../../docs/RISIKOREGISTER.md).
-- Når det er løst: verifiser at oppgaven faktisk dukker opp for testpersonen.
-- Utforsk skjemaoppgave (`focus.type = "Questionnaire"`) og `Bundle`-varianten, som er det som
-  faktisk trengs for NA-0201-egenerklæringen (se [PASIENTFLYT.md](../../docs/PASIENTFLYT.md)).
+- Utforsk skjemaoppgave (`focus.type = "Questionnaire"`) og `Bundle`-varianten
+  (`POST .../oppgave/v1/Bundle`) — det er dette som faktisk trengs for NA-0201-egenerklæringen
+  (se [PASIENTFLYT.md](../../docs/PASIENTFLYT.md)). Ingen grunn til å anta nye blokkere her utover
+  det som allerede er løst, men selve payload-strukturen for en skjemaoppgave er ikke utforsket.
+- Retest Sart Maskin (`26908896636`) ved å fullføre samtykke-flyten for henne også på portalen,
+  for å bekrefte at «Full»-samtykke er det som faktisk avgjør «digitalt aktiv»-status (ikke noe
+  unikt med Høy Hai).
+- Fortsatt uklart om dette funnet (IP-sperren løst, «digitalt aktiv» løst ved samtykke) også
+  gjelder DokumentAPI (se [PASIENTFLYT.md §4](../../docs/PASIENTFLYT.md), «DokumentAPI»-avsnittet)
+  — den har en annen autentiseringsmodell (brukertilstedeværelse/OIDC, ikke `client_credentials`)
+  og er ikke retestet.
 
 ## Kilder
 

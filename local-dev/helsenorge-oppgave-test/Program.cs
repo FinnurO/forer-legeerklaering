@@ -36,7 +36,7 @@ const string OppgaveEndpoint = $"{EksternApiBaseUrl}/oppgave/v1/Task";
 const string RequesterOrgnr = "310911186"; // LAV MODIG TIGER AS — hovedenhet for "Altinn Studio"-klienten
 const string RequesterOrgName = "LAV MODIG TIGER AS";
 
-const string OwnerFnr = "26908896636"; // Sart Maskin — Tenor-sjekket syntetisk testperson (forsøk 2, etter at Høy Hai ikke var digitalt aktiv)
+const string OwnerFnr = "21814497167"; // Høy Hai — retestet 2026-09-18 etter at IP-sperren på citizen-portalen ble åpnet og Høy Hai fullførte samtykke-flyten (Full) live på portalen
 
 var jwkPath = Environment.GetEnvironmentVariable("HELSEID_JWK_PATH");
 if (string.IsNullOrWhiteSpace(jwkPath))

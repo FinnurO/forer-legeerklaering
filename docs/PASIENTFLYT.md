@@ -188,9 +188,11 @@ Relevante svar fra egenerklæringen kan:
 
 **Utfordringer:** Krever at Dialogporten er tilgjengelig og at helsenorge.no viser dialogen; krever Maskinporten-autentisering fra EPJ for dialogoppretting.
 
-### Alternativ B — Helsenorge EksternAPI (Oppgave + Skjema) — nå konkretisert og delvis verifisert
+### Alternativ B — Helsenorge EksternAPI (Oppgave + Skjema) — nå ende-til-ende verifisert for Oppgave
 
 **Oppdatert 2026-08-10:** dette var tidligere en vag skisse ("Helsenorge.no har egne skjematjenester"). Nå vet vi konkret hvordan det fungerer og har verifisert autentiseringen. Se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) for full teknisk detalj.
+
+**Oppdatert 2026-09-18 — Oppgave-delen er nå bekreftet fungerende hele veien til innbyggeren, ikke bare strukturelt.** Etter at NHN åpnet IP-sperren på citizen-portalen og en testperson fullførte samtykke-flyten der, ga et `focus.type = "Communication"`-oppgavekall `HTTP 201 Created`, og oppgaven dukket faktisk opp i testpersonens `/oppgaver`-innboks på ekte helsenorge.no-testmiljø (TEST02) — se [local-dev/helsenorge-oppgave-test/README.md](../local-dev/helsenorge-oppgave-test/README.md). Den tidligere "ikke digitalt aktiv"-blokkeren var altså et konsekvens av at IP-sperren gjorde det umulig for testpersonen å fullføre sitt eget samtykke — ikke en permanent NHN-provisjoneringsbeslutning. **Fortsatt ikke utforsket:** `focus.type = "Questionnaire"` og `Bundle`-varianten, som er det NA-0201-egenerklæringen faktisk krever (en enkel informasjonsoppgave holder ikke for et skjema med 17 spørsmål).
 
 Helsenorge tilbyr et **maskin-til-maskin API** (`eksternapi.helsenorge.no`) med to relevante tjenester, hver med eget HelseID-scope:
 - **Oppgave** (`nhn:helsenorge.eksternapi/oppgave`) — sender en oppgave (FHIR `Task`) til en innbygger, som varsles på helsenorge.no og må gjøre et aktivt valg for å åpne den.
@@ -207,7 +209,14 @@ Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App b
 
 ### Anbefaling
 
+**Oppdatert 2026-09-18: Alternativ B er nå den klare foretrukne retningen.** Oppgave-mekanismen er ende-til-ende verifisert (auth, FHIR `Task`-struktur, og nå bekreftet faktisk levering til en innbyggers Helsenorge-innboks) — ikke bare teoretisk mulig, men vist å fungere mot en ekte NHN-tjeneste. Alternativ A (Dialogporten) forblir uverifisert og har et åpent spørsmål om hvordan/om Dialogporten faktisk vises på helsenorge.no, mens B nå har ingenting uverifisert utover selve skjemaoppgave-payloaden (`focus.type = "Questionnaire"`/`Bundle`). Neste steg er ikke lenger å avgjøre hvilket alternativ som er raskest — det er avgjort — men å bygge selve skjemaoppgaven for NA-0201 (se `local-dev/helsenorge-oppgave-test/README.md`, "Neste steg").
+
+<details>
+<summary>Historikk: anbefaling før 2026-09-18</summary>
+
 **Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
+
+</details>
 
 ### DokumentAPI — kvittering til Helsenorge (funn 2026-08-12)
 
