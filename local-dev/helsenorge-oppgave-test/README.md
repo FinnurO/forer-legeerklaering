@@ -32,6 +32,11 @@ UI på `/oppgaver`): oppgaven vises for Høy Hai som «TEST — teknisk tilkobli
 fungerende testpersonen. Sart Maskin (`26908896636`) er ikke retestet — anta samme «ikke
 digitalt aktiv»-status til hun også har fullført samtykke-flyten på portalen minst én gang.
 
+**Visuelt bekreftet 2026-09-21** (i tillegg til API-responsen over): skjermbilde av Høy Hai sin
+faktiske `/oppgaver`-side viser oppgavekortet «TEST — teknisk tilkoblingstest», status «Ikke
+startet», merket «Ulest», avsender «LAV MODIG TIGER AS», frist «Om 30 dager (18.10.2026)» — altså
+et fullt visuelt samsvar med det API-et rapporterte, ikke bare en antatt kobling mellom de to.
+
 ---
 
 <details>
