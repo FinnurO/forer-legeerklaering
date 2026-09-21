@@ -93,13 +93,15 @@ dotnet run
 
 ## Neste steg
 
-**Oppdatert 2026-09-18.** Ende-til-ende-leveransen for `focus.type = "Communication"` er nå
-bekreftet (se status øverst). Gjenstående arbeid:
+**Oppdatert 2026-09-21.** Skjemaoppgave (`focus.type = "Questionnaire"`) er nå også verifisert —
+se [local-dev/helsenorge-skjemaoppgave-test/](../helsenorge-skjemaoppgave-test/) (krever HTTPS-lenke)
+og [local-dev/helsenorge-skjema-melding-test/](../helsenorge-skjema-melding-test/) (kopi av
+innsending tilbake til innbygger, via et eget API — `DocumentReference`, ikke `Task`). Gjenstående
+arbeid:
 
-- Utforsk skjemaoppgave (`focus.type = "Questionnaire"`) og `Bundle`-varianten
-  (`POST .../oppgave/v1/Bundle`) — det er dette som faktisk trengs for NA-0201-egenerklæringen
-  (se [PASIENTFLYT.md](../../docs/PASIENTFLYT.md)). Ingen grunn til å anta nye blokkere her utover
-  det som allerede er løst, men selve payload-strukturen for en skjemaoppgave er ikke utforsket.
+- `Bundle`-varianten (`POST .../oppgave/v1/Bundle`) er fortsatt ikke utforsket.
+- «Sømløst uthopp» (Helsenorge som OIDC-provider for vår egen skjemautfylling) — nødvendig for at
+  innbygger ikke skal måtte logge inn på nytt hos oss, se `helsenorge-skjemaoppgave-test/README.md`.
 - Retest Sart Maskin (`26908896636`) ved å fullføre samtykke-flyten for henne også på portalen,
   for å bekrefte at «Full»-samtykke er det som faktisk avgjør «digitalt aktiv»-status (ikke noe
   unikt med Høy Hai).
