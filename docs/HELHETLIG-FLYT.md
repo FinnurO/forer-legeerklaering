@@ -66,7 +66,7 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 
 **Steg 1** kan alternativt gjøres via to forskjellige spor — se [PASIENTFLYT.md](PASIENTFLYT.md) for begge:
 - **Alternativ A:** Dialogporten-dialog vist på helsenorge.no, egenerklæring fylt ut i en egen Altinn-app.
-- **Alternativ B:** Helsenorge EksternAPI (Oppgave + Skjema) — teknisk autentisering og selve API-strukturen er verifisert (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md)), men selve skjemaoppgaven er ikke bygget, og videre testing er blokkert på formell NHN-kontakt (se [BESLUTNINGER.md C-6](BESLUTNINGER.md)).
+- **Alternativ B:** Helsenorge EksternAPI (Oppgave + Skjema) — teknisk autentisering og selve API-strukturen er verifisert, og en informasjonsoppgave (`focus.type = "Communication"`) er nå bekreftet levert ende-til-ende til en ekte testpersons Helsenorge-innboks (se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md)). Selve skjemaoppgaven (`Questionnaire`/`Bundle`), som er det NA-0201 faktisk krever, er ikke bygget ennå — men den tidligere NHN-kontakt-blokkeringen er løst (se [BESLUTNINGER.md C-6](BESLUTNINGER.md)).
 
 ---
 
@@ -82,7 +82,7 @@ Pasient (Helsenorge.no)      EPJ (fastlege)         Altinn Studio-app (BFF)     
 | 4 | Lege fyller ut, signerer, sender inn | ✅ Verifisert («Signer og send inn», Task_1) | [process.bpmn](../src/App/config/process/process.bpmn) |
 | 5a | Full attest skrives tilbake til EPJ | ⚠️ Skrivemekanikk bevist 2026-08-11 (`POST DocumentReference` → `HTTP 201` mot launch.smarthealthit.org), men placeholder-innhold, ikke PDF/idempotens | [VEIKART.md fase 2](VEIKART.md), [IMPLEMENTERING.md §13](IMPLEMENTERING.md) |
 | 5b | Konklusjon (grønt/rødt) → SVV via Altinn Events | ⚠️ Datamodell verifisert (`ForerKonklusjonModel`), selve Events-abonnementet hos SVV er ikke avtalt | [BESLUTNINGER.md C-3](BESLUTNINGER.md) |
-| — | Helsenorge EksternAPI-autentisering (Oppgave/Skjema) | ✅ Verifisert mot ekte NHN-testmiljø, men videre arbeid blokkert på NHN-kontakt | [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md), [RISIKOREGISTER.md R9](RISIKOREGISTER.md) |
+| — | Helsenorge EksternAPI (Oppgave/Skjema) | ✅ **Ende-til-ende verifisert 2026-09-18/21** for `Communication`- og `Questionnaire`-oppgave, samt kopi-tilbake til innbygger (`DocumentReference`, eget API). Gjenstår: `Bundle`-varianten, HTTPS-nåbart skjema (localtest er ren HTTP), og sømløst OIDC-uthopp | [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md), [RISIKOREGISTER.md R9](RISIKOREGISTER.md), [PASIENTFLYT.md](PASIENTFLYT.md) |
 
 **Lesbar oppsummering:** Den *midtre* delen av flyten (steg 2–4, lege ↔ Altinn-app) er den best verifiserte delen av hele PoC-en. Det som skjer *før* (pasientens egenerklæring) og *etter* (writeback til EPJ, faktisk mottak hos SVV) konsultasjonen er i stor grad arkitektur og datamodeller — ikke virkende integrasjoner.
 

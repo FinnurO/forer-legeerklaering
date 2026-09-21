@@ -1,6 +1,6 @@
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
-**Status (2026-09-09): delvis løst.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Ser ut som en beslektet, men separat, synk-forsinkelse i en annen del av Epics infrastruktur. Se §9 for full diagnostikk og §10 for e-postutvekslingen med Epic support.
+**Status (2026-09-16): uendret blokkert, avventer Epic-eskalering.** Epic bekreftet et driftsproblem (synk-feil i testmiljøene deres), og LaunchPad-verktøyet gir nå et faktisk, ikke-tomt launch-token med riktig `iss` (R4) — det opprinnelige tomme-launch-token/DSTU2-problemet er bekreftet borte. Men selve ende-til-ende-testen (faktisk `Launch` mot en kjørende lokal app) traff en **ny, generisk feil lenger inn i flyten**: Epics eget `/oauth2/authorize` svarer «Something went wrong trying to authorize the client» selv når appen vår sender en fullstendig korrekt forespørsel. Epic support sitt siste svar var generisk self-service-dokumentasjon — **ikke** en bekreftelse på at feilen ligger hos oss. Ekte gjennomlesning av Epics egen troubleshooting-side (§10, rettet 2026-09-16 — et første automatisert forsøk ga feilaktig et "ingen treff") bekrefter at **alle** årsakene Epic selv lister for nøyaktig denne feilteksten allerede er sjekket og utelukket hos oss. Se §9 for full diagnostikk og §10 for e-postutvekslingen, den korrigerte vurderingen og utkast til presist oppfølgingssvar.
 
 ## Innhold
 
@@ -272,4 +272,62 @@ Gjentatt launch-forsøk (§9, 2026-09-09) bekreftet at `launch`-token og `iss` n
 >
 > Could you check whether our app's registration has fully synced to the authorization service? Happy to provide a fresh trace/timestamp if useful.
 
-**Status:** venter på svar fra Epic. Oppdater denne seksjonen med responsen når den kommer.
+**Svar fra Epic support (mottatt, logget 2026-09-16):**
+
+> I have verified that your app is synced to our sandbox environment.
+>
+> Our open.epic resources are designed to be self-service. The App Creation and Request Process, the OAuth 2.0 Tutorial, the Developer Testing Guide, and the FHIR Tutorial are common resources referenced by developers. If you're having issues, check out our Troubleshooting documentation, including help with OAuth 2.0 errors.
+>
+> You can test many FHIR APIs using the "Try It" feature on the spec that will pre-fill an example of a patient with that data.
+>
+> Within the troubleshooting document, we specifically have a JWT Auth Troubleshooting document that I recommend referencing if applicable.
+> https://fhir.epic.com/Documentation?docId=epiconfhirrequestprocess
+> https://fhir.epic.com/Documentation?docId=oauth2
+> https://fhir.epic.com/Documentation?docId=testingguide
+> https://fhir.epic.com/Documentation?docId=fhir
+> https://fhir.epic.com/Documentation?docId=troubleshooting_eof
+> https://fhir.epic.com/Documentation?docId=jwtAuthTroubleshooting
+
+**Rettelse, 2026-09-16:** en tidligere versjon av denne seksjonen påsto at «alle seks lenkene ble sjekket» og at ingen av dem nevnte den spesifikke feilteksten. **Det var feil.** Det første forsøket på å lese sidene brukte et automatisert hente-verktøy som ga generisk, innholdsløst sammendrag for flere av `docId`-sidene (disse er JS-rendrede sider på fhir.epic.com, og verktøyet fikk tydeligvis ikke tak i det faktiske innholdet) — men dette ble feilaktig rapportert som en reell, negativ sjekk. Etter at Johann konkret spurte om det faktisk var verifisert, ble sidene lest på nytt via en ekte nettleser. Det avdekket at **`troubleshooting_eof`-siden nevner den eksakte feilteksten vår**, med en egen liste over kjente årsaker. Korrigert vurdering under.
+
+**Vurdering (korrigert):** Epics «Troubleshooting»-side (`docId=troubleshooting_eof`) har en egen seksjon **«Authorize Endpoint»** med akkurat feilteksten vår, «Something went wrong trying to authorize the client. Please try logging in again.», og lister disse årsakene ordrett:
+
+- Redirect URI i forespørselen må matche en av de registrerte redirect URI-ene på appen — **case-sensitive, eksakt match** (f.eks. matcher ikke `/` mot `/index.html`). Hvis URI-er nylig er endret: vent på synk.
+- client_id i forespørselen må matche appens client_id, og `response_type` må være `code`.
+- Hvis det er en backend-app som treffer denne feilen: sjekk at URL-en ender på `/token`, ikke `/authorize` (ikke relevant — dette er en EHR Launch).
+- Sørg for at en korrekt `aud`-parameter er inkludert i forespørselen.
+- Ved POST: sjekk at `Content-Type` er `application/x-www-form-urlencoded`, ikke JSON, og at data står i body, ikke i querystring (ikke relevant — vi bruker HTTP GET-redirect, som er eksplisitt støttet for EHR Launch per OAuth 2.0-tutorialen).
+
+I tillegg ble selve OAuth 2.0-tutorialen (`docId=oauth2`) lest i sin helhet (ekte nettleser, ikke hente-verktøyet): den bekrefter at `aud` er **påkrevd fra Epic-versjon mai 2023** når en launch-kontekst er inkludert i scope, med verdi lik FHIR-base-URL-en (typisk samme som `iss`) — nøyaktig det vi allerede gjør (`aud=iss` i `BuildAuthorizationUrl`). Den bekrefter også at et rent HTTP GET-redirect med `response_type`, `client_id`, `redirect_uri`, `scope`, `launch`, `state`, `aud`, `code_challenge`, `code_challenge_method=S256` er riktig format for en EHR Launch — identisk med det appen vår allerede sender.
+
+**Krysssjekk mot alle punktene i troubleshooting-siden:**
+
+| Årsak (Epics egen liste) | Status hos oss |
+|---|---|
+| redirect_uri eksakt match (case-sensitive) | Bekreftet identisk via serverlogg, §9 (2026-09-09-testen) |
+| client_id matcher, response_type=code | Bekreftet — `response_type=code` er hardkodet i `BuildAuthorizationUrl`, client_id bekreftet via serverlogg |
+| Backend-app treffer `/authorize` i stedet for `/token` | Ikke relevant — dette er EHR Launch, ikke Backend Services |
+| Korrekt `aud`-parameter inkludert | Bekreftet — `aud=iss`, i tråd med Epics egen spesifikasjon |
+| POST-formatering (Content-Type, body vs. querystring) | Ikke relevant — vi bruker GET-redirect |
+| (Utenfor troubleshooting-listen, men allerede utelukket tidligere) Client-synk | Eksplisitt bekreftet av Epic selv i dette svaret |
+| (Utenfor troubleshooting-listen) Scope-mismatch | Utelukket via scope-innsnevringen i [PR #19](https://github.com/FinnurO/forer-legeerklaering/pull/19), retestet uten effekt |
+
+**Konklusjon:** samtlige årsaker Epic selv lister for nøyaktig denne feilteksten er nå sjekket og utelukket — ikke bare antatt riktige, men verifisert mot ekte, lest dokumentasjon og egne serverlogger. Dette er en vesentlig sterkere posisjon for en eskalering enn før: vi kan nå vise Epic, punkt for punkt fra deres egen troubleshooting-side, at vi har fulgt alt de selv ber om å sjekke. Se forslag til presist oppfølgingssvar under.
+
+**Utkast til oppfølgingssvar (ikke sendt — send fra din egen open.epic-konto når du er klar):**
+
+> **Subject:** Re: SMART on FHIR LaunchPad generates empty launch token and wrong FHIR version — /oauth2/authorize error persists after checking every cause in your own troubleshooting guide
+>
+> Thanks for confirming the sync status. I went through the "Authorize Endpoint" section of your Troubleshooting guide (`docId=troubleshooting_eof`) point by point, since that's the one that actually names our exact error text:
+>
+> - **redirect_uri**: confirmed byte-for-byte identical (case-sensitive) to our registered value via our own server logs on the actual failing request.
+> - **client_id / response_type**: confirmed correct (non-production client_id, `response_type=code`) via the same server logs.
+> - **Backend app hitting /authorize instead of /token**: not applicable — this is an EHR Launch, not a Backend Services client.
+> - **aud parameter**: present and correctly formed (`aud` = our app's registered R4 FHIR base URL, same as `iss`), per your OAuth 2.0 Tutorial's specification that aud is required since the May 2023 Epic version.
+> - **POST Content-Type/body formatting**: not applicable — we use an HTTP GET redirect, which your tutorial confirms is supported for EHR launches.
+> - **Sync**: you've now confirmed this directly.
+> - **Scope**: retested with a scope list narrowed to exactly match our app's registered Incoming APIs — same error, so this isn't a scope issue either.
+>
+> Every cause your own troubleshooting guide lists for this specific error is ruled out on our end. Could someone look at the actual request log for our client_id around [INSETT TIDSPUNKT FOR ET FERSKT FORSØK, UTC] and tell us what the authorization server actually rejected? We're happy to generate a fresh, timestamped reproduction on request. We also want to flag that a public smart-on-fhir Google Group thread reports the identical error text with no root cause ever identified (https://groups.google.com/g/smart-on-fhir/c/1yssoyIa5_s) — if this is a known, recurring sandbox issue, knowing that would help us decide whether to keep retrying or wait it out.
+
+**Status:** ikke sendt. Avvent bekreftelse fra Johann på om/når dette skal sendes fra hans egen open.epic-konto.

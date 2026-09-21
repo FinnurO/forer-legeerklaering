@@ -188,9 +188,19 @@ Relevante svar fra egenerklæringen kan:
 
 **Utfordringer:** Krever at Dialogporten er tilgjengelig og at helsenorge.no viser dialogen; krever Maskinporten-autentisering fra EPJ for dialogoppretting.
 
-### Alternativ B — Helsenorge EksternAPI (Oppgave + Skjema) — nå konkretisert og delvis verifisert
+### Alternativ B — Helsenorge EksternAPI (Oppgave + Skjema) — nå ende-til-ende verifisert for Oppgave
 
 **Oppdatert 2026-08-10:** dette var tidligere en vag skisse ("Helsenorge.no har egne skjematjenester"). Nå vet vi konkret hvordan det fungerer og har verifisert autentiseringen. Se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) for full teknisk detalj.
+
+**Oppdatert 2026-09-18 — Oppgave-delen er nå bekreftet fungerende hele veien til innbyggeren, ikke bare strukturelt.** Etter at NHN åpnet IP-sperren på citizen-portalen og en testperson fullførte samtykke-flyten der, ga et `focus.type = "Communication"`-oppgavekall `HTTP 201 Created`, og oppgaven dukket faktisk opp i testpersonens `/oppgaver`-innboks på ekte helsenorge.no-testmiljø (TEST02) — se [local-dev/helsenorge-oppgave-test/README.md](../local-dev/helsenorge-oppgave-test/README.md). Den tidligere "ikke digitalt aktiv"-blokkeren var altså et konsekvens av at IP-sperren gjorde det umulig for testpersonen å fullføre sitt eget samtykke — ikke en permanent NHN-provisjoneringsbeslutning.
+
+**Oppdatert 2026-09-21 — skjemaoppgave og kopi-tilbake til innbygger er begge nå strukturelt verifisert.**
+
+- **Skjemaoppgave (`focus.type = "Questionnaire"`):** godtas av API-et (`HTTP 201 Created`) med en `contained` `Questionnaire`-ressurs hvis `url` er skjemalenken. **Viktig begrensning funnet:** `Task.instantiatesUri` må være `https://` — Helsenorge avviser eksplisitt `http://`-lenker (kode 2174), uavhengig av nettverksmessig nåbarhet. Vårt localtest-skjema kjører på ren HTTP (`local.altinn.cloud:8000`) og kan derfor **ikke** peke dit direkte — krever en HTTPS-tunnel under en demo, eller en faktisk TT02-deploy-URL. Se [local-dev/helsenorge-skjemaoppgave-test/README.md](../local-dev/helsenorge-skjemaoppgave-test/README.md).
+- **Kopi av utfylt skjema tilbake til innbygger:** dette er **ikke** en del av Oppgave (Task) API-et, men et **eget** API/løsningsområde — Skjema-API-et (`nhn:helsenorge.eksternapi/skjema`, `POST .../skjema/v1/DocumentReference`). **Arkitektonisk kjernefunn:** en `DocumentReference` kan ikke sendes fritt — den må inneholde `context.related` som peker til `Task.identifier` for en skjemaoppgave Helsenorge selv sendte. Det finnes altså ingen støttet «send en vilkårlig melding med kopi av et dokument»-mekanisme uavhengig av en foregående skjemaoppgave. Ende-til-ende verifisert (`HTTP 200 OK`, ekte lagret dokument) etter fire iterasjoner (manglende `context`, manglende `docStatus`, feil MIME-type, og til slutt ekte PDF-binærvalidering — Helsenorge validerer faktisk filsignaturen, ikke bare den deklarerte typen). Se [local-dev/helsenorge-skjema-melding-test/README.md](../local-dev/helsenorge-skjema-melding-test/README.md).
+- **Fortsatt ikke utforsket:** selve «sømløst OIDC-uthopp»-mekanismen (innbygger skal ikke måtte logge inn på nytt når hun forlater Helsenorge og kommer til vårt skjema) og `Bundle`-varianten av Oppgave-API-et.
+
+**Presisering fra Johann (2026-09-21) — «kopi» betyr også Brevtjenesten, et annet scenario enn skjemautfylling:** [NHNs Brevtjeneste](https://www.nhn.no/tjenester/helsenorge/sende-brev-skjema-og-andre-oppgaver) dekker at **en helseaktør (fastlege) sender en henvisning til en annen helseaktør (spesialist) via en helt annen kanal, og samtidig sender en kopi til pasienten via Helsenorge** — altså noe annet enn "ekstern skjemautfyller returnerer et utfylt skjema". Verifisert strukturelt (`local-dev/helsenorge-brevtjeneste-kopi-test/`): en `Communication`-Task med `Task.basedOn` → henvisningens `ServiceRequest`-identifier (`HTTP 201`), og en `DocumentReference` med `context.related` som inneholder **både** en referanse til denne Task-en og en direkte referanse til henvisningen (`HTTP 200`). Begge var uverifiserte antagelser (Task.basedOn, flere context.related-oppføringer) og fungerte på første forsøk — ingen nye API-er behøves utover Oppgave og Skjema, allerede kartlagt.
 
 Helsenorge tilbyr et **maskin-til-maskin API** (`eksternapi.helsenorge.no`) med to relevante tjenester, hver med eget HelseID-scope:
 - **Oppgave** (`nhn:helsenorge.eksternapi/oppgave`) — sender en oppgave (FHIR `Task`) til en innbygger, som varsles på helsenorge.no og må gjøre et aktivt valg for å åpne den.
@@ -207,7 +217,16 @@ Dette er trolig nøyaktig samme mekanisme NHNs egen produksjons-Førerrett-App b
 
 ### Anbefaling
 
+**Oppdatert 2026-09-18: Alternativ B er nå den klare foretrukne retningen.** Oppgave-mekanismen er ende-til-ende verifisert (auth, FHIR `Task`-struktur, og nå bekreftet faktisk levering til en innbyggers Helsenorge-innboks) — ikke bare teoretisk mulig, men vist å fungere mot en ekte NHN-tjeneste. Alternativ A (Dialogporten) forblir uverifisert og har et åpent spørsmål om hvordan/om Dialogporten faktisk vises på helsenorge.no.
+
+**Oppdatert 2026-09-21:** skjemaoppgave-payloaden (`focus.type = "Questionnaire"`) og kopi-tilbake-mekanismen (`DocumentReference` via Skjema-API-et) er nå også strukturelt verifisert — se over. Det som gjenstår før en reell NA-0201-pilot er ikke lenger «er dette mulig», men to konkrete byggeklosser: (1) en HTTPS-nåbar utgave av skjemaet (localtest holder ikke), og (2) selve «sømløst OIDC-uthopp»-integrasjonen mot Helsenorge sin OpenID Connect-provider. Neste steg: `local-dev/helsenorge-skjemaoppgave-test/README.md` og `local-dev/helsenorge-skjema-melding-test/README.md`, «Neste steg».
+
+<details>
+<summary>Historikk: anbefaling før 2026-09-18</summary>
+
 **Alternativ B (Helsenorge EksternAPI) bør utforskes videre før A velges endelig** — nå som autentiseringen er verifisert og vi vet at det er samme plattform NHN selv bruker for førerrett, er den tekniske usikkerheten redusert sammenlignet med da alternativ A ble anbefalt (2026-06-16). Alternativ A (Dialogporten) er fortsatt en gyldig arkitektur og gjenbruker eksisterende infrastruktur, men krever mer avklaring rundt hvordan Dialogporten faktisk vises på helsenorge.no. Neste steg: forsøk et faktisk Oppgave-kall (se IMPLEMENTERING.md §14.1 "ikke verifisert ennå") for å avgjøre hvilket alternativ som er raskest til en fungerende pasientflyt.
+
+</details>
 
 ### DokumentAPI — kvittering til Helsenorge (funn 2026-08-12)
 

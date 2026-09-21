@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using HelseId.Library;
 using HelseId.Library.ClientCredentials;
@@ -10,14 +10,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 // ---------------------------------------------------------------------------------------------
-// Sender én test-Oppgave (FHIR Task) til Helsenorge EksternAPI TEST02, for å verifisere at
-// selve API-kallet fungerer — ikke bare token-utvekslingen (bekreftet i local-dev/helseid-token-test/).
+// Eksperiment: kan en FHIR Task med focus.type = "Questionnaire" (skjemaoppgave) peke ut til et
+// eget skjema (f.eks. vårt localtest-skjema), i motsetning til focus.type = "Communication" (kun
+// en "les info"-lenke, verifisert i local-dev/helsenorge-oppgave-test/)?
 //
-// Mottaker er "Høy Hai" (fnr 21814497167) — en ekte Tenor-sjekket syntetisk testperson (ikke en
-// reell person), oppgitt av Johann og verifisert med gyldig MOD11-kontrollsiffer.
+// Metodikk: samme empiriske "send → les konkret FHIR OperationOutcome-feilkode → juster → prøv
+// igjen"-mønster som løste Communication-varianten. Se README.md for loggen av forsøk.
 //
-// SIKKERHET: privatnøkkelen (JWK) leses fra en lokal fil utenfor repoet, se
-// local-dev/helseid-token-test/README.md for fremgangsmåte. Samme miljøvariabel gjenbrukes her.
+// Mottaker er "Høy Hai" (fnr 21814497167) — samme bekreftet digitalt aktive testperson som i
+// helsenorge-oppgave-test.
 //
 // Kjør:
 //   $env:HELSEID_JWK_PATH = "C:\Users\jsf\.secrets\helseid-eksternapi-test.jwk.json"
@@ -28,15 +29,18 @@ const string ClientId = "4f1fc480-72d9-4e31-b099-69b84fd5ba6b"; // "Altinn Studi
 const string IssuerUri = "https://helseid-sts.test.nhn.no";
 const string Scope = "nhn:helsenorge.eksternapi/oppgave";
 
-// TEST02 — "normalt det miljøet som benyttes ved oppkobling av nye eksterne integrasjoner"
-// jf. Testmiljøer og endepunkter-dokumentasjonen.
 const string EksternApiBaseUrl = "https://eksternapi.hn2.test.nhn.no";
 const string OppgaveEndpoint = $"{EksternApiBaseUrl}/oppgave/v1/Task";
 
-const string RequesterOrgnr = "310911186"; // LAV MODIG TIGER AS — hovedenhet for "Altinn Studio"-klienten
+const string RequesterOrgnr = "310911186"; // LAV MODIG TIGER AS
 const string RequesterOrgName = "LAV MODIG TIGER AS";
 
-const string OwnerFnr = "21814497167"; // Høy Hai — retestet 2026-09-18 etter at IP-sperren på citizen-portalen ble åpnet og Høy Hai fullførte samtykke-flyten (Full) live på portalen
+const string OwnerFnr = "21814497167"; // Høy Hai
+
+// Forsøk 1 (http://local.altinn.cloud:8000/...) ga 400 — "URI scheme må være HTTPS" (kode 2174).
+// Forsøk 2: isoler om resten av Questionnaire-oppsettet er riktig ved å bruke en ekte HTTPS-URL vi
+// allerede vet er akseptert (samme repo-lenke som Communication-varianten brukte).
+const string LocalTestSkjemaUrl = "https://github.com/FinnurO/forer-legeerklaering";
 
 var jwkPath = Environment.GetEnvironmentVariable("HELSEID_JWK_PATH");
 if (string.IsNullOrWhiteSpace(jwkPath))
@@ -75,8 +79,6 @@ var dPoPProofCreator = host.Services.GetRequiredService<IDPoPProofCreatorForApiR
 
 Console.WriteLine($"1) Henter token fra {IssuerUri} (scope: {Scope}, orgnr_parent: {RequesterOrgnr}) ...");
 
-// Klienten "Altinn Studio" er registrert som multi-tenant i HelseID — krever både parent- og
-// child-organisasjon. Vi har ingen egen underenhet, så vi bruker samme orgnr for begge.
 var organizationNumbers = new HelseId.Library.Models.DetailsFromClient.OrganizationNumbers
 {
     ParentOrganization = RequesterOrgnr,
@@ -97,10 +99,14 @@ Console.WriteLine(
 );
 Console.WriteLine();
 
-// Bygg en minimal, tydelig merket TEST-oppgave som FHIR Task.
 var taskIdentifierGuid = Guid.NewGuid();
 var deadline = DateTimeOffset.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:sszzz");
+var questionnaireId = "questionnaire-1";
 
+// Forsøk 1: focus.type = "Questionnaire" med en contained Questionnaire-ressurs hvis .url peker
+// til vårt localtest-skjema — analogt med hvordan Communication-varianten pekte til et nettsted
+// via instantiatesUri, men her via en ekte FHIR Questionnaire.url siden focus nå refererer til en
+// reell ressurstype med skjemainnhold, ikke bare en fritekst-info-side.
 var task = new Dictionary<string, object?>
 {
     ["resourceType"] = "Task",
@@ -120,10 +126,17 @@ var task = new Dictionary<string, object?>
             },
             ["name"] = RequesterOrgName,
         },
+        new Dictionary<string, object?>
+        {
+            ["resourceType"] = "Questionnaire",
+            ["id"] = questionnaireId,
+            ["url"] = LocalTestSkjemaUrl,
+            ["status"] = "active",
+            ["title"] = "TEST — skjemaoppgave (localtest-lenke)",
+        },
     },
     ["meta"] = new Dictionary<string, object?>
     {
-        // Volven kodeverk 7618 — tjenesteområde. Kode 3 = "Helsehjelp".
         ["security"] = new object[]
         {
             new Dictionary<string, object?>
@@ -144,16 +157,12 @@ var task = new Dictionary<string, object?>
     },
     ["status"] = "ready",
     ["intent"] = "proposal",
-    ["code"] = new Dictionary<string, object?> { ["text"] = "TEST — teknisk tilkoblingstest" },
+    ["code"] = new Dictionary<string, object?> { ["text"] = "TEST — skjemaoppgave (Questionnaire-lenke)" },
     ["description"] =
-        "TEST fra Digdir sin forer-legeerklaering PoC (SMART on FHIR + Altinn Studio). "
-        + "Dette er en teknisk tilkoblingstest av Helsenorge EksternAPI, ikke en reell oppgave. "
-        + "Kan trygt ignoreres/kanselleres.",
-    // Enklest mulige oppgavetype for en tilkoblingstest: "Communication" = informasjonsoppgave,
-    // krever ingen ekstern Questionnaire/Device-referanse — men instantiatesUri er obligatorisk
-    // for denne typen (peker til nettstedet der informasjonen finnes).
-    ["focus"] = new Dictionary<string, object?> { ["type"] = "Communication" },
-    ["instantiatesUri"] = "https://github.com/FinnurO/forer-legeerklaering",
+        "TEST fra Digdir sin forer-legeerklaering PoC. Eksperiment: skjemaoppgave (focus.type=Questionnaire) "
+        + "som peker til vårt eget localtest-skjema. Kan trygt ignoreres/kanselleres.",
+    ["focus"] = new Dictionary<string, object?> { ["type"] = "Questionnaire", ["reference"] = $"#{questionnaireId}" },
+    ["instantiatesUri"] = LocalTestSkjemaUrl,
     ["requester"] = new Dictionary<string, object?> { ["reference"] = "#requester-1", ["type"] = "Organization" },
     ["owner"] = new Dictionary<string, object?>
     {
@@ -172,7 +181,7 @@ var task = new Dictionary<string, object?>
 
 var taskJson = JsonSerializer.Serialize(task, new JsonSerializerOptions { WriteIndented = true });
 
-Console.WriteLine("2) Sender FHIR Task:");
+Console.WriteLine("2) Sender FHIR Task (focus.type=Questionnaire):");
 Console.WriteLine(taskJson);
 Console.WriteLine();
 
