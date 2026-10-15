@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="nb" data-color-scheme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caser – førerrett og kjeveortopedisk henvisning – SMART on FHIR for Altinn</title>
+<meta name="description" content="To helseskjema bygget på samme SMART on FHIR-mønster i Altinn Studio: legeerklæring for førerrett (IS-2569) og henvisning til kjeveortopedisk vurdering (Helfo), med delt bibliotek.">
+<link rel="canonical" href="https://finnuro.github.io/forer-legeerklaering/caser/">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/fonts.css">
+<link rel="stylesheet" href="../assets/css/vendor/designsystemet.css">
+<link rel="stylesheet" href="../assets/css/vendor/designsystemet-theme.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<meta property="og:title" content="Caser – førerrett og kjeveortopedisk henvisning – SMART on FHIR for Altinn">
+<meta property="og:description" content="To helseskjema bygget på samme SMART on FHIR-mønster i Altinn Studio: legeerklæring for førerrett (IS-2569) og henvisning til kjeveortopedisk vurdering (Helfo), med delt bibliotek.">
+<meta property="og:type" content="website">
+</head>
+<body>
+
+<a class="ds-link skip-to-content" href="#main">Hopp til innhold</a>
+
+<div class="disclaimer-bar">
+  <div class="wrap">
+    <span>📎 <strong>Prototype / proof of concept</strong> — ikke en produksjonstjeneste og ikke en offisiell Digdir-tjeneste. <strong>Utviklet sammen med Claude Code.</strong></span>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand plain" href="../">
+      <span class="brand__mark" aria-hidden="true">SF</span>
+      <span class="brand__text">
+        <span class="brand__title">SMART on FHIR for Altinn</span>
+        <span class="brand__subtitle">Helseskjema fra journalen</span>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="Hovedmeny">
+      <a href="../">Forside</a>
+      <a href="../flyt/">Flyt</a>
+      <a href="../caser/" aria-current="page">Caser</a>
+      <a href="../helsenorge/">Helsenorge</a>
+      <a href="../status/">Status</a>
+      <a href="../dokumentasjon/">Dokumentasjon</a>
+      <a href="../onboarding/">Onboarding</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap page-head">
+    <span style="font-size:var(--ds-body-xs-font-size); color:var(--ds-color-text-subtle);"><a class="ds-link" href="../">Forside</a> / Caser</span>
+    <h1>Caser</h1>
+    <p class="lead">Legeerklæring for førerrett og henvisning til kjeveortopedisk vurdering: to skjema, to ulike helsepersonellgrupper, ett felles SMART on FHIR-mønster.</p>
+  </div>
+
+  <div class="wrap guide-layout">
+    <nav class="guide-nav" aria-label="Innhold på siden">
+      <a href="#oversikt" data-anchor="oversikt">Oversikt</a>
+      <a href="#forerrett" data-anchor="forerrett">Legeerklæring førerrett</a>
+      <a href="#kjeveortopedisk" data-anchor="kjeveortopedisk">Kjeveortopedisk henvisning</a>
+      <a href="#felles" data-anchor="felles">Delt bibliotek</a>
+      <a href="#modeller" data-anchor="modeller">Fire leveransemodeller</a>
+      <a href="#kandidater" data-anchor="kandidater">Neste kandidater</a>
+    </nav>
+    <div class="guide-article">
+
+      <section id="oversikt">
+        <span class="section-num">Oversikt</span>
+        <h2>To skjema, ett mønster</h2>
+        <p class="intro">Hensikten med to caser er å teste påstanden om at mønsteret er generisk. Førerrett har en <em>lege</em> som utsteder og mottaker i staten; kjeveortopedisk henvisning har en <em>tannlege eller tannpleier</em> som henviser og en kjeveortoped som mottaker. Begge bruker samme SMART-launch, samme prefill og samme signeringsmønster.</p>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">Sammenligning av de to casene</caption>
+            <thead><tr><th scope="col"></th><th scope="col">Legeerklæring førerrett</th><th scope="col">Kjeveortopedisk henvisning</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Blankett</th><td>Helseattest førerett IS-2569 (Helsedirektoratet)</td><td>Helfo 05-06.10 (endret 01.2026)</td></tr>
+              <tr><th scope="row">Utsteder</th><td>Lege</td><td>Tannlege / tannpleier</td></tr>
+              <tr><th scope="row">Mottaker</th><td>Statens vegvesen / Helsedirektoratet</td><td>Kjeveortoped; vurderes mot folketrygdens stønadsregler</td></tr>
+              <tr><th scope="row">App</th><td><a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/src/App" target="_blank" rel="noopener"><code>src/App</code></a></td><td><a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/src/AppKjeveortopedisk" target="_blank" rel="noopener"><code>src/AppKjeveortopedisk</code></a></td></tr>
+              <tr><th scope="row">Diagnose fra FHIR</th><td>Ja (<code>Condition</code>)</td><td>Nei — klinisk vurdering er en Helfo-spesifikk bittanomali-klassifisering</td></tr>
+              <tr><th scope="row">Status</th><td><span class="pill warn">Delvis modellert</span></td><td><span class="pill info">Skjema bygget, ikke testet mot tannlege-EPJ</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="forerrett">
+        <span class="section-num">Case 1</span>
+        <h2>Legeerklæring for førerrett (IS-2569)</h2>
+        <p class="intro">Utgangspunktet for hele prosjektet. Pasienten tar helseattesten med til trafikkstasjonen, og den må ikke være eldre enn tre måneder. Hjemmel: førerkortforskriften vedlegg 1 og helsepersonelloven §§ 4 og 15.</p>
+        <ul>
+          <li><strong>Bygget:</strong> SMART EHR Launch, FHIR-prefill av pasient, lege, virksomhet og diagnose, «Signer og send inn», og en egen konklusjonsmodell (grønt/rødt per kjøretøygruppe) som kan gå til Statens vegvesen separat fra hele attesten.</li>
+          <li><strong>Ikke bygget:</strong> selve helsekategoriene i full bredde (omtrent 4 av 17+ er modellert), og full IS-2569. Se beslutning C-5.</li>
+          <li><strong>Pasientens del:</strong> egenerklæringen NA-0201 (17 ja/nei-spørsmål) er i dag papir. Digital flyt via Helsenorge er <a href="../helsenorge/">utforsket og delvis verifisert</a>.</li>
+          <li><strong>Sammenligningsgrunnlag:</strong> NHNs produksjons-Førerrett-App ligger på Helsenorge-plattformen, ikke Altinn. De to er komplementære, ikke konkurrerende — se <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/SAMMENLIGNING-syk-inn.md" target="_blank" rel="noopener"><code>docs/SAMMENLIGNING-syk-inn.md</code></a> og <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/NHN-DOKUMENTASJON.md" target="_blank" rel="noopener"><code>docs/NHN-DOKUMENTASJON.md</code></a>.</li>
+        </ul>
+        <p>Feltstruktur og implementeringsstatus per felt: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/SKJEMA-IS2569.md" target="_blank" rel="noopener"><code>docs/SKJEMA-IS2569.md</code></a>.</p>
+      </section>
+
+      <section id="kjeveortopedisk">
+        <span class="section-num">Case 2 · lagt til 2026-09-09</span>
+        <h2>Henvisning til kjeveortopedisk vurdering</h2>
+        <p class="intro">Helfo-blanketten 05-06.10: tannlege eller tannpleier henviser til kjeveortoped, som foretar en selvstendig vurdering av om pasientens bittavvik gir rett til stønad (gruppe a, b eller c, med ulik dekning). Caset er en sannhetstest for at «helse-template»-tanken holder utenfor legeyrket.</p>
+        <ul>
+          <li><strong>Skjemaet:</strong> tre sider pluss oppsummering. Tekstene er <em>1:1 med kildeblanketten</em> — også de stedene kildeteksten er uryddig — fordi første versjon skal speile papirskjemaet; omarbeiding kommer senere.</li>
+          <li><strong>Felt:</strong> pasient- og virksomhetsfelt kan redigeres for hånd (skjemaet skal kunne fylles helt uten EPJ), mens henviser (behandler) er skrivebeskyttet og hentes fra FHIR via HPR.</li>
+          <li><strong>Testdata:</strong> henviseren Tina Tannlege og Sentrum Tannklinikk ligger i appens <code>testData.json</code>, slik at appen kan startes som tannlege i localtest. Pasienten Kaja Kviss, tannlegen og klinikken finnes også i FHIR-seeden.</li>
+          <li><strong>Åpent:</strong> hva et tannlege-EPJ faktisk kan gi via FHIR er ikke bekreftet mot et reelt system.</li>
+        </ul>
+        <p>Feltanalyse og åpne spørsmål: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/SKJEMA-KJEVEORTOPEDISK.md" target="_blank" rel="noopener"><code>docs/SKJEMA-KJEVEORTOPEDISK.md</code></a>.</p>
+      </section>
+
+      <section id="felles">
+        <span class="section-num">Felles kode</span>
+        <h2>SmartFhir.Common — delt «standard pakkeutvidelse»</h2>
+        <p class="intro">Da det andre caset kom, viste det seg at SMART-kontrolleren og FHIR-prefillen allerede var cirka 100 % app-nøytrale. Koden ble derfor flyttet til et internt klassebibliotek, <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/src/SmartFhir.Common" target="_blank" rel="noopener"><code>src/SmartFhir.Common</code></a>, i stedet for å kopieres.</p>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">Hva som er delt og hva som er app-spesifikt</caption>
+            <thead><tr><th scope="col">Delt i biblioteket</th><th scope="col">Forblir i hver app</th></tr></thead>
+            <tbody>
+              <tr><td><code>SmartLaunchControllerBase</code> — OAuth2, PKCE, discovery, token-utveksling, sesjon</td><td>Klient-ID-fallback, testdata, scopes og standard testbruker (overstyres via <code>protected virtual</code>-egenskaper)</td></tr>
+              <tr><td><code>SmartFhirPrefillClient</code> — henter og tolker Patient, Practitioner, Organization, Encounter, Condition</td><td>Mapping fra <code>StandardFhirPrefillData</code> til appens egen datamodell</td></tr>
+              <tr><td><code>SmartSessionReader</code>, <code>NorwegianHealthOids</code>, sesjons-DTO-er</td><td>Alt som ikke er standard-prefill, f.eks. avledning av førerrett-konklusjonen</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Dette er <em>ikke</em> den fremtidige NuGet-pakken <code>Digdir.SmartOnFhir</code> (veikart fase 4): ingen DI-extension, ingen token-validator, ingen Redis-støtte. Det er et internt steg som ble tvunget frem av en reell andre bruker. Detaljer: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/SMARTFHIR-COMMON.md" target="_blank" rel="noopener"><code>docs/SMARTFHIR-COMMON.md</code></a>.</p>
+      </section>
+
+      <section id="modeller">
+        <span class="section-num">Strategi</span>
+        <h2>Fire måter å levere et helseskjema på</h2>
+        <p class="intro">Spørsmålet er ikke bare hvilket skjema, men hvem som bygger, eier og driver det. Hvor mange ganger må integrasjonslaget (SMART, FHIR, HelseID, signering, audit) bygges på nytt?</p>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">Leveransemodeller</caption>
+            <thead><tr><th scope="col"></th><th scope="col">NAV</th><th scope="col">NHN / Helsenorge</th><th scope="col">EPJ</th><th scope="col">Altinn</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Utvikler</th><td>Virksomheten selv</td><td>NHN på vegne av tjenesteeier</td><td>EPJ-leverandøren</td><td>Tjenesteeieren selv</td></tr>
+              <tr><th scope="row">Lages i</th><td>Egen stack</td><td>Helsenorge-plattformen</td><td>Inne i EPJ-et</td><td>Altinn Studio</td></tr>
+              <tr><th scope="row">Eksempel</th><td><code>syk-inn</code></td><td>Førerrett-App</td><td>MSIS-klinikermelding (FHI, minst ett EPJ)</td><td>dette prosjektet</td></tr>
+              <tr><th scope="row">Skalering</th><td>N reimplementasjoner</td><td>Kø bak NHNs kapasitet</td><td>N × M (leverandører × skjema)</td><td>Laget bygges én gang; tjenesteeier bygger skjema selv</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Modellene utelukker ikke hverandre. Det sterkeste grepet er å standardisere integrasjonslaget og la hostingmodellen velges per case. Se <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/STRATEGI.md" target="_blank" rel="noopener"><code>docs/STRATEGI.md</code></a>.</p>
+      </section>
+
+      <section id="kandidater">
+        <span class="section-num">Videre</span>
+        <h2>Hvilke skjema bør bygges neste?</h2>
+        <p class="intro">Vi har kartlagt over 50 rapporterings- og meldeplikter for helsepersonell og vurdert hvor en SMART on FHIR-app gir verdi: der klinikeren fortsatt fyller ut en strukturert melding for hånd, ikke der data allerede høstes automatisk som batch fra fagsystemet.</p>
+        <div class="callout">
+          <h3>MSIS-klinikermelding er allerede i bruk</h3>
+          <p>Folkehelseinstituttet bekrefter per 2026-09-14 at MSIS-klinikermelding kjører SMART on FHIR i produksjon i minst ett EPJ-system, og ønsker å utvide til flere leverandører. Det er det sterkeste konkrete eksemplet på EPJ-modellen. Hvilket EPJ og hva som stopper utrullingen er ikke undersøkt.</p>
+        </div>
+        <p>Hele kartleggingen: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/KARTLEGGING-kandidater.md" target="_blank" rel="noopener"><code>docs/KARTLEGGING-kandidater.md</code></a>.</p>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <h3>Om nettstedet</h3>
+      <p style="font-size:var(--ds-body-sm-font-size); color:var(--ds-color-text-subtle); max-width:34ch; margin:0;">
+        Dokumentasjon for <a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">forer-legeerklaering</a>:
+        et proof of concept som viser at Altinn Studio kan være en generisk SMART on FHIR-plattform for helseskjema.
+        Bygget med <a href="https://designsystemet.no/" target="_blank" rel="noopener">designsystemet.no</a>.
+      </p>
+    </div>
+    <div>
+      <h3>På nettstedet</h3>
+      <ul>
+        <li><a href="../flyt/">Flyt og arkitektur</a></li>
+        <li><a href="../caser/">Caser</a></li>
+        <li><a href="../helsenorge/">Helsenorge-flytene</a></li>
+        <li><a href="../status/">Status og veikart</a></li>
+        <li><a href="../dokumentasjon/">Dokumentasjon</a></li>
+        <li><a href="../onboarding/">Onboarding for utviklere</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>Relatert</h3>
+      <ul>
+        <li><a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">Kildekode på GitHub</a></li>
+        <li><a href="https://hl7.org/fhir/smart-app-launch/" target="_blank" rel="noopener">SMART App Launch IG</a></li>
+        <li><a href="https://docs.altinn.studio/" target="_blank" rel="noopener">Altinn Studio-dokumentasjon</a></li>
+        <li><a href="https://github.com/navikt/syk-inn" target="_blank" rel="noopener">NAV syk-inn</a></li>
+        <li><a href="https://finnuro.github.io/forklaringsmodell-api/" target="_blank" rel="noopener">Forklaringsmodell-API</a></li>
+        <li><a href="https://finnuro.github.io/regel-ide/" target="_blank" rel="noopener">Regel-IDE</a></li>
+      </ul>
+    </div>
+    <p class="fine">
+      Prototype og proof of concept — ikke en offisiell nettside for Digitaliseringsdirektoratet (Digdir), og ikke en produksjonsklar tjeneste. Testdata er syntetiske; ingen reelle pasienter er involvert.
+      Kildekode på <a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">GitHub</a>.
+    </p>
+    <p class="fine">
+      <strong>Utviklet sammen med Claude Code</strong> (Anthropic) — kode, tester og dokumentasjon. Innholdet er ikke fasitsjekket av jurister eller helsepersonell; behandle det som et utkast og meld gjerne fra via «Gi tilbakemelding».
+    </p>
+  </div>
+</footer>
+
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>
