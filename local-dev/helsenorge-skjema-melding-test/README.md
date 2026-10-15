@@ -52,9 +52,9 @@ cd local-dev\helsenorge-skjema-melding-test
 dotnet run
 ```
 
-`RelatedTaskIdentifierGuid` i `Program.cs` peker på en spesifikk, allerede opprettet `Task` — bytt
-denne til identifier-verdien fra en fersk kjøring av `helsenorge-skjemaoppgave-test` for å teste mot
-en ny oppgave.
+Kopien må knyttes til en eksisterende `Task`. Oppgi identifier-verdien fra en fersk kjøring av
+`helsenorge-skjemaoppgave-test` som argument (`dotnet run -- <guid>`) eller i miljøvariabelen
+`RELATED_TASK_ID`. Uten argument brukes en gammel oppgave som kan være utløpt.
 
 ## Neste steg
 
