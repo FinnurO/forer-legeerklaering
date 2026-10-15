@@ -1,0 +1,31 @@
+name: PR-forhåndsvisning av nettsted
+
+# Deployer hver åpne PR som endrer site/ til gh-pages/pr-preview/pr-<nummer>/ og
+# kommenterer med lenke. Ryddes bort automatisk når PR-en lukkes.
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+    paths:
+      - 'site/**'
+
+concurrency: preview-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: site
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview

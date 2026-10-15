@@ -1,0 +1,34 @@
+name: Deploy dokumentasjonsnettsted
+
+# Nettstedet i site/ er ferdig statisk HTML/CSS/JS — ingen bygg-steg.
+# Innholdet kopieres til gh-pages-branchen, som GitHub Pages serverer fra.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages-deploy.yml'
+  workflow_dispatch:
+
+# Unngå at to produksjonsdeploy kjører samtidig og krasjer i hverandre
+concurrency:
+  group: pages-production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: site
+          branch: gh-pages
+          # Ikke rør aktive PR-forhåndsvisninger når produksjon deployes
+          clean-exclude: pr-preview/
+          force: false
