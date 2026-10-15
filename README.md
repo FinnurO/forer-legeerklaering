@@ -2,7 +2,8 @@
 
 **Status:** PoC gjennomført og verifisert — FHIR-prefill, auto-innlogging og signering fungerer i lokalt testmiljø  
 **Eier:** Digitaliseringsdirektoratet  
-**Kontakt:** johann.finnur.sigurvinsson.olafsson@digdir.no
+**Kontakt:** johann.finnur.sigurvinsson.olafsson@digdir.no  
+**Nettsted:** <https://finnuro.github.io/forer-legeerklaering/> (kilden ligger i [`site/`](site/); egen side for [onboarding av utviklere](https://finnuro.github.io/forer-legeerklaering/onboarding/))
 
 ---
 
