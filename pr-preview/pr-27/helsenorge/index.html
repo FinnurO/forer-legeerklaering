@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="nb" data-color-scheme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helsenorge-flytene – oppgave, skjemaoppgave og kopi til pasient – SMART on FHIR for Altinn</title>
+<meta name="description" content="Fire verifiserte flyter mot Helsenorge EksternAPI (TEST02): informasjonsoppgave, skjemaoppgave, kopi av innsending og Brevtjeneste-kopi av henvisning — med feilkoder og fallgruver.">
+<link rel="canonical" href="https://finnuro.github.io/forer-legeerklaering/helsenorge/">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/fonts.css">
+<link rel="stylesheet" href="../assets/css/vendor/designsystemet.css">
+<link rel="stylesheet" href="../assets/css/vendor/designsystemet-theme.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<meta property="og:title" content="Helsenorge-flytene – oppgave, skjemaoppgave og kopi til pasient – SMART on FHIR for Altinn">
+<meta property="og:description" content="Fire verifiserte flyter mot Helsenorge EksternAPI (TEST02): informasjonsoppgave, skjemaoppgave, kopi av innsending og Brevtjeneste-kopi av henvisning — med feilkoder og fallgruver.">
+<meta property="og:type" content="website">
+</head>
+<body>
+
+<a class="ds-link skip-to-content" href="#main">Hopp til innhold</a>
+
+<div class="disclaimer-bar">
+  <div class="wrap">
+    <span>📎 <strong>Prototype / proof of concept</strong> — ikke en produksjonstjeneste og ikke en offisiell Digdir-tjeneste. <strong>Utviklet sammen med Claude Code.</strong></span>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand plain" href="../">
+      <span class="brand__mark" aria-hidden="true">SF</span>
+      <span class="brand__text">
+        <span class="brand__title">SMART on FHIR for Altinn</span>
+        <span class="brand__subtitle">Helseskjema fra journalen</span>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="Hovedmeny">
+      <a href="../">Forside</a>
+      <a href="../flyt/">Flyt</a>
+      <a href="../caser/">Caser</a>
+      <a href="../helsenorge/" aria-current="page">Helsenorge</a>
+      <a href="../status/">Status</a>
+      <a href="../dokumentasjon/">Dokumentasjon</a>
+      <a href="../onboarding/">Onboarding</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap page-head">
+    <span style="font-size:var(--ds-body-xs-font-size); color:var(--ds-color-text-subtle);"><a class="ds-link" href="../">Forside</a> / Helsenorge</span>
+    <h1>Helsenorge-flytene</h1>
+    <p class="lead">Pasientens del av flyten: fra Altinn-appen til en oppgave og en PDF-kopi i innbyggerens Helsenorge, via NHNs EksternAPI. Alle fire flytene er kjørt mot testmiljøet.</p>
+  </div>
+
+  <div class="wrap guide-layout">
+    <nav class="guide-nav" aria-label="Innhold på siden">
+      <a href="#oversikt" data-anchor="oversikt">Oversikt</a>
+      <a href="#flytene" data-anchor="flytene">De fire flytene</a>
+      <a href="#pasienten" data-anchor="pasienten">Slik ser det ut for pasienten</a>
+      <a href="#funn" data-anchor="funn">Funn og fallgruver</a>
+      <a href="#feilkoder" data-anchor="feilkoder">Feilkoder vi har truffet</a>
+      <a href="#gjenstar" data-anchor="gjenstar">Hva som gjenstår</a>
+      <a href="#kjor" data-anchor="kjor">Kjør det selv</a>
+    </nav>
+    <div class="guide-article">
+
+      <section id="oversikt">
+        <span class="section-num">Oversikt</span>
+        <h2>Fra Altinn-appen til pasientens Helsenorge</h2>
+        <p class="intro">Legens del av flyten er SMART on FHIR. Pasientens del er en helt annen integrasjon: et maskin-til-maskin-API hos Helsenorge (<em>EksternAPI</em>) som lar en helseaktør sende en oppgave eller et dokument til en innbygger. Det er samme plattform som NHNs egen produksjons-Førerrett-App bruker.</p>
+        <div class="fact-row">
+          <div class="fact"><span class="big">4</span><span class="lbl">flyter verifisert ende-til-ende mot Helsenorge-testmiljøet TEST02</span></div>
+          <div class="fact"><span class="big">2</span><span class="lbl">API-er i bruk: Oppgave (<code>Task</code>) og Skjema (<code>DocumentReference</code>)</span></div>
+          <div class="fact"><span class="big">DPoP</span><span class="lbl">autentisering: HelseID <code>client_credentials</code> med <code>private_key_jwt</code> og DPoP — ingen brukerredirect</span></div>
+        </div>
+        <p>Teknisk: klienten er registrert i HelseIDs selvbetjening for test, er <em>multi-tenant</em> (både overordnet og underordnet organisasjonsnummer må sendes i tokenforespørselen), og bruker NHNs bibliotek <code>HelseID.Library.ClientCredentials</code>. Tokenet lever bare 60 sekunder i test. Den private nøkkelen ligger i en lokal fil utenfor repoet.</p>
+      </section>
+
+      <section id="flytene">
+        <span class="section-num">Verifisert 2026-09-18 til 2026-09-22</span>
+        <h2>De fire flytene</h2>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">De fire verifiserte Helsenorge-flytene</caption>
+            <thead><tr><th scope="col">Flyt</th><th scope="col">Kall</th><th scope="col">Resultat</th><th scope="col">Pasienten ser</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Informasjonsoppgave</strong><br><span class="footnote"><a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/local-dev/helsenorge-oppgave-test" target="_blank" rel="noopener"><code>helsenorge-oppgave-test</code></a></span></td>
+                <td><code>POST oppgave/v1/Task</code> med <code>focus.type = Communication</code></td>
+                <td><span class="pill ok">201 Created</span></td>
+                <td>Oppgave «Lese informasjon» fra avsender, med frist</td>
+              </tr>
+              <tr>
+                <td><strong>2. Skjemaoppgave</strong><br><span class="footnote"><a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/local-dev/helsenorge-skjemaoppgave-test" target="_blank" rel="noopener"><code>helsenorge-skjemaoppgave-test</code></a></span></td>
+                <td><code>POST oppgave/v1/Task</code> med <code>focus.type = Questionnaire</code> og en lenke til skjemaet</td>
+                <td><span class="pill ok">201 Created</span></td>
+                <td>Oppgave «Fylle ut skjema» — «Denne oppgaven utfører du utenfor Helsenorge»</td>
+              </tr>
+              <tr>
+                <td><strong>3. Kopi av innsending</strong><br><span class="footnote"><a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/local-dev/helsenorge-skjema-melding-test" target="_blank" rel="noopener"><code>helsenorge-skjema-melding-test</code></a></span></td>
+                <td><code>POST skjema/v1/DocumentReference</code> med PDF, knyttet til oppgaven via <code>context.related</code></td>
+                <td><span class="pill ok">200 OK</span></td>
+                <td>PDF-en under «Se ditt skjemasvar» inne i oppgaven</td>
+              </tr>
+              <tr>
+                <td><strong>4. Brevtjeneste: kopi av henvisning</strong><br><span class="footnote"><a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/local-dev/helsenorge-brevtjeneste-kopi-test" target="_blank" rel="noopener"><code>helsenorge-brevtjeneste-kopi-test</code></a></span></td>
+                <td>Oppgave med <code>Task.basedOn</code> → <code>ServiceRequest</code>, pluss <code>DocumentReference</code> med <em>to</em> <code>context.related</code>-oppføringer (oppgaven og henvisningen)</td>
+                <td><span class="pill ok">201 + 200</span></td>
+                <td>PDF-kopien, pluss lenken «Les om dine rettigheter i henvisningen»</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Flyt 4 er scenarioet i NHNs <a class="ds-link" href="https://www.nhn.no/tjenester/helsenorge/sende-brev-skjema-og-andre-oppgaver" target="_blank" rel="noopener">Brevtjeneste</a>: en helseaktør (fastlege) sender en henvisning til en annen helseaktør (spesialist) via en helt annen kanal, og vil samtidig sende en lesbar kopi til pasienten. Selve henvisningen til spesialisten er <em>ikke</em> en del av testen — den sendes utenfor Helsenorge.</p>
+      </section>
+
+      <section id="pasienten">
+        <span class="section-num">Pasientens side</span>
+        <h2>Slik ser det ut på helsenorge.no</h2>
+        <p class="intro">Alle testene sender til én syntetisk testperson. Under «Oppgaver» på hennes Helsenorge vises hver oppgave som et kort med tittel, avsender, frist og hva slags oppgave det er.</p>
+        <ul>
+          <li><strong>Informasjonsoppgaven</strong> har oppgavetypen «Lese informasjon».</li>
+          <li><strong>Skjemaoppgaven</strong> har oppgavetypen «Fylle ut skjema». Helsenorge leser <code>focus.type</code> riktig og viser at oppgaven utføres utenfor Helsenorge når lenken er satt.</li>
+          <li><strong>Kopien</strong> vises som en PDF-lenke under «Se ditt skjemasvar» inne i oppgaven. Henvisningsreferansen fra <code>Task.basedOn</code> vises som en egen lenke om rettigheter og plikter.</li>
+          <li><strong>Varsling:</strong> avsenders navn skal merkes som sensitivt når det kan avsløre diagnose eller behandlingssted, siden varsler går på SMS og e-post.</li>
+        </ul>
+        <div class="callout">
+          <h3>Rart ved testmiljøet</h3>
+          <p>Nyopprettede oppgaver havnet under fanen «Tidligere», merket «Utført», selv om ingen hadde utført dem. Vi har ikke funnet årsaken; det kan være en egenskap ved testmiljøet, eller at vi gjenbrukte de samme innebygde ressurs-ID-ene på tvers av kjøringer. Husk det hvis du vil vise tilstanden «Ikke startet».</p>
+        </div>
+      </section>
+
+      <section id="funn">
+        <span class="section-num">Funn</span>
+        <h2>Det vi ikke kunne lese oss til</h2>
+        <ol class="principle-list">
+          <li><span class="n">1</span><div><h4>«Ikke digitalt aktiv» var en samtykke-sak</h4><p>Testpersonen avvistes først med «Pasienten er ikke digitalt aktiv for tjeneste: OmradeHelsehjelp». Årsaken var at hun aldri hadde fullført Helsenorges egen samtykkeflyt — det var umulig mens portalen var IP-sperret. Etter samtykke på nivå «Full» gikk samme kall gjennom.</p></div></li>
+          <li><span class="n">2</span><div><h4>Skjemalenken må være HTTPS</h4><p>Helsenorge avviser <code>http://</code>-lenker i <code>Task.instantiatesUri</code>, uavhengig av om de er nåbare. Vårt localtest-skjema kjører med hensikt på ren HTTP, så en ekte lenke dit krever en HTTPS-tunnel eller et deployet testmiljø.</p></div></li>
+          <li><span class="n">3</span><div><h4>«Kopi» er ikke en fristående melding</h4><p>En <code>DocumentReference</code> avvises uten <code>context.related</code> til en eksisterende oppgave. Det finnes ingen støttet «send et vilkårlig dokument»-vei uten en oppgave å knytte det til.</p></div></li>
+          <li><span class="n">4</span><div><h4>PDF-en valideres som binærfil</h4><p>Et «final» dokument må ha <code>docStatus = final</code>, MIME-type <code>application/pdf</code> <em>og</em> faktiske PDF-bytes. Helsenorge sjekker filsignaturen, ikke bare den oppgitte typen.</p></div></li>
+          <li><span class="n">5</span><div><h4>Testmiljøet krever godkjent IP</h4><p>Portalen kan bare nås fra IP-adresser NHN har åpnet. Åpningen er knyttet til bestemte adresser (for eksempel kontornettet eller VPN), ikke en generell fjerning av sperren.</p></div></li>
+        </ol>
+      </section>
+
+      <section id="feilkoder">
+        <span class="section-num">Referanse</span>
+        <h2>Feilkoder vi har truffet, i rekkefølge</h2>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">Feilkoder fra Helsenorge EksternAPI og hva som løste dem</caption>
+            <thead><tr><th scope="col">Kode</th><th scope="col">Melding</th><th scope="col">Løsning</th></tr></thead>
+            <tbody>
+              <tr><td><code>401 EHSEC-110002</code></td><td>«Token is expired or invalid» (misvisende)</td><td>Organisasjonsnummer manglet i tokenforespørselen</td></tr>
+              <tr><td><code>invalid_request</code></td><td>Klienten er multi-tenant, men sendte en enkelt organisasjon</td><td>Send både overordnet og underordnet organisasjonsnummer</td></tr>
+              <tr><td><code>2109</code></td><td>Finner ikke <code>Task.focus</code></td><td>Sett <code>focus.type</code> (det er reelt obligatorisk)</td></tr>
+              <tr><td><code>2147</code></td><td>Finner ikke <code>Task.instantiatesUri</code></td><td>Obligatorisk for <code>Communication</code></td></tr>
+              <tr><td><code>2118</code></td><td>Pasienten er ikke digitalt aktiv</td><td>Pasienten må fullføre samtykket på portalen</td></tr>
+              <tr><td><code>2174</code></td><td>URI-skjema må være HTTPS</td><td>Bruk en <code>https://</code>-lenke</td></tr>
+              <tr><td><code>102</code></td><td>Context kan ikke være null eller tom</td><td>Legg til <code>context.related</code> med <code>Task.identifier</code></td></tr>
+              <tr><td><code>1111</code></td><td>Don't know how to handle documentReference status</td><td>Legg til <code>docStatus: final</code></td></tr>
+              <tr><td><code>1112</code></td><td>A final DocumentReference requires that a pdf is attached</td><td>Bruk <code>application/pdf</code></td></tr>
+              <tr><td><code>119</code></td><td>Fil signatur stemmer ikke for mimetype application/pdf</td><td>Send en ekte PDF</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="gjenstar">
+        <span class="section-num">Åpent</span>
+        <h2>Hva som gjenstår</h2>
+        <ul>
+          <li><strong>Sømløst uthopp:</strong> pasienten skal ikke måtte logge inn på nytt når hun går fra Helsenorge til vårt skjema. Det krever at vi bruker Helsenorge som OpenID Connect-provider — ikke utforsket.</li>
+          <li><strong>HTTPS-nåbart skjema:</strong> en tunnel til localtest eller et deployet testmiljø, så klikk-gjennom faktisk kan prøves.</li>
+          <li><strong><code>Bundle</code>-varianten</strong> av Oppgave-API-et.</li>
+          <li><strong>DokumentAPI</strong> (lagring i innbyggers helsearkiv) er et tredje API med brukerpålogging og er begrenset til innholdstypen «egenkartlegging». En legeerklæring faller trolig utenfor. Ikke testet.</li>
+          <li><strong>Dialogporten</strong> (alternativ A i <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/PASIENTFLYT.md" target="_blank" rel="noopener"><code>docs/PASIENTFLYT.md</code></a>) er fortsatt uverifisert, og det er uklart hvordan dialoger vises på helsenorge.no. Alternativ B (EksternAPI) er nå den foretrukne retningen.</li>
+          <li><strong>Plattformvalget</strong> — Altinn, Helsenorge eller hybrid — er en organisatorisk beslutning, ikke en teknisk. Se <a href="../status/#beslutninger">C-6</a>.</li>
+        </ul>
+      </section>
+
+      <section id="kjor">
+        <span class="section-num">Reproduser</span>
+        <h2>Kjør det selv</h2>
+        <p class="intro">Hver flyt er et lite konsollprosjekt under <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/tree/main/local-dev" target="_blank" rel="noopener"><code>local-dev/</code></a>. Du trenger en registrert klient i HelseIDs selvbetjening for test, den private nøkkelen som en lokal fil, og en IP-adresse NHN har åpnet.</p>
+        <span class="code-label">PowerShell</span>
+        <pre class="code"><code>$env:HELSEID_JWK_PATH = "C:\Users\&lt;deg&gt;\.secrets\helseid-eksternapi-test.jwk.json"
+cd local-dev\helsenorge-oppgave-test
+dotnet run</code></pre>
+        <p>Skjemaoppgaven og kopien henger sammen: <code>helsenorge-skjema-melding-test</code> trenger identifieren til en eksisterende oppgave: oppgi den fra en fersk kjøring av skjemaoppgave-testen som argument (<code>dotnet run -- &lt;guid&gt;</code>) eller i <code>RELATED_TASK_ID</code>. Flyt 4 oppretter sin egen oppgave og trenger ikke endringer.</p>
+        <p>Full teknisk logg: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/IMPLEMENTERING.md" target="_blank" rel="noopener"><code>docs/IMPLEMENTERING.md</code></a> (§14.1) og <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/PASIENTFLYT.md" target="_blank" rel="noopener"><code>docs/PASIENTFLYT.md</code></a>.</p>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <h3>Om nettstedet</h3>
+      <p style="font-size:var(--ds-body-sm-font-size); color:var(--ds-color-text-subtle); max-width:34ch; margin:0;">
+        Dokumentasjon for <a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">forer-legeerklaering</a>:
+        et proof of concept som viser at Altinn Studio kan være en generisk SMART on FHIR-plattform for helseskjema.
+        Bygget med <a href="https://designsystemet.no/" target="_blank" rel="noopener">designsystemet.no</a>.
+      </p>
+    </div>
+    <div>
+      <h3>På nettstedet</h3>
+      <ul>
+        <li><a href="../flyt/">Flyt og arkitektur</a></li>
+        <li><a href="../caser/">Caser</a></li>
+        <li><a href="../helsenorge/">Helsenorge-flytene</a></li>
+        <li><a href="../status/">Status og veikart</a></li>
+        <li><a href="../dokumentasjon/">Dokumentasjon</a></li>
+        <li><a href="../onboarding/">Onboarding for utviklere</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>Relatert</h3>
+      <ul>
+        <li><a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">Kildekode på GitHub</a></li>
+        <li><a href="https://hl7.org/fhir/smart-app-launch/" target="_blank" rel="noopener">SMART App Launch IG</a></li>
+        <li><a href="https://docs.altinn.studio/" target="_blank" rel="noopener">Altinn Studio-dokumentasjon</a></li>
+        <li><a href="https://github.com/navikt/syk-inn" target="_blank" rel="noopener">NAV syk-inn</a></li>
+        <li><a href="https://finnuro.github.io/forklaringsmodell-api/" target="_blank" rel="noopener">Forklaringsmodell-API</a></li>
+        <li><a href="https://finnuro.github.io/regel-ide/" target="_blank" rel="noopener">Regel-IDE</a></li>
+      </ul>
+    </div>
+    <p class="fine">
+      Prototype og proof of concept — ikke en offisiell nettside for Digitaliseringsdirektoratet (Digdir), og ikke en produksjonsklar tjeneste. Testdata er syntetiske; ingen reelle pasienter er involvert.
+      Kildekode på <a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">GitHub</a>.
+    </p>
+    <p class="fine">
+      <strong>Utviklet sammen med Claude Code</strong> (Anthropic) — kode, tester og dokumentasjon. Innholdet er ikke fasitsjekket av jurister eller helsepersonell; behandle det som et utkast og meld gjerne fra via «Gi tilbakemelding».
+    </p>
+  </div>
+</footer>
+
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>
