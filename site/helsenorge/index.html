@@ -187,7 +187,7 @@
         <pre class="code"><code>$env:HELSEID_JWK_PATH = "C:\Users\&lt;deg&gt;\.secrets\helseid-eksternapi-test.jwk.json"
 cd local-dev\helsenorge-oppgave-test
 dotnet run</code></pre>
-        <p>Skjemaoppgaven og kopien henger sammen: <code>helsenorge-skjema-melding-test</code> peker på en bestemt oppgave via <code>RelatedTaskIdentifierGuid</code> i <code>Program.cs</code>. Bytt den til identifieren fra en fersk kjøring av skjemaoppgave-testen. Flyt 4 oppretter sin egen oppgave og trenger ikke endringer.</p>
+        <p>Skjemaoppgaven og kopien henger sammen: <code>helsenorge-skjema-melding-test</code> trenger identifieren til en eksisterende oppgave: oppgi den fra en fersk kjøring av skjemaoppgave-testen som argument (<code>dotnet run -- &lt;guid&gt;</code>) eller i <code>RELATED_TASK_ID</code>. Flyt 4 oppretter sin egen oppgave og trenger ikke endringer.</p>
         <p>Full teknisk logg: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/IMPLEMENTERING.md" target="_blank" rel="noopener"><code>docs/IMPLEMENTERING.md</code></a> (§14.1) og <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/PASIENTFLYT.md" target="_blank" rel="noopener"><code>docs/PASIENTFLYT.md</code></a>.</p>
       </section>
 

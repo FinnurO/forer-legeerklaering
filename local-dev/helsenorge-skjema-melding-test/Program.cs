@@ -47,9 +47,13 @@ const string OwnerFnr = "21814497167"; // Høy Hai
 // KRITISK FUNN (Confluence "Benyttede FHIR Ressurser i Skjemaløsningen", 2026-09-21): en
 // DocumentReference ("kopi av innsending") kan IKKE sendes fritt — den må knyttes til en
 // eksisterende skjemaoppgave (Task) via context.related, som refererer til Task.identifier.
-// Dette er identifier-verdien fra Task-en opprettet av helsenorge-skjemaoppgave-test (HTTP 201,
-// Task.id/identifier = cabf75ca-3675-492c-b800-d97686801887).
-const string RelatedTaskIdentifierGuid = "cabf75ca-3675-492c-b800-d97686801887";
+// Oppgi identifier-verdien fra Task-en opprettet av helsenorge-skjemaoppgave-test som første
+// argument (dotnet run -- <guid>) eller i miljøvariabelen RELATED_TASK_ID. Uten argument brukes
+// en eldre oppgave (cabf75ca-…) som kan være utløpt eller slettet i testmiljøet.
+var RelatedTaskIdentifierGuid =
+    args.FirstOrDefault()
+    ?? Environment.GetEnvironmentVariable("RELATED_TASK_ID")
+    ?? "cabf75ca-3675-492c-b800-d97686801887";
 
 var jwkPath = Environment.GetEnvironmentVariable("HELSEID_JWK_PATH");
 if (string.IsNullOrWhiteSpace(jwkPath))
