@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="nb" data-color-scheme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status og veikart – SMART on FHIR for Altinn</title>
+<meta name="description" content="Hva som er verifisert og hva som er planlagt i SMART on FHIR-PoC-en for Altinn: veikart fase 1–5, risikoregister, åpne beslutninger og eksterne avhengigheter.">
+<link rel="canonical" href="https://finnuro.github.io/forer-legeerklaering/status/">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/fonts.css">
+<link rel="stylesheet" href="../assets/css/vendor/designsystemet.css">
+<link rel="stylesheet" href="../assets/css/vendor/designsystemet-theme.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<meta property="og:title" content="Status og veikart – SMART on FHIR for Altinn">
+<meta property="og:description" content="Hva som er verifisert og hva som er planlagt i SMART on FHIR-PoC-en for Altinn: veikart fase 1–5, risikoregister, åpne beslutninger og eksterne avhengigheter.">
+<meta property="og:type" content="website">
+</head>
+<body>
+
+<a class="ds-link skip-to-content" href="#main">Hopp til innhold</a>
+
+<div class="disclaimer-bar">
+  <div class="wrap">
+    <span>📎 <strong>Prototype / proof of concept</strong> — ikke en produksjonstjeneste og ikke en offisiell Digdir-tjeneste. <strong>Utviklet sammen med Claude Code.</strong></span>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand plain" href="../">
+      <span class="brand__mark" aria-hidden="true">SF</span>
+      <span class="brand__text">
+        <span class="brand__title">SMART on FHIR for Altinn</span>
+        <span class="brand__subtitle">Helseskjema fra journalen</span>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="Hovedmeny">
+      <a href="../">Forside</a>
+      <a href="../flyt/">Flyt</a>
+      <a href="../caser/">Caser</a>
+      <a href="../helsenorge/">Helsenorge</a>
+      <a href="../status/" aria-current="page">Status</a>
+      <a href="../dokumentasjon/">Dokumentasjon</a>
+      <a href="../onboarding/">Onboarding</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap page-head">
+    <span style="font-size:var(--ds-body-xs-font-size); color:var(--ds-color-text-subtle);"><a class="ds-link" href="../">Forside</a> / Status</span>
+    <h1>Status og veikart</h1>
+    <p class="lead">Et ærlig bilde av hvor langt proof of concept-et har kommet: hva som er bevist, hva som mangler før produksjon, og hva som venter på en beslutning.</p>
+  </div>
+
+  <div class="wrap guide-layout">
+    <nav class="guide-nav" aria-label="Innhold på siden">
+      <a href="#verifisert" data-anchor="verifisert">Verifisert vs. planlagt</a>
+      <a href="#veikart" data-anchor="veikart">Veikart</a>
+      <a href="#risiko" data-anchor="risiko">Risiko</a>
+      <a href="#beslutninger" data-anchor="beslutninger">Åpne beslutninger</a>
+      <a href="#avhengigheter" data-anchor="avhengigheter">Eksterne avhengigheter</a>
+    </nav>
+    <div class="guide-article">
+
+      <section id="verifisert">
+        <span class="section-num">Hele reisen</span>
+        <h2>Hva er faktisk verifisert, og hva er bare tegnet?</h2>
+        <p class="intro">Den midtre delen av flyten (lege ↔ Altinn-app) er best verifisert. Det som skjer <em>før</em> (pasientens egenerklæring) og <em>etter</em> (writeback til EPJ, mottak hos Statens vegvesen) er i stor grad arkitektur og datamodeller.</p>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">Status per steg i den samlede flyten</caption>
+            <thead><tr><th scope="col">Steg</th><th scope="col">Status</th><th scope="col">Merknad</th></tr></thead>
+            <tbody>
+              <tr><td>Pasienten fyller ut egenerklæring (NA-0201) digitalt</td><td><span class="pill warn">Delvis</span></td><td>Helsenorge-mekanismene (oppgave, skjemaoppgave, kopi) er verifisert; selve egenerklæringsskjemaet og HTTPS-nåbar lenke er ikke bygget</td></tr>
+              <tr><td>EPJ → Altinn: SMART EHR Launch</td><td><span class="pill ok">Verifisert</span></td><td>Mot launch.smarthealthit.org, inkl. innlogging, pasientvalg og full prefill. Syv feil funnet og rettet</td></tr>
+              <tr><td>Altinn-sesjon for legen</td><td><span class="pill warn">Mitigert i dev</span></td><td>Auto-innlogging via localtests testbruker i <code>/smart/callback</code> finnes ikke i produksjon (R10)</td></tr>
+              <tr><td>Altinn henter FHIR-data</td><td><span class="pill ok">Verifisert</span></td><td>Mot lokal HAPI FHIR-mock og testserveren — ikke mot et reelt fastlege-EPJ (R1)</td></tr>
+              <tr><td>Legen fyller ut, signerer og sender inn</td><td><span class="pill ok">Verifisert</span></td><td>«Signer og send inn», <code>Task_1</code></td></tr>
+              <tr><td>Full attest skrives tilbake til EPJ</td><td><span class="pill warn">Mekanikk bevist</span></td><td><code>POST DocumentReference</code> ga 201 mot launch.smarthealthit.org, men med plassholder-innhold; ikke PDF, ikke idempotent</td></tr>
+              <tr><td>Konklusjon til Statens vegvesen</td><td><span class="pill warn">Modell verifisert</span></td><td>Datamodell finnes; Events-abonnementet hos SVV er ikke avtalt</td></tr>
+              <tr><td>Helsenorge EksternAPI (oppgave, skjemaoppgave, kopi)</td><td><span class="pill ok">Verifisert</span></td><td>Fire flyter mot TEST02. Se <a href="../helsenorge/">Helsenorge</a></td></tr>
+              <tr><td>Epic on FHIR-sandkassen som testmiljø</td><td><span class="pill bad">Blokkert</span></td><td>Se <a href="#avhengigheter">eksterne avhengigheter</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote" style="margin-top:var(--ds-size-3);">Kilde: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/HELHETLIG-FLYT.md" target="_blank" rel="noopener"><code>docs/HELHETLIG-FLYT.md</code></a>. Statusen er dokumentert per datoene i kildefilene, ikke automatisk oppdatert.</p>
+      </section>
+
+      <section id="veikart">
+        <span class="section-num">Veikart</span>
+        <h2>Fra PoC til produksjonsklar referansearkitektur</h2>
+        <p class="intro">Strategien følger det NAV har gjort med <code>syk-inn</code>: få én app til å virke skikkelig i produksjon, og trekk deretter ut det generiske laget som et bibliotek andre kan bruke. Fase 1–3 er uavhengige av menneskelige avklaringer; fase 5 er ikke det.</p>
+        <ul class="timeline">
+          <li><span class="yr">Fase 1 — Produksjonsklar SMART-klient</span><p>Tokenvalidering mot EPJ (JWKS), refresh, issuer-allowlist og distribuert sesjon. Forutsetning for all produksjonssetting.</p></li>
+          <li><span class="yr">Fase 1b — Portal-modus</span><p>Bevisst dobbel inngangsmodus: modus-deteksjon, <code>PersonLookup</code>, HelseID-tilleggsflyt og HPR-bekreftelse. Delvis avhengig av klientregistreringer.</p></li>
+          <li><span class="yr">Fase 2 — Writeback til EPJ</span><p><code>DocumentReference</code> (og <code>QuestionnaireResponse</code>) tilbake til journalen — med ekte PDF og idempotens.</p></li>
+          <li><span class="yr">Fase 3 — Testing</span><p>Ende-til-ende, enhets- og integrasjonstester. I dag finnes ingen automatiserte tester.</p></li>
+          <li><span class="yr">Fase 4 — NuGet-pakken <code>Digdir.SmartOnFhir</code></span><p>Protokoll, ikke domene: launch, callback, token-lager, token-validator, DI-extension — og et konvensjonsmønster for dobbel inngangsmodus. Gjøres etter at mønsteret er bevist.</p></li>
+          <li><span class="yr">Fase 5 — Full IS-2569, HelseID og mottaksarkitektur</span><p>Avhenger av avklaringene under «Åpne beslutninger».</p></li>
+        </ul>
+        <p>Detaljer og tiltakslister per fase: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/VEIKART.md" target="_blank" rel="noopener"><code>docs/VEIKART.md</code></a>. Nasjonal vinkling: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/STRATEGI.md" target="_blank" rel="noopener"><code>docs/STRATEGI.md</code></a>.</p>
+      </section>
+
+      <section id="risiko">
+        <span class="section-num">Risiko</span>
+        <h2>Risikoregisteret i korte trekk</h2>
+        <p class="intro">Prioritert lukkerekkefølge: R2 og R3 først (forutsetninger uansett leveransemodell), så R10, så R1 og R4, og R7 parallelt. R5 og R6 krever at resten er på plass.</p>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <caption class="ds-sr-only">Utvalgte risikoer</caption>
+            <thead><tr><th scope="col">ID</th><th scope="col">Risiko</th><th scope="col">Nivå</th></tr></thead>
+            <tbody>
+              <tr><td>R1</td><td>Fastlege-EPJ-enes FHIR-/SMART-modenhet er ukjent — underlaget har referert DIPS Arena (sykehus), ikke de faktiske fastlege-EPJ-ene</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R2</td><td>Rettslig grunnlag, behandlingsansvar og Normen-vurdering for plattformleddet er uavklart; ingen DPIA finnes</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R3</td><td>Mottaksarkitektur og tjenesteeierskap er ikke formelt avklart; SVV har ikke bekreftet Events-abonnement</td><td><span class="pill warn">Middels</span></td></tr>
+              <tr><td>R4</td><td>Sikkerhetsgap: tokenvalidering, audit-logging og issuer-allowlist er ikke implementert</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R5</td><td>Lav adopsjon hos fastleger — kontekstbytte ut av EPJ gir svakere UX enn EPJ-native løsninger</td><td><span class="pill warn">Middels</span></td></tr>
+              <tr><td>R6</td><td>Initiativet kan oppfattes som konkurrerende med NHNs produksjonsløsning for IS-2569</td><td><span class="pill warn">Middels</span></td></tr>
+              <tr><td id="r7">R7</td><td>Ingen automatiserte tester — regresjon kan innføres uten å bli fanget</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R10</td><td>Etter SMART callback finnes FHIR-kontekst, men ingen Altinn-sesjon i produksjon</td><td><span class="pill warn">Middels, mitigert i dev</span></td></tr>
+              <tr><td>R11</td><td>SMART-konteksten ligger kun i in-process-sesjon — svikter ved flere replikaer eller lengre økter</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R9</td><td>Helsenorge EksternAPI: testmiljøtilgang og «digitalt aktive» testpersoner</td><td><span class="pill ok">Løst</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Hele registeret med eier og tiltak: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/RISIKOREGISTER.md" target="_blank" rel="noopener"><code>docs/RISIKOREGISTER.md</code></a>.</p>
+      </section>
+
+      <section id="beslutninger">
+        <span class="section-num">Beslutninger</span>
+        <h2>Det som krever et menneske å avgjøre</h2>
+        <ul class="principle-list" style="max-width:46rem;">
+          <li><span class="n">C-1</span><div><h4>Hvem er «parten» i Altinn-instansen?</h4><p>Uavklart. PoC-en bruker legen som part.</p></div></li>
+          <li><span class="n">C-2</span><div><h4>HelseID — når skal BFF-en validere tokenet?</h4><p>Dokumentert, ikke implementert. Blokkert av klientregistrering.</p></div></li>
+          <li><span class="n">C-3</span><div><h4>Mottaksarkitektur — hvem er tjenesteeier?</h4><p>Teknisk retning er satt (to-lags: konklusjon til SVV via Events, full attest til EPJ). Tjenesteeier og SVVs mottakssystem gjenstår.</p></div></li>
+          <li><span class="n">C-4</span><div><h4>Rettslig grunnlag og DPIA</h4><p>Uavklart.</p></div></li>
+          <li><span class="n">C-5</span><div><h4>Full IS-2569 og pasientens egenerklæring (NA-0201)</h4><p>Datamodell og feltstruktur er dokumentert; implementering utsatt.</p></div></li>
+          <li><span class="n">C-6</span><div><h4>Altinn Studio eller Helsenorge som plattform</h4><p>Åpen. Den tekniske usikkerheten rundt Helsenorge-sporet er redusert betydelig, men selve plattformvalget er organisatorisk.</p></div></li>
+          <li><span class="n">C-7</span><div><h4>DSOP og SMART on FHIR mot privat sektor (forsikring)</h4><p>Åpen.</p></div></li>
+        </ul>
+        <p>Alternativer og konsekvenser: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/BESLUTNINGER.md" target="_blank" rel="noopener"><code>docs/BESLUTNINGER.md</code></a>.</p>
+      </section>
+
+      <section id="avhengigheter">
+        <span class="section-num">Utenfor vår kontroll</span>
+        <h2>Eksterne avhengigheter</h2>
+        <ul>
+          <li><strong>Epic on FHIR (sandkasse):</strong> Helseplattformen kjører Epic, så sandkassen er et relevant testmiljø. LaunchPad-feilen ble rettet av Epic, men selve <code>/oauth2/authorize</code> svarer fortsatt med en generisk autorisasjonsfeil, og alle årsakene Epics egen feilsøkingsside lister er sjekket og utelukket hos oss. Status per 2026-09-16 var uendret blokkert i påvente av at Epic ser på egne logger. Se <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/EPIC-TESTMILJO.md" target="_blank" rel="noopener"><code>docs/EPIC-TESTMILJO.md</code></a> for siste status.</li>
+          <li><strong>NHN-testmiljø:</strong> Helsenorge-portalen kan bare nås fra IP-adresser NHN har åpnet. Se <a href="../helsenorge/#funn">Helsenorge</a>.</li>
+          <li><strong>Fastlege-EPJ:</strong> hva leverandørene faktisk støtter av SMART og FHIR er ikke kartlagt mot reelle systemer (R1). NAVs <code>nav-epj</code> kan settes opp lokalt som et Norge-tilpasset SMART-testmiljø; se <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/NAV-EPJ-TESTMILJO.md" target="_blank" rel="noopener"><code>docs/NAV-EPJ-TESTMILJO.md</code></a>.</li>
+          <li><strong>Statens vegvesen:</strong> Events-abonnement og mottakssystem er ikke avtalt.</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <h3>Om nettstedet</h3>
+      <p style="font-size:var(--ds-body-sm-font-size); color:var(--ds-color-text-subtle); max-width:34ch; margin:0;">
+        Dokumentasjon for <a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">forer-legeerklaering</a>:
+        et proof of concept som viser at Altinn Studio kan være en generisk SMART on FHIR-plattform for helseskjema.
+        Bygget med <a href="https://designsystemet.no/" target="_blank" rel="noopener">designsystemet.no</a>.
+      </p>
+    </div>
+    <div>
+      <h3>På nettstedet</h3>
+      <ul>
+        <li><a href="../flyt/">Flyt og arkitektur</a></li>
+        <li><a href="../caser/">Caser</a></li>
+        <li><a href="../helsenorge/">Helsenorge-flytene</a></li>
+        <li><a href="../status/">Status og veikart</a></li>
+        <li><a href="../dokumentasjon/">Dokumentasjon</a></li>
+        <li><a href="../onboarding/">Onboarding for utviklere</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>Relatert</h3>
+      <ul>
+        <li><a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">Kildekode på GitHub</a></li>
+        <li><a href="https://hl7.org/fhir/smart-app-launch/" target="_blank" rel="noopener">SMART App Launch IG</a></li>
+        <li><a href="https://docs.altinn.studio/" target="_blank" rel="noopener">Altinn Studio-dokumentasjon</a></li>
+        <li><a href="https://github.com/navikt/syk-inn" target="_blank" rel="noopener">NAV syk-inn</a></li>
+        <li><a href="https://finnuro.github.io/forklaringsmodell-api/" target="_blank" rel="noopener">Forklaringsmodell-API</a></li>
+        <li><a href="https://finnuro.github.io/regel-ide/" target="_blank" rel="noopener">Regel-IDE</a></li>
+      </ul>
+    </div>
+    <p class="fine">
+      Prototype og proof of concept — ikke en offisiell nettside for Digitaliseringsdirektoratet (Digdir), og ikke en produksjonsklar tjeneste. Testdata er syntetiske; ingen reelle pasienter er involvert.
+      Kildekode på <a href="https://github.com/FinnurO/forer-legeerklaering" target="_blank" rel="noopener">GitHub</a>.
+    </p>
+    <p class="fine">
+      <strong>Utviklet sammen med Claude Code</strong> (Anthropic) — kode, tester og dokumentasjon. Innholdet er ikke fasitsjekket av jurister eller helsepersonell; behandle det som et utkast og meld gjerne fra via «Gi tilbakemelding».
+    </p>
+  </div>
+</footer>
+
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>
