@@ -1020,14 +1020,14 @@ Appens `ExchangeCodeForToken` har lenge støttet HTTP Basic-auth med `client_id:
 
 ### Bakgrunn
 
-HelseID autentiserer helsepersonell via ID-porten og beriker identiteten med helsefaglige claims (HPR-nummer, assurance-nivå, organisasjonstilknytning). Siden HelseID bruker ID-porten som identitetsrot, er `pid`-claimet (fnr) identisk med det Altinn mottar ved normal ID-porten-innlogging. SSO oppnås dermed via felles `pid` — ingen ny plattformavtale er nødvendig.
+**Rettet 2026-11-12.** HelseID er en identitetsføderasjon uten egen innlogging: brukeren logger inn hos en ekstern leverandør (Buypass, Commfides, BankID, ID-porten m.fl.), og HelseID beriker identiteten med helsefaglige claims (HPR-nummer, sikkerhetsnivå, organisasjonstilknytning). ID-porten er bare én av leverandørene. En tidligere versjon her påsto at ID-porten er HelseIDs identitetsrot, og at SSO mot Altinn dermed oppnås via felles `pid`. Det er ikke belagt: felles fødselsnummer lar oss koble to innlogginger til samme person, men legen må logge inn to ganger. Detaljer: [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md).
 
-Testmiljøet (`selvbetjening.test.nhn.no`) er tilgjengelig uten formell leverandøravtale med NHN — du logger inn med ID-porten og registrerer klient selv.
+Testmiljøet (`selvbetjening.test.nhn.no`) er tilgjengelig uten formell leverandøravtale med NHN. Hvilken innlogging selvbetjeningen bruker for utviklere, er ikke verifisert; tidligere versjoner skrev «ID-porten».
 
 ### Steg 1: Registrer klient i HelseID testmiljø
 
 1. Gå til `https://selvbetjening.test.nhn.no/`
-2. Logg inn med din ID-porten-identitet
+2. Logg inn (innloggingsmetoden er ikke verifisert; tidligere versjoner skrev «ID-porten»)
 3. Opprett ny klient med disse verdiene:
 
 | Felt | Verdi |

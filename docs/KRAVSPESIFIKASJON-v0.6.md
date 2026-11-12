@@ -279,18 +279,18 @@ Klientregistrering mot EPJ-leverandøren er ikke en engangsoperasjon:
 
 Legene er allerede innlogget i EPJ via **HelseID** (NHNs OpenID Connect-leverandør for helsepersonell). Spørsmålet er: kan vi gjenbruke HelseID-sesjonen i Altinn, slik at legen slipper dobbel innlogging?
 
-#### Nøkkelinnsikt: HelseID bruker ID-porten som rot-identitetstjeneste
+#### Nøkkelinnsikt (rettet 2026-11-12): HelseID er en føderasjon, og ID-porten er bare én av flere identitetsleverandører
 
-**HelseID autentiserer selve brukeren via ID-porten.** HelseID er et lag på toppen — det legger til helsefaglige claims (HPR-nummer, organisasjon, assurance-nivå), men den underliggende identiteten er ID-porten-verifisert. Konsekvensen er:
+> **Rettelse.** En tidligere versjon av dette avsnittet (v0.6.5) påsto at «HelseID autentiserer selve brukeren via ID-porten» og at SSO mot Altinn dermed «skjer naturlig» via felles fødselsnummer. Begge deler er feil eller ubelagte. Se [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md).
+
+**HelseID er en identitetsføderasjon uten egen innlogging.** Brukeren velger en ekstern identitetsleverandør; standardlisten er Buypass, Commfides, BankID, ID-porten og Helse Midt-Norge RHF. ID-porten er et «ekstra alternativ» og er ikke tilgjengelig på Helsenettet. HelseID legger til helsefaglige claims (HPR-nummer, organisasjon, sikkerhetsnivå) som ID-porten ikke gir. Hvilken leverandør som ble brukt, står i `idp`-claimet.
 
 ```
-Lege i EPJ:     ID-porten → HelseID → EPJ (token med pid + hpr_number)
+Lege i EPJ:     Buypass | Commfides | BankID | ID-porten | … → HelseID → EPJ (token med pid + hpr_number)
 Lege i Altinn:  ID-porten → Altinn  (token med pid)
-                               ↑
-                          Samme pid (fnr) — samme person
 ```
 
-**SSO skjer naturlig gjennom den felles tillitskjeden.** Ingen ny plattformavtale mellom Digdir og NHN er nødvendig for at konsumenten (vår BFF) skal validere HelseID-tokens. NHN bekrefter at testmiljøet er tilgjengelig uten formell avtale — man logger inn med ID-porten og avgjør selv tillitsnivå.
+**Felles fødselsnummer gir korrelasjon, ikke SSO.** Begge tokens har et fødselsnummer, og det lar oss koble to innlogginger til samme person. Ingen kilde sier at Altinn kan gjenbruke en HelseID-sesjon, så legen må logge inn to ganger i portalmodus. At testmiljøet er tilgjengelig uten formell avtale (selvbetjening.test.nhn.no) gjelder registrering av klient, ikke SSO.
 
 #### HelseID tekniske egenskaper
 
@@ -331,7 +331,7 @@ Altinn-sesjon:
 
 NHN tilbyr testmiljø på `https://selvbetjening.test.nhn.no/` — tilgjengelig uten leverandøravtale:
 
-1. **Logg inn** med ID-porten på `https://selvbetjening.test.nhn.no/`
+1. **Logg inn** på `https://selvbetjening.test.nhn.no/` (innloggingsmetoden er ikke verifisert; tidligere versjoner skrev «med ID-porten»)
 2. **Registrer klient** — oppgi redirect URI for din app, velg scopes
 3. **Generer JWK-nøkkelpar** — `private_key_jwt` brukt som client assertion
 4. **Bruk TestIDP** — simulerer brukerinnlogging; velg testperson med HPR-nummer
@@ -362,9 +362,9 @@ helseid://scopes/identity/assurance_level
 |---|---|---|
 | `AppOidcProvider` | `"feide"` | Ikke nødvendig |
 | Altinn-integrasjon | Krever Digdir/Sikt-avtale + UIDP | Ingen — BFF validerer direkte |
-| Identitetsrot | Feide/OIDC | ID-porten (via HelseID) |
-| SSO-mekanisme | Altinn-plattform | Felles `pid` (fnr) |
-| Status | Registrert i Altinn | Mulig uten ny avtale |
+| Identitetsrot | Feide/OIDC | Føderasjon av flere leverandører (ID-porten er én av dem), se INNLOGGING-HELSEID-IDPORTEN.md |
+| SSO-mekanisme | Altinn-plattform | Ingen SSO: felles `pid` (fnr) kobler bare to innlogginger |
+| Status | Registrert i Altinn | Validering i BFF mulig uten ny avtale; dobbel innlogging |
 
 Feide-mønsteret er altså ikke riktig sammenligningsgrunnlag. Vår tilnærming er enklere: BFF-en validerer HelseID-tokenet selv og bruker `pid`-claimen som bindeledd til Altinn-sesjonen.
 
@@ -622,3 +622,4 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 | **v0.6.6** | **2026-06-16** | Ny seksjon 7: Digdir-kapabiliteter (Maskinporten, Altinn Autorisasjon, Ressursregisteret) med helsesektorens tilsvarende løsninger (HelseID client_credentials, HPR-autorisasjon, NHN Tillitsrammeverk). Seksjoner renummerert. |
 | **v0.6.7** | **2026-06-16** | Ny fil `PASIENTFLYT.md`: arkitekturforslag for digital egenerklæring (NA-0201) med Dialogporten og helsenorge.no. Fullstendig feltstruktur for egenerklæringen. Mapping NA-0201 → IS-2569 helsekategorier. Faseplan v1.0–v3.0. |
 | **v0.6.8** | **2026-06-16** | Fem forbedringer basert på ekstern gjennomgang: (A) Scope-korreksjon — `user/PractitionerRole.read` lagt til, begrunnelse for `user/` vs `patient/` dokumentert. (B) Suksesskriterier — ny seksjon 2.2 med 6 målbare kriterier og akseptansetest. (C) Eksplisitt BFF-valg — browser-direkte FHIR avvist med begrunnelse i seksjon 4. (D) Ny seksjon 7 Personvern og behandlingsgrunnlag — hjemmel, dataflyt, dataminimering, logging, åpne spørsmål. (E) Token-livssyklus — refresh, utløp, session timeout i IMPLEMENTERING. Seksjoner renummerert til 12. |
+| **v0.6.9** | **2026-11-12** | Rettet seksjon 6.6 og tilhørende tabell: HelseID er en identitetsføderasjon der ID-porten er én av flere leverandører (ikke «identitetsrot»), og felles `pid` gir korrelasjon, ikke SSO. Se INNLOGGING-HELSEID-IDPORTEN.md. |
