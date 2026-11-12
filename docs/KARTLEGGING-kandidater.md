@@ -372,6 +372,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 - Bits/Finans Norge – DSOP; DSOP «Syke- og uføreforsikring»
 - Norsk helsenett – tjenester, felles tillitstjenester / tillitsanker
 - Helsedatastrategi 2025–2027 (FHI); rapporten «Nå snakker vi» (Helsedir/NAV/Dir. e-helse)
+- Direktoratet for e-helse – Rapport fra Portaloppdraget (TB2023-17, november 2023), se [PORTALOPPDRAGET.md](PORTALOPPDRAGET.md). Kartlegger portaler og attester for fastleger og gir anbefalinger om SMART on FHIR; peker bl.a. på at ulik kommunal utforming av erklæringer (HC-kort) hindrer automatisering (kap. 4.6.4), og at kommuneoverlegen får MSIS-meldingen på papir (kap. 4.6.2)
 - Norsk Tannlegeforenings veileder; Den norske tannlegeforenings retningslinjer for bivirkningsmelding
 - Norsk Psykologforening – fagetiske retningslinjer; NAV-samarbeidsveileder
 - Norsk Fysioterapeutforbund; Norske Kiropraktorers Forening

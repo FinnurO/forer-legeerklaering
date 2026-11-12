@@ -71,6 +71,7 @@ Alle dokumentene under er også samlet i [DOKUMENTASJON-KOMPLETT.md](DOKUMENTASJ
 | [VEIKART.md](docs/VEIKART.md) | Prioritert veikart mot produksjonsklar referansearkitektur: fase 1–5 inkl. NuGet-pakke `Digdir.SmartOnFhir` |
 | [SAMMENLIGNING-syk-inn.md](docs/SAMMENLIGNING-syk-inn.md) | Arkitektursammenligning mot NAV `syk-inn` og NHN Førerrett-App (begge i produksjon) — gap-analyse og læringspunkter |
 | [NHN-DOKUMENTASJON.md](docs/NHN-DOKUMENTASJON.md) | Oppsummering av NHNs implementasjonsguide for SMART App Launch og NHNs produksjons-Førerrett-App på Helsenorge-plattformen |
+| [PORTALOPPDRAGET.md](docs/PORTALOPPDRAGET.md) | Direktoratet for e-helses rapport fra Portaloppdraget (TB2023-17, nov. 2023): anbefaler SMART on FHIR i alle fastlege-EPJ-er som tredje samhandlingsmekanisme ved siden av portal og API — oppsummering, hvordan den treffer prosjektet, og hvor den avviker eller ikke dekker oss |
 | [KARTLEGGING-kandidater.md](docs/KARTLEGGING-kandidater.md) | Kartlegging av EPJ-systemer, eksisterende SMART-apper og kandidater for nye SMART on FHIR-implementasjoner i norsk helsesektor |
 | [STRATEGI.md](docs/STRATEGI.md) | Produktvisjon, to spor (Førerrett PoC / Altinn Health Integration Framework), samarbeidsmodell, gevinsthypotese og nasjonal roadmap |
 | [HACKATHON-EHIN-2026.md](docs/HACKATHON-EHIN-2026.md) | Forberedelse til Norwegian FHIR Hackathon 2026 (EHiN-pre-konferanse, 9. nov) — gap-analyse mot SMART-sporets bronse/sølv/gull-krav |
@@ -222,6 +223,7 @@ forer-legeerklaering/
 - [Altinn Studio dokumentasjon](https://docs.altinn.studio/)
 - [app-localtest](https://github.com/Altinn/app-localtest)
 - [NAV syk-inn — SMART on FHIR sykmelding i produksjon](https://github.com/navikt/syk-inn)
+- [Rapport fra Portaloppdraget med anbefalinger (Direktoratet for e-helse, nov. 2023)](https://www.helsedirektoratet.no/rapporter/rapport-om-forbedret-informasjonsutveksling-mellom-helsepersonell-og-myndigheter/Rapport%20fra%20Portaloppdraget%20med%20anbefalinger_November%202023.pdf/_/attachment/inline/92538d09-4356-497d-9b39-d28bd9fa3682:6400840f7801415673ee116f2b7e9a1a6d0f3f74/Rapport%20fra%20Portaloppdraget%20med%20anbefalinger_November%202023.pdf) — oppsummert i [PORTALOPPDRAGET.md](docs/PORTALOPPDRAGET.md)
 
 ---
 

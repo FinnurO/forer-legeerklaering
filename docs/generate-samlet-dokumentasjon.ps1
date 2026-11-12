@@ -34,6 +34,7 @@ $sections = @(
     @{ File = "VEIKART.md";                      Title = "Veikart" }
     @{ File = "SAMMENLIGNING-syk-inn.md";        Title = "Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App" }
     @{ File = "NHN-DOKUMENTASJON.md";            Title = "NHN-dokumentasjon" }
+    @{ File = "PORTALOPPDRAGET.md";              Title = "Portaloppdraget (TB2023-17) - rapport om informasjonsutveksling mellom helsepersonell og myndigheter" }
     @{ File = "KARTLEGGING-kandidater.md";       Title = "Kartlegging av rapporteringsplikter" }
     @{ File = "STRATEGI.md";                     Title = "Strategi" }
     @{ File = "HACKATHON-EHIN-2026.md";           Title = "Norwegian FHIR Hackathon 2026 - forberedelse" }

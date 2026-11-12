@@ -17,6 +17,8 @@
 | **FHIR-prefill** | Automatisk (`FhirPrefillService.ProcessDataRead`) | Ikke mulig — ingen FHIR-tilkobling finnes |
 | **Status i dag** | ✅ Fullstendig verifisert (IMPLEMENTERING.md §13) | ⚠️ Fungerer trolig som utilsiktet bivirkning — aldri designet eller testet bevisst |
 
+**Lagt til 2026-11-12 — støtte fra Portaloppdraget:** rapporten fra Direktoratet for e-helse ([PORTALOPPDRAGET.md](PORTALOPPDRAGET.md), kap. 4.1.6) sier at fordi det vil ta tid å få SMART on FHIR-støtte i alle fastlege-EPJ-er, kan et innrapporteringsbehov i en periode både være tilgjengelig via portal (for EPJ-er uten støtte) og via SMART-app. Det bekrefter behovet for to innganger. Rapporten ser dem som to separate løsninger i en overgangsperiode; at *samme app* håndterer begge, slik dette dokumentet foreslår, er en videreføring og ikke noe rapporten anbefaler.
+
 ---
 
 ## 2. Hva fungerer allerede i dag (verifisert 2026-08-12)

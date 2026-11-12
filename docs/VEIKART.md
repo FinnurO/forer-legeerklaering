@@ -74,6 +74,8 @@ Strategien følger det NAV har bevist med `syk-inn`:
 | **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. | ❌ Ikke implementert |
 | **Charset-verifisering** | Norske tegn (æ/ø/å) i skjemainnhold — testen mot smarthealthit.org viste mulig charset-mistolkning av `attachment.title` server-side (se IMPLEMENTERING.md §13). Må verifiseres mot ekte EPJ. | 🔍 Nytt funn, ikke undersøkt videre |
 
+**Lagt til 2026-11-12 — valg av tilbakeskrivingsmekanisme bør gjøres bevisst:** Portaloppdraget ([PORTALOPPDRAGET.md](PORTALOPPDRAGET.md), kap. 4.1.2) foreslår at tilbakeskriving til EPJ for portaler kan baseres på meldingsstandarden *Dialogmelding* og eksisterende meldingsinfrastruktur, og peker på at det må avgjøres om det bare skal være ustrukturert PDF eller også strukturerte data. Den nevner FHIR-API for å skrive PDF eller strukturert innhold tilbake som en mulighet for SMART-apper (kap. 4.1.4), men utdyper den ikke. Rapporten anbefaler at det som skrives tilbake er konsist og relevant. Dette påvirker valget mellom `DocumentReference` og Dialogmelding over, og bør inn i en egen beslutning.
+
 **Referanse:** `syk-inn/src/fhir-write-service.ts` + ADR01.  
 **Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope — nå bevist mulig å få).
 
@@ -125,6 +127,8 @@ Applikasjonslogikk (prefill-mapping, FHIR-ressursmodeller, skjemastruktur). Pakk
 **Estimat:** 2–3 uker for v0.1 (etter at fase 1-koden er stabil nok å ekstrahere fra).
 
 **Lagt til 2026-09-15 — profilretting mot HelseAPI:** [NHN-DOKUMENTASJON.md §5](NHN-DOKUMENTASJON.md) vurderer `HL7Norway/HelseAPI` (samme brukstilfelle, samme HPR-slice-konvensjon, men dormant siden mai 2024). Når `Digdir.SmartOnFhir` skal defineres formelt, bør `FhirHttpClientFactory`/prefill-mappingen vurdere å style seg eksplisitt mot `no-helseapi-Patient`/`-Practitioner`/`-DocumentReference` der de allerede overlapper — gir pakken forankring i en (om enn stalled) navngitt norsk fagstandard fremfor en ad-hoc-tolkning av `no-basis`. Ikke en blokkerende avhengighet — kun en anbefalt justering av profilvalg når pakken uansett skal spesifiseres.
+
+**Lagt til 2026-11-12 — rapportens tiltak 1D:** [PORTALOPPDRAGET.md](PORTALOPPDRAGET.md) (kap. 4.1.8) anbefaler å standardisere og vurdere normering av HelseAPI på kort sikt og å utvide den på mellomlang sikt, og å avklare økosystemet for statlige apper (ansvar, endringshåndtering, app-butikk, test og godkjenning) først. Når `Digdir.SmartOnFhir` spesifiseres, er det naturlig å la pakkens dokumentasjon svare på de spørsmålene for appene den støtter.
 
 ---
 

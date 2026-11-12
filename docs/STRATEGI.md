@@ -177,6 +177,16 @@ Se [SAMMENLIGNING-syk-inn.md](SAMMENLIGNING-syk-inn.md) og [NHN-DOKUMENTASJON.md
 
 ---
 
+## Forankring i nasjonale føringer — Portaloppdraget
+
+**Lagt til 2026-11-12.** Direktoratet for e-helses rapport fra Portaloppdraget (november 2023, [PORTALOPPDRAGET.md](PORTALOPPDRAGET.md)) anbefaler at SMART on FHIR innføres i alle fastlege-EPJ-er som en **tredje samhandlingsmekanisme** ved siden av portaler og API (tiltak 1D). Den peker på appmodellens hovedgevinst — at tjenesteeieren kan endre appen uten at EPJ-leverandøren må utvikle noe — og beskriver en overgangsperiode der samme behov dekkes både av portal og app. Dette er i praksis den posisjonen Spor A og Spor B bygger på, nå med en offisiell anbefaling bak.
+
+Rapporten stiller også spørsmålet vi ikke har besvart: hvem eier, godkjenner og distribuerer **statlige apper**? (ansvarsforhold, endringshåndtering, app-butikk, test og godkjenning). Det er et argument for at plattformvalget i [BESLUTNINGER.md C-6](BESLUTNINGER.md) og hostingmodellene over bør besvares, ikke bare antas. Rapporten sier ingenting om Altinn som plattform utover å nevne Altinn i forbindelse med en mulig nasjonal skjemadatabase.
+
+**Forbehold:** rapporten er fra 2023, og dekker innrapportering til myndigheter, ikke utveksling mellom helseaktører.
+
+---
+
 ## Europeisk medvind — EHDS
 
 **European Health Data Space** (forordning (EU) 2025/327) er i kraft og gjelder fra 2026, med gjennomføringsrettsakter innen mars 2027 og første primærbruk-utveksling fra 2029. FHIR er den sentrale tekniske standarden. Norge er EØS-bundet og vil bli omfattet.
