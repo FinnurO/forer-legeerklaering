@@ -1,6 +1,6 @@
 ﻿# forer-legeerklaering — Samlet dokumentasjon
 
-**Generert:** 2026-09-21
+**Generert:** 2026-11-12
 **Kilde:** `docs/` — rekkefølge etter tabell i README.md. Generert av `docs/generate-samlet-dokumentasjon.ps1` — kjør skriptet på nytt etter endringer i docs/*.md, rediger ikke denne filen direkte.
 
 ---
@@ -20,12 +20,13 @@
 11. [Veikart](#11-veikart)
 12. [Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App](#12-sammenligning-forer-vs-syk-inn-vs-nhn-førerrett-app)
 13. [NHN-dokumentasjon](#13-nhn-dokumentasjon)
-14. [Kartlegging av rapporteringsplikter](#14-kartlegging-av-rapporteringsplikter)
-15. [Strategi](#15-strategi)
-16. [Norwegian FHIR Hackathon 2026 - forberedelse](#16-norwegian-fhir-hackathon-2026---forberedelse)
-17. [Testguide: SMART EHR Launch mot launch.smarthealthit.org](#17-testguide-smart-ehr-launch-mot-launchsmarthealthitorg)
-18. [nav-epj som lokalt SMART on FHIR-testmiljo](#18-nav-epj-som-lokalt-smart-on-fhir-testmiljo)
-19. [Epic on FHIR som testmiljo (Helseplattformen)](#19-epic-on-fhir-som-testmiljo-helseplattformen)
+14. [Portaloppdraget (TB2023-17) - rapport om informasjonsutveksling mellom helsepersonell og myndigheter](#14-portaloppdraget-tb2023-17---rapport-om-informasjonsutveksling-mellom-helsepersonell-og-myndigheter)
+15. [Kartlegging av rapporteringsplikter](#15-kartlegging-av-rapporteringsplikter)
+16. [Strategi](#16-strategi)
+17. [Norwegian FHIR Hackathon 2026 - forberedelse](#17-norwegian-fhir-hackathon-2026---forberedelse)
+18. [Testguide: SMART EHR Launch mot launch.smarthealthit.org](#18-testguide-smart-ehr-launch-mot-launchsmarthealthitorg)
+19. [nav-epj som lokalt SMART on FHIR-testmiljo](#19-nav-epj-som-lokalt-smart-on-fhir-testmiljo)
+20. [Epic on FHIR som testmiljo (Helseplattformen)](#20-epic-on-fhir-som-testmiljo-helseplattformen)
 
 ---
 
@@ -178,6 +179,8 @@ Etter at alt kjører: åpne `http://localhost:9090/epj` for EPJ-simulatoren (anb
 | **Pasientkontekst** | Kjent fra launch (patient-ID, encounter-ID) | Ukjent — må oppgis manuelt |
 | **FHIR-prefill** | Automatisk (`FhirPrefillService.ProcessDataRead`) | Ikke mulig — ingen FHIR-tilkobling finnes |
 | **Status i dag** | ✅ Fullstendig verifisert (IMPLEMENTERING.md §13) | ⚠️ Fungerer trolig som utilsiktet bivirkning — aldri designet eller testet bevisst |
+
+**Lagt til 2026-11-12 — støtte fra Portaloppdraget:** rapporten fra Direktoratet for e-helse ([PORTALOPPDRAGET.md](PORTALOPPDRAGET.md), kap. 4.1.6) sier at fordi det vil ta tid å få SMART on FHIR-støtte i alle fastlege-EPJ-er, kan et innrapporteringsbehov i en periode både være tilgjengelig via portal (for EPJ-er uten støtte) og via SMART-app. Det bekrefter behovet for to innganger. Rapporten ser dem som to separate løsninger i en overgangsperiode; at *samme app* håndterer begge, slik dette dokumentet foreslår, er en videreføring og ikke noe rapporten anbefaler.
 
 ---
 
@@ -3555,6 +3558,8 @@ Strategien følger det NAV har bevist med `syk-inn`:
 | **Kanonisk Questionnaire** | Publiser `Questionnaire`-ressursen som beskriver IS-2569-feltene — gjenbrukbar av andre systemer som skal konsumere innsendingen. | ❌ Ikke implementert |
 | **Charset-verifisering** | Norske tegn (æ/ø/å) i skjemainnhold — testen mot smarthealthit.org viste mulig charset-mistolkning av `attachment.title` server-side (se IMPLEMENTERING.md §13). Må verifiseres mot ekte EPJ. | 🔍 Nytt funn, ikke undersøkt videre |
 
+**Lagt til 2026-11-12 — valg av tilbakeskrivingsmekanisme bør gjøres bevisst:** Portaloppdraget ([PORTALOPPDRAGET.md](PORTALOPPDRAGET.md), kap. 4.1.2) foreslår at tilbakeskriving til EPJ for portaler kan baseres på meldingsstandarden *Dialogmelding* og eksisterende meldingsinfrastruktur, og peker på at det må avgjøres om det bare skal være ustrukturert PDF eller også strukturerte data. Den nevner FHIR-API for å skrive PDF eller strukturert innhold tilbake som en mulighet for SMART-apper (kap. 4.1.4), men utdyper den ikke. Rapporten anbefaler at det som skrives tilbake er konsist og relevant. Dette påvirker valget mellom `DocumentReference` og Dialogmelding over, og bør inn i en egen beslutning.
+
 **Referanse:** `syk-inn/src/fhir-write-service.ts` + ADR01.  
 **Estimat:** 1–2 uker etter fase 1 (krever gyldig access token med write-scope — nå bevist mulig å få).
 
@@ -3606,6 +3611,8 @@ Applikasjonslogikk (prefill-mapping, FHIR-ressursmodeller, skjemastruktur). Pakk
 **Estimat:** 2–3 uker for v0.1 (etter at fase 1-koden er stabil nok å ekstrahere fra).
 
 **Lagt til 2026-09-15 — profilretting mot HelseAPI:** [NHN-DOKUMENTASJON.md §5](NHN-DOKUMENTASJON.md) vurderer `HL7Norway/HelseAPI` (samme brukstilfelle, samme HPR-slice-konvensjon, men dormant siden mai 2024). Når `Digdir.SmartOnFhir` skal defineres formelt, bør `FhirHttpClientFactory`/prefill-mappingen vurdere å style seg eksplisitt mot `no-helseapi-Patient`/`-Practitioner`/`-DocumentReference` der de allerede overlapper — gir pakken forankring i en (om enn stalled) navngitt norsk fagstandard fremfor en ad-hoc-tolkning av `no-basis`. Ikke en blokkerende avhengighet — kun en anbefalt justering av profilvalg når pakken uansett skal spesifiseres.
+
+**Lagt til 2026-11-12 — rapportens tiltak 1D:** [PORTALOPPDRAGET.md](PORTALOPPDRAGET.md) (kap. 4.1.8) anbefaler å standardisere og vurdere normering av HelseAPI på kort sikt og å utvide den på mellomlang sikt, og å avklare økosystemet for statlige apper (ansvar, endringshåndtering, app-butikk, test og godkjenning) først. Når `Digdir.SmartOnFhir` spesifiseres, er det naturlig å la pakkens dokumentasjon svare på de spørsmålene for appene den støtter.
 
 ---
 
@@ -4069,6 +4076,8 @@ Nei. Fem åpne issues, ingen lukket siden 2020 bortsett fra diskusjon:
 
 **Issue #15 sitt innhold er selve verdien i repoet akkurat nå.** Ekte HL7 Norway/Helsenorge-folk (rockphotog, kennethmyhra, thomiz, losolio, oaassv) diskuterer der — uten å konkludere — nøyaktig det samme spørsmålet `forer-legeerklaering` selv har måttet ta stilling til: **EHR-launched (scenario 4) vs. standalone/portal-launched (scenario 3, f.eks. fra Helseaktørportalen)** — det dette prosjektet kaller «dobbel inngangsmodus» (se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md)). `kennethmyhra` uttrykker usikkerhet om Helseaktørportalen i det hele tatt er SMART-kompatibel. `losolio` foreslår mot slutten en generalisering til «portal-smart-apper», som ligger tett opptil dette prosjektets eget STRATEGI.md-spor B («Altinn Health Integration Framework»), med referanse til Helsedirektoratets «portaloppdraget»-rapport. `kennethmyhra` lenker også en «fornorsket versjon» av en SMART App Launch-IG skrevet for scenario 4 spesifikt ([Confluence, bekreftet offentlig lesbar](https://helsenorge.atlassian.net/l/cp/J1efuXyY)) — innholdsmessig overlappende med §1 i dette dokumentet.
 
+**Lagt til 2026-11-12 — rapporten tråden viser til:** `losolio` viser i issue #15 til «Helsedirektoratets portaloppdraget-rapport». Det er trolig [Portaloppdraget (TB2023-17, november 2023)](PORTALOPPDRAGET.md). Den navngir HelseAPI som API for standardiserte informasjonselementer fra EPJ og anbefaler i tiltak 1D å standardisere og vurdere normering av HelseAPI på kort sikt og utvide den på mellomlang sikt (kap. 4.1.8). Det er en offisiell anbefaling bak noe repoet ikke har fulgt opp siden mai 2024, og det styrker anbefalingen om å bidra i stedet for å bygge på.
+
 ### Vurdering
 
 **Ja, dette er troverdig prior art** som `forer-legeerklaering` bør forholde seg til — samme brukstilfelle, samme HPR-slice-konvensjon, og en stalled fagdiskusjon som allerede har identifisert de samme arkitektoniske spørsmålene dette prosjektet har måttet løse selv. **Nei, det er ikke noe å «bygge på» direkte i kodeteknisk forstand** — repoet er dormant (ingen push siden mai 2024), det finnes ingen publisert/versjonert FHIR Implementation Guide (kun løse `StructureDefinition`-filer og en stanset issue-diskusjon om nettopp å publisere en), og §2 over viser at selv Confluence-dokumentasjonen og GitHub-kildekoden har driftet fra hverandre.
@@ -4083,7 +4092,141 @@ Ingen av disse er kodeendringer i seg selv — de er forankrings-/kommunikasjons
 
 ---
 
-# 14. Kartlegging av rapporteringsplikter
+# 14. Portaloppdraget (TB2023-17) - rapport om informasjonsutveksling mellom helsepersonell og myndigheter
+
+# Portaloppdraget (TB2023-17) — rapport om forbedret informasjonsutveksling mellom helsepersonell og myndigheter
+
+**Kilde:** [Rapport fra Portaloppdraget med anbefalinger (PDF, Helsedirektoratet)](https://www.helsedirektoratet.no/rapporter/rapport-om-forbedret-informasjonsutveksling-mellom-helsepersonell-og-myndigheter/Rapport%20fra%20Portaloppdraget%20med%20anbefalinger_November%202023.pdf/_/attachment/inline/92538d09-4356-497d-9b39-d28bd9fa3682:6400840f7801415673ee116f2b7e9a1a6d0f3f74/Rapport%20fra%20Portaloppdraget%20med%20anbefalinger_November%202023.pdf)
+**Tittel i PDF-en:** «Rapport om forbedret informasjonsutveksling mellom helsepersonell og myndigheter — Anbefalinger for å redusere rapporteringsbyrden», rapportnummer TB2023-17 Portal-oppdraget
+**Dato og avsender:** november 2023. Skrevet av Direktoratet for e-helse (innlemmet i Helsedirektoratet i 2024) på oppdrag fra Helse- og omsorgsdepartementet. Prosjektet ble finansiert gjennom Stimulab-ordningen, og Digitaliseringsdirektoratet er oppført som å ha gitt midler.
+**Lest og oppsummert:** 2026-11-12, hele rapporten (ca. 65 sider pluss vedlegg). Kapittelhenvisninger under er til rapportens egen nummerering.
+
+**Forbehold:** rapporten er fra 2023. Hva som har skjedd med tiltakene siden, er ikke undersøkt her. Påstander om «dagens situasjon» i rapporten (for eksempel at bare én fastlege-EPJ støtter SMART on FHIR) er tilstanden i 2023 og må leses slik.
+
+---
+
+## 1. Hva rapporten er, og hva den ikke dekker
+
+Oppdraget var å anbefale hvordan innrapportering og informasjonsutveksling fra helsepersonell til **myndigheter** bør håndteres fremover. Med «rapportering» menes både innrapportering til registre og utfylling av skjema, erklæringer og helseattester til andre enn pasienten selv (kap. 1.6). Det er altså nøyaktig den klassen skjema dette prosjektet bygger på.
+
+**Avgrensning som er viktig for oss:** oppdragsteksten (kap. 1.1) utelater uttrykkelig informasjonsutveksling *mellom helseaktører* om ytelse av helsehjelp. Det betyr at en henvisning fra tannlege til kjeveortoped (`AppKjeveortopedisk`) i seg selv ligger utenfor rapportens omfang. Helfos vurdering av stønad er derimot en myndighetsvurdering. Rapportens konklusjoner kan derfor brukes som støtte for kjeveortopedisk-caset bare med dette forbeholdet.
+
+Fokus er fastlegene, men rapporten sier selv at mye er relevant for annet helsepersonell.
+
+## 2. Hovedfunn
+
+| Funn | Tall og beskrivelse (kap. 1.2, 2) |
+|---|---|
+| Arbeidsbyrde | Median arbeidstid for fastleger er 55 timer per uke. 58 % opplever markant økt arbeidsbelastning, særlig knyttet til attester, erklæringer og sykmelding. Omtrent syv timer per uke går til administrativt arbeid, der kontakten med NAV er største andel. |
+| Fragmentering | Mange portaler med ulik pålogging og ulikt brukergrensesnitt, liten grad av forhåndsutfylling, og dobbeltregistrering — også ved at opplysningene må føres manuelt tilbake i journalen. |
+| Hvorfor portaler vinner | De er enkle for myndigheten å etablere: ofte ingen databehandleravtale og ingen avtale om utvikling i EPJ, og de kan endres raskt av virksomheten selv. |
+| Leverandørsiden | 41 EPJ fra 29 leverandører, hvorav fastleger bruker 9. Leverandørene har for lite kapasitet mot summen av myndighetenes behov, og de opplever at myndighetene ikke er koordinerte eller tydelige på standarder. Kundene betaler lite for rapporteringsfunksjonalitet pålagt av myndighetene. |
+| Endringstakt | NAV opplever at endringer i skjema som ligger i EPJ-ene kan ta flere år å få gjennomført hos alle leverandørene (kap. 4.1.4 og 5.1.1). |
+
+## 3. De fem tiltaksområdene
+
+| Område | Innhold | Anbefaling |
+|---|---|---|
+| 1 | Rapportering tettere integrert i fastlegens EPJ (tiltak 1A–1F) | Start med 1A, 1B, 1D og 1F. Vent med 1C og 1E. |
+| 2 | Samskapingsarena for behov og løsninger | Videreføre arenaen fra Portaloppdraget |
+| 3 | Nasjonal samordning, som verner fastlegen mot nye rapporteringsoppgaver | Utrede videre |
+| 4 | Nasjonal prioritering av myndighetenes behov mot EPJ-leverandørene | Helsedirektoratet vurderer operasjonalisering |
+| 5 | Regelverk som understøtter effektiv rapportering | Ingen nye tiltak nå; gjennomgang av registerforskriftene støttes |
+
+Tiltakene i område 1:
+
+| Tiltak | Innhold |
+|---|---|
+| 1A | Samleside med lenker til relevante portaler (lav kost, lav nytte) |
+| 1B | Felles rammeverk for portaler: single sign-on, kontekstoverføring, sikkerhet og tilbakeskriving, inkludert HelseID |
+| 1C | Én felles inngangsportal med HelseID-SSO (utsettes, venter på 1B) |
+| **1D** | **Tilrettelegge for apper i EPJ — SMART on FHIR** |
+| 1E | Felles rammeverk for API-integrasjon (ikke prioritert først) |
+| 1F | Veileder for valg mellom portal, API og SMART on FHIR |
+
+## 4. Tiltak 1D: SMART on FHIR (kap. 4.1.4, 4.1.7, 4.1.8)
+
+Dette er den delen som treffer prosjektet tydeligst.
+
+**Konklusjonen** er at SMART on FHIR-rammeverket bør innføres i alle fastlege-EPJ-er, som en tredje samhandlingsmekanisme ved siden av portaler og API. Den skal *sameksistere* med dem, ikke erstatte dem, fordi den ikke er beste løsning i alle tilfeller.
+
+**Argumentene for** appmodellen er at:
+- én app kan vedlikeholdes én gang og kjøres i alle EPJ-er som støtter rammeverket, noe som gir raskere og mer enhetlig utrulling fra sentralt hold;
+- registereier eller tjenesteeier kan endre appen uten at EPJ-leverandøren må utvikle noe;
+- appen kan hente standardisert informasjon (rapporten nevner uttrykkelig pasient, behandler og konsultasjon) og forhåndsutfylle skjemaet;
+- FHIR-API-er kan også brukes til å skrive PDF eller strukturerte data tilbake til EPJ for journalføring;
+- EPJ-leverandørene slipper å bygge og vedlikeholde brukergrensesnitt for hvert rapporteringsbehov, og de har selv sagt at de ikke ønsker å konkurrere på rapportering til myndigheter;
+- en løsning med komplisert forretningslogikk og hyppige endringer er en god kandidat.
+
+**Ulempene og uavklarte forhold** rapporten selv peker på:
+- I 2023 hadde bare én fastlege-EPJ implementert støtte, og det hadde vist seg vanskelig å få flere til det.
+- Appens brukergrensesnitt vil se annerledes ut enn EPJ-ets. Felles designelementer i portalrammeverket (1B) kan jevne ut forskjellene.
+- Én leverandør ønsket at API alltid skulle tilbys i tillegg. Ulempen er at tjenesteeieren da igjen blir avhengig av leverandørens prioriteringer. Dette avgjøres fra case til case.
+- Apper fra myndigheter eller registereiere er enklere å ta i bruk enn tredjepartsapper, som krever avklaringer om avtaler, ansvar, distribusjon og test.
+
+**Anbefalt rekkefølge:**
+
+| Horisont | Aktiviteter for 1D |
+|---|---|
+| Kort sikt (1 år) | Avklare **økosystemet for statlige apper** — ansvarsforhold, endringshåndtering, app-butikk, test og godkjenning. Gi en tydeligere anbefaling om bruk av SMART on FHIR og vurdere å normere Direktoratet for e-helses «Anbefaling om bruk av SMART on FHIR». Avklare finansiering og virkemidler mot EPJ-leverandørene. Identifisere en pilotapp for innrapportering. Standardisere og vurdere normering av **HelseAPI**. |
+| Mellomlang sikt (2–4 år) | Etablere SMART on FHIR-støtte i resterende fastlege-EPJ-er. Teste pilotappen i den EPJ-en som allerede har støtte. Utvikle og ta i bruk statlige apper (utviklingen kan settes ut til næringslivet). Utvide HelseAPI til flere informasjonselementer. Avklare økosystemet for norske og utenlandske tredjepartsapper. |
+| Lang sikt (4+ år) | Ta i bruk tredjepartsapper på en styrt måte. |
+
+**Overgangsperioden (kap. 4.1.6):** fordi det tar tid å få SMART-støtte i alle EPJ-er, kan et innrapporteringsbehov i en periode være tilgjengelig både som portal (for EPJ-er uten støtte) og som SMART-app.
+
+## 5. Hva som er relevant for andre deler av tiltaksområdene
+
+- **Tilbakeskriving (1B, 1C):** rapporten foreslår at tilbakeskriving til EPJ kan baseres på meldingsstandarden *Dialogmelding* (eller en profil av den) og eksisterende meldingsinfrastruktur, og at det må vurderes om det bare skal være ustrukturert PDF eller også strukturert informasjon. Det som sendes tilbake bør være konsist, så journalen ikke fylles med unødvendig tekst.
+- **NAV (kap. 5.1.1):** i det parallelle NAV-oppdraget er SMART on FHIR og webapplikasjoner/portaler de to mest aktuelle løsningene. Arbeidet bør starte med sykmeldingsløpet og legeerklæring ved arbeidsuførhet, og det trengs en plan for hvordan oppslutning fra EPJ-leverandørene kan sikres.
+- **Kommunale skjema (kap. 4.6.4):** legeerklæring for HC-kort (parkering) er eksempel på at kommunene har ulik utforming og ulike krav, noe som hindrer automatisering og gjenbruk av EPJ-data.
+- **Selvbetjening på Helsenorge (kap. 4.6.5):** en mer tillitsbasert tilnærming til attester, med økt bruk av egenmeldinger som innbygger kan fylle ut på Helsenorge.
+- **Nasjonal skjemadatabase (kap. 4.6.3):** krever videre utredning og må vurderes sammen med skjemaløsningene i Helsenorge og i Altinn. Det er den eneste uttrykkelige omtalen av Altinn i rapporten.
+- **MSIS (kap. 4.6.2):** kommuneoverlegen får i dag en papirkopi av meldingen og trenger mer informasjon fra MSIS til smittesporing. Rapporten anbefaler at dette løftes av FHI etter samlingen av registrene.
+- **Interessenter (vedlegg A):** Statens vegvesen er oppført som behovseier, med erfaringsdeling via NHN knyttet til førerrett-prosjektet. Vedlegget nevner også at konklusjonen etter helseattest eller synsattest sendes elektronisk til førerkortregisteret.
+
+## 6. Hvordan dette treffer `forer-legeerklaering`
+
+| Vår påstand eller arbeid | Hva rapporten sier | Vurdering |
+|---|---|---|
+| SMART on FHIR er en gyldig tredje mekanisme ved siden av portal og API ([STRATEGI.md](STRATEGI.md)) | Kap. 4.1.7 konkluderer at den bør innføres i alle fastlege-EPJ-er og sameksistere med portaler og API | **Støtte.** Posisjonen er forankret i en offisiell anbefaling, ikke bare vår egen. |
+| Dobbel inngangsmodus: samme app fra EPJ og via vanlig Altinn-pålogging ([DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md)) | Kap. 4.1.6: i en periode både portal og SMART-app for samme behov | **Delvis støtte.** Rapporten ser portal og app som to løsninger i en overgangsperiode. At *samme app* håndterer begge, er vår egen videreføring og ikke noe rapporten foreslår. |
+| Appen eies av tjenesteeier og kan endres uten EPJ-leverandøren | Kap. 4.1.4 og 5.1.1: dette er hovedgevinsten, og NAVs erfaring er flere år per endring via EPJ | **Støtte.** |
+| Prefill av pasient, behandler, organisasjon og konsultasjon ([SMARTFHIR-COMMON.md](SMARTFHIR-COMMON.md)) | Kap. 4.1.4 nevner nettopp pasient, behandler og konsultasjon | **Støtte.** Vi leser i tillegg organisasjon og diagnose. |
+| Writeback som FHIR `DocumentReference` ([VEIKART.md fase 2](VEIKART.md)) | Kap. 4.1.2: tilbakeskriving kan baseres på Dialogmelding. Kap. 4.1.4: FHIR-API for å skrive PDF eller strukturerte data er også mulig | **Avvik å merke seg.** Rapporten peker først og fremst på Dialogmelding for portaler. Vår FHIR-vei er nevnt som mulighet for apper, men ikke utdypet. Valget bør gjøres bevisst. |
+| HelseID og Normen ([BESLUTNINGER.md C-2](BESLUTNINGER.md)) | 1B og 1C forutsetter HelseID for SSO, og et tillitsrammeverk for tilgangsstyring | **Samsvar.** |
+| Hvor skal statlige apper kjøre, og hvem godkjenner dem? ([BESLUTNINGER.md C-4, C-6](BESLUTNINGER.md)) | Kap. 4.1.4: økosystem for statlige apper (ansvar, endringshåndtering, app-butikk, test og godkjenning) er uavklart og er første aktivitet på kort sikt | **Åpent og relevant.** Altinn Studio som hosting- og utviklingsplattform er et mulig svar på deler av dette. Rapporten tar ikke stilling til plattform. |
+| Pilotapp for innrapportering | Kap. 4.1.8: identifisere og teste én pilotapp i den EPJ-en som har støtte | **Aktuelt.** FHI har bekreftet at MSIS-klinikermelding kjører SMART on FHIR i minst ett EPJ ([KARTLEGGING-kandidater.md, note til A5](KARTLEGGING-kandidater.md)). Om det er pilotappen rapporten sikter til, er ikke avklart. |
+| `NHN-DOKUMENTASJON.md §5`: HL7Norway/HelseAPI | Kap. 4.1.8 anbefaler å standardisere og vurdere normering av HelseAPI, og utvide den | **Styrker bidragsanbefalingen.** Se [NHN-DOKUMENTASJON.md §5](NHN-DOKUMENTASJON.md). |
+| Digital egenerklæring NA-0201 via Helsenorge ([PASIENTFLYT.md](PASIENTFLYT.md)) | Kap. 4.6.5: attester og egenmeldinger som innbygger fyller ut på Helsenorge, som tillitsbasert tilnærming | **Samsvar i retning.** |
+| Helse-template for flere skjema (STRATEGI.md Spor B) | Kap. 4.6.4: ulik kommunal utforming av for eksempel HC-kort-erklæringen hindrer gjenbruk av EPJ-data. Kap. 4.6.3: skjemadatabase vurderes sammen med Helsenorge og Altinn | **Relevant for kandidatvalg.** Skjema som er nasjonalt enhetlige, er lettere å automatisere enn kommunale varianter. |
+
+## 7. Hvor rapporten og prosjektet ikke møtes
+
+- **Rapporten behandler ikke Altinn som plattform.** Den sammenligner portal, API og SMART on FHIR, men sier ingenting om hvor SMART-apper bør hostes eller hvordan skjemaeier bør bygge dem.
+- **Rapporten er ikke teknisk.** Den beskriver ingen launch-flyt, ingen scopes og ingen tokenvalidering. Alt i [IMPLEMENTERING.md](IMPLEMENTERING.md) går dypere enn den.
+- **Helseaktør-til-helseaktør** (henvisninger) er uttrykkelig utenfor omfanget, jf. kap. 1.
+- **Pasientsiden** (Helsenorge EksternAPI, oppgaver og kopi til innbygger) er ikke et tema, bortsett fra tiltaket om selvbetjening for attester.
+- **Tidsforskyvning:** tilstanden i 2023 er ikke tilstanden i dag. Våre egne funn (MSIS i produksjon i et EPJ, NAVs `nav-epj`, Helsenorge EksternAPI verifisert mot testmiljø) viser at deler av det rapporten ser som fremtidig, er kommet lenger.
+
+## 8. Mulige oppfølginger
+
+1. **Bruk rapporten som referanse i dialogen med NHN og Helsedirektoratet.** Den gir et felles språk («pilotapp», «statlige apper», tiltak 1D/1F) og viser at prosjektets retning allerede er anbefalt.
+2. **Svar på de uavklarte spørsmålene i 1D** med erfaringene fra dette prosjektet: ansvarsforhold, endringshåndtering, test og godkjenning, og hosting. Beslutning C-6 er stedet å begynne.
+3. **Bidra til tiltak 1F (veileder for valg av integrasjonsløsning).** Dobbel inngangsmodus og erfaringene fra to ulike skjema er konkret materiale.
+4. **Ta stilling til tilbakeskriving:** Dialogmelding eller FHIR `DocumentReference`. Legg valget inn i veikartets fase 2.
+5. **Undersøk hva som har skjedd med tiltakene siden 2023** før noe av dette brukes utad.
+
+---
+
+## Referanser
+
+- Direktoratet for e-helse. *Rapport om forbedret informasjonsutveksling mellom helsepersonell og myndigheter — Anbefalinger for å redusere rapporteringsbyrden.* November 2023. TB2023-17 Portal-oppdraget. Lenke øverst.
+- Rapporten viser selv til *Anbefaling om bruk av SMART on FHIR* og *SMART on FHIR: Bruk og potensial* (Direktoratet for e-helse), *Situasjonsbeskrivelse og erfaringer med SMART on FHIR — EPJ-løftet*, og *Fastlegers arbeid med attester og erklæringer utenfor NAV området* (Helsedirektoratet, 2022). De er ikke lest her.
+
+
+---
+
+# 15. Kartlegging av rapporteringsplikter
 
 # Kartlegging av rapporteringsplikter for helsepersonell
 
@@ -4459,6 +4602,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 - Bits/Finans Norge – DSOP; DSOP «Syke- og uføreforsikring»
 - Norsk helsenett – tjenester, felles tillitstjenester / tillitsanker
 - Helsedatastrategi 2025–2027 (FHI); rapporten «Nå snakker vi» (Helsedir/NAV/Dir. e-helse)
+- Direktoratet for e-helse – Rapport fra Portaloppdraget (TB2023-17, november 2023), se [PORTALOPPDRAGET.md](PORTALOPPDRAGET.md). Kartlegger portaler og attester for fastleger og gir anbefalinger om SMART on FHIR; peker bl.a. på at ulik kommunal utforming av erklæringer (HC-kort) hindrer automatisering (kap. 4.6.4), og at kommuneoverlegen får MSIS-meldingen på papir (kap. 4.6.2)
 - Norsk Tannlegeforenings veileder; Den norske tannlegeforenings retningslinjer for bivirkningsmelding
 - Norsk Psykologforening – fagetiske retningslinjer; NAV-samarbeidsveileder
 - Norsk Fysioterapeutforbund; Norske Kiropraktorers Forening
@@ -4467,7 +4611,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) C-7 for strategisk avklaring.
 
 ---
 
-# 15. Strategi
+# 16. Strategi
 
 # Strategi — SMART on FHIR for Altinn Studio
 
@@ -4648,6 +4792,16 @@ Se [SAMMENLIGNING-syk-inn.md](SAMMENLIGNING-syk-inn.md) og [NHN-DOKUMENTASJON.md
 
 ---
 
+## Forankring i nasjonale føringer — Portaloppdraget
+
+**Lagt til 2026-11-12.** Direktoratet for e-helses rapport fra Portaloppdraget (november 2023, [PORTALOPPDRAGET.md](PORTALOPPDRAGET.md)) anbefaler at SMART on FHIR innføres i alle fastlege-EPJ-er som en **tredje samhandlingsmekanisme** ved siden av portaler og API (tiltak 1D). Den peker på appmodellens hovedgevinst — at tjenesteeieren kan endre appen uten at EPJ-leverandøren må utvikle noe — og beskriver en overgangsperiode der samme behov dekkes både av portal og app. Dette er i praksis den posisjonen Spor A og Spor B bygger på, nå med en offisiell anbefaling bak.
+
+Rapporten stiller også spørsmålet vi ikke har besvart: hvem eier, godkjenner og distribuerer **statlige apper**? (ansvarsforhold, endringshåndtering, app-butikk, test og godkjenning). Det er et argument for at plattformvalget i [BESLUTNINGER.md C-6](BESLUTNINGER.md) og hostingmodellene over bør besvares, ikke bare antas. Rapporten sier ingenting om Altinn som plattform utover å nevne Altinn i forbindelse med en mulig nasjonal skjemadatabase.
+
+**Forbehold:** rapporten er fra 2023, og dekker innrapportering til myndigheter, ikke utveksling mellom helseaktører.
+
+---
+
 ## Europeisk medvind — EHDS
 
 **European Health Data Space** (forordning (EU) 2025/327) er i kraft og gjelder fra 2026, med gjennomføringsrettsakter innen mars 2027 og første primærbruk-utveksling fra 2029. FHIR er den sentrale tekniske standarden. Norge er EØS-bundet og vil bli omfattet.
@@ -4672,7 +4826,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) for alle åpne beslutninger. De mest strat
 
 ---
 
-# 16. Norwegian FHIR Hackathon 2026 - forberedelse
+# 17. Norwegian FHIR Hackathon 2026 - forberedelse
 
 # Norwegian FHIR Hackathon 2026 (EHiN pre-konferanse) — forberedelse og gap-analyse
 
@@ -4801,7 +4955,7 @@ Sporet lenker til to NAV-repoer (samme team som `syk-inn`, jf. [SAMMENLIGNING-sy
 
 ---
 
-# 17. Testguide: SMART EHR Launch mot launch.smarthealthit.org
+# 18. Testguide: SMART EHR Launch mot launch.smarthealthit.org
 
 # Testguide: SMART EHR Launch mot launch.smarthealthit.org
 
@@ -4992,7 +5146,7 @@ Det denne testrunden **ikke** beviser:
 
 ---
 
-# 18. nav-epj som lokalt SMART on FHIR-testmiljo
+# 19. nav-epj som lokalt SMART on FHIR-testmiljo
 
 # nav-epj som lokalt SMART on FHIR-testmiljø
 
@@ -5215,7 +5369,7 @@ Dette er den enkleste måten å demonstrere at hele flyten fungerer for en perso
 
 ---
 
-# 19. Epic on FHIR som testmiljo (Helseplattformen)
+# 20. Epic on FHIR som testmiljo (Helseplattformen)
 
 # Epic on FHIR som testmiljø — relevant fordi Helseplattformen kjører Epic
 
