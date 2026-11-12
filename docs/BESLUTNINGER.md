@@ -23,6 +23,8 @@ En Altinn-instans har alltid én «part» (party) som eier instansen. I dag star
 
 **Status:** Uavklart — PoC bruker alternativ A (legen som part).
 
+**Ny innsikt (2026-11-12):** i Altinn er «part» også nøkkelen i instans-ID og lagring (`InstanceOwner.PartyId`), ikke bare en eierpost. Å velge en part er derfor også å velge Altinns identitetsmodell. En helsepersonell-identitet (HelseID, HPR-nummer) er ikke en Altinn-part. Se [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) del B.4 og del C, og C-8.
+
 ---
 
 ## C-2: HelseID — når skal BFF-siden validere tokenet?
@@ -191,6 +193,8 @@ NHN har allerede en produksjonssatt løsning for legeerklæring IS-2569 bygget p
 
 **Ny innsikt (2026-09-18):** blokkeren fra 2026-08-11 (testmiljøtilgang) er løst — NHN åpnet IP-sperren på citizen-portalen, og et Oppgave-kall (`Task`, `focus.type = "Communication"`) er nå bekreftet levert ende-til-ende til en ekte testpersons Helsenorge-innboks (TEST02) — se [IMPLEMENTERING.md §14.1](IMPLEMENTERING.md) og [local-dev/helsenorge-oppgave-test/README.md](../local-dev/helsenorge-oppgave-test/README.md). Dette de-risikerer alternativ B/C betydelig: den tekniske usikkerheten som gjorde at C-6 sto uavklart er nå i stor grad fjernet for pasientsporet. Selve plattformvalget (Altinn vs. Helsenorge vs. hybrid) er fortsatt en organisatorisk/strategisk beslutning, ikke en teknisk — men grunnlaget for å ta den er nå sterkere.
 
+**Ny innsikt (2026-11-12):** arkitekturvurderingen i [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) peker på et fjerde alternativ: **D — Altinn Studio og Apps Runtime som teknologi i en egen helseinstallasjon** med HelseID, egen instanseiermodell og eget mottak. Se C-8.
+
 **Beslutter:** Programleder + NHN + Statens vegvesen.
 
 **Status:** Åpen beslutning — teknisk usikkerhet om alternativ B/C betydelig redusert 2026-09-18, men selve plattformvalget uavklart.
@@ -223,6 +227,29 @@ Forsikringsbransjen er en stor og manuell konsument av legeerklæringer (ved teg
 
 ---
 
+## C-8: Altinn Studio som felles teknologi på tvers av sektorer (sektorprofiler)
+
+**Problemstilling:**
+Det er satt som føring at **bruk av HelseID er avgjørende** for helsepersonell. Altinn har i dag ID-porten som innlogging, og instansmodellen og lagringen hviler på Altinns Party-modell. Analysen i [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) legger frem tre retninger:
+
+| Alternativ | Beskrivelse | Vurdering i analysen |
+|---|---|---|
+| **A — Generalisere Altinns felleskomponenter** | Altinn Party, Storage og autorisasjon gjøres sektoragnostiske | Stort program, risiko for domenekobling og kompleksitet |
+| **B — Separate kodebaser** | Hver sektor kopierer og videreutvikler | God separasjon, men teknisk divergens |
+| **C — Felles kodegrunnlag, separate installasjoner** | Studio og Apps Runtime felles; egen helseinstallasjon med HelseID, egen instanseiermodell, eget mottak | Anbefalt å undersøke nærmere. Ikke vist i praksis |
+
+I tillegg gjelder C-6 (Helsenorge-plattformen som sektorløsning).
+
+**Avhengigheter:** C-1 (hvem er parten), C-6 (plattformvalg), R12 og R13 i risikoregisteret, og om Altinn Studio-teamet vil ta imot HelseID som innloggingsleverandør (se [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md) §6).
+
+**Anbefalt neste steg (fra analysen):** et mandat til en avgrenset teknisk analyse av Storage, instansmodellen og Apps Runtime, og en liten PoC der én app kjører med HelseID uten Altinn Party, Dialogporten og arbeidsflaten. Suksesskriterier og målepunkter står i analysens del B.12.
+
+**Beslutter:** Digdir (Altinn Studio-teamet) i samråd med NHN og Helsedirektoratet.
+
+**Status:** Ny åpen beslutning 2026-11-12. Analysen er foreløpig, og kodepåstandene er bare delvis kontrollert (se analysens del C).
+
+---
+
 ## Beslutningslogg
 
 | Dato | Beslutning | Besluttet av | Status |
@@ -234,3 +261,4 @@ Forsikringsbransjen er en stor og manuell konsument av legeerklæringer (ved teg
 | 2026-06-16 | Full IS-2569 utsettes til v1.0 (C-5) | JSF | Planlagt |
 | 2026-06-17 | Altinn Studio vs. Helsenorge — plattformvalg (C-6) | JSF | Ny åpen beslutning |
 | 2026-06-17 | DSOP + SMART on FHIR mot forsikring/privat sektor (C-7) | JSF | Ny åpen beslutning |
+| 2026-11-12 | Føring: bruk av HelseID er avgjørende for helsepersonell. Altinn som felles teknologi med sektorprofiler (C-8) | JSF | Føring satt; C-8 åpen |

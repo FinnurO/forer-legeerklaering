@@ -13,6 +13,7 @@
 - **Den påstanden bar en konklusjon som heller ikke holder:** at SSO mellom EPJ og Altinn «skjer naturlig» via felles fødselsnummer. Felles fødselsnummer lar oss *koble* to innlogginger til samme person; det er ikke SSO.
 - **Vår Altinn-statusbeskrivelse er utdatert:** den sier at Altinn «kun» støtter ID-porten, Feide og UIDP. Altinns kode har siden september 2026 fått HelseID-relaterte endringer, men ekte HelseID-innlogging er ikke verifisert og vi fant ingen dokumentasjon eller bekreftelse for TT02 eller produksjon.
 - **Vi har et eget hull:** appens Altinn-tilgangsregel er standardmalens, og sjekker ikke at brukeren er helsepersonell (§5).
+- **Føring 2026-11-12: bruk av HelseID er avgjørende.** ID-porten for helsepersonell i portalmodus er derfor et midlertidig PoC-valg, ikke et sted vi kan lande. Det åpner et større spørsmål enn innloggingen, fordi Altinns instansmodell og lagring hviler på Party. Analysen er samlet i [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md).
 
 ## 2. Hvem logger inn hvor
 
@@ -65,7 +66,7 @@
 
 1. **Helseaktørportalen:** hvem eier den, hvilken innlogging den krever, og om den støtter SSO eller kontekstoverføring fra EPJ. Delegert oppslag fant ingen omtale; adressen det ble forsøkt mot ga DNS-feil. Må avklares av noen som kjenner portalen.
 2. **Hvilke identitetsleverandører fastlegene faktisk bruker** i sine EPJ-er, og om noen av dem bare kan nå HelseID (og ikke ID-porten).
-3. **Om og når HelseID blir en støttet Altinn-innlogging**, og hvordan en app skal melde seg på. Åpent strategisk spørsmål i `VEIKART.md` fase 1b.
+3. **Om og når HelseID blir en støttet Altinn-innlogging**, og hvordan en app skal melde seg på. Åpent strategisk spørsmål i `VEIKART.md` fase 1b. Etter føringen 2026-11-12 er spørsmålet ikke lenger *om* HelseID trengs, men *hvordan*: som leverandør i Altinn, som app-intern tilleggsflyt, eller i en egen helseinstallasjon ([ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md)).
 4. **Hvilken innlogging HelseIDs selvbetjening bruker** for utviklere (ID-porten, Test-IdP eller HelseID test).
 5. **Om en HelseID-innlogging i Altinn ville gi HPR-nummeret automatisk**, slik tilleggsflyten i dag må hente det.
 
@@ -74,6 +75,7 @@
 | Tiltak | Hvor |
 |---|---|
 | Stram inn `policy.xml` og krev høyere autentiseringsnivå, og avklar hva som skal til for å kreve HPR | R12, `VEIKART.md` fase 1 |
+| Undersøk om en HelseID-basert app kan kjøre uten Altinn Party, Dialogporten og arbeidsflate (liten PoC, målrettet analyse av Storage og instansmodell) | [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md), `BESLUTNINGER.md` C-8, R13 |
 | Skriv ned eksplisitt at portalmodus i dag betyr dobbel innlogging for helsepersonell | `DOBBEL-INNGANGSMODUS.md` |
 | Avklar punktene i §6, spesielt 1 og 3, med NHN og Altinn Studio-teamet | `BESLUTNINGER.md` C-2 og C-6 |
 

@@ -283,6 +283,8 @@ Legene er allerede innlogget i EPJ via **HelseID** (NHNs OpenID Connect-leverand
 
 > **Rettelse.** En tidligere versjon av dette avsnittet (v0.6.5) påsto at «HelseID autentiserer selve brukeren via ID-porten» og at SSO mot Altinn dermed «skjer naturlig» via felles fødselsnummer. Begge deler er feil eller ubelagte. Se [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md).
 
+> **Føring (2026-11-12).** Bruk av HelseID er avgjørende. Å løse det bare med en HelseID-tilleggsflyt i en Altinn-app er ikke nok, siden Altinns instansmodell og lagring hviler på Altinn Party. Se [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) og [BESLUTNINGER.md](BESLUTNINGER.md) C-8.
+
 **HelseID er en identitetsføderasjon uten egen innlogging.** Brukeren velger en ekstern identitetsleverandør; standardlisten er Buypass, Commfides, BankID, ID-porten og Helse Midt-Norge RHF. ID-porten er et «ekstra alternativ» og er ikke tilgjengelig på Helsenettet. HelseID legger til helsefaglige claims (HPR-nummer, organisasjon, sikkerhetsnivå) som ID-porten ikke gir. Hvilken leverandør som ble brukt, står i `idp`-claimet.
 
 ```
@@ -623,3 +625,4 @@ Per 2026 finnes det **ingen nasjonal FHIR-profil for legeerklæring førerrett**
 | **v0.6.7** | **2026-06-16** | Ny fil `PASIENTFLYT.md`: arkitekturforslag for digital egenerklæring (NA-0201) med Dialogporten og helsenorge.no. Fullstendig feltstruktur for egenerklæringen. Mapping NA-0201 → IS-2569 helsekategorier. Faseplan v1.0–v3.0. |
 | **v0.6.8** | **2026-06-16** | Fem forbedringer basert på ekstern gjennomgang: (A) Scope-korreksjon — `user/PractitionerRole.read` lagt til, begrunnelse for `user/` vs `patient/` dokumentert. (B) Suksesskriterier — ny seksjon 2.2 med 6 målbare kriterier og akseptansetest. (C) Eksplisitt BFF-valg — browser-direkte FHIR avvist med begrunnelse i seksjon 4. (D) Ny seksjon 7 Personvern og behandlingsgrunnlag — hjemmel, dataflyt, dataminimering, logging, åpne spørsmål. (E) Token-livssyklus — refresh, utløp, session timeout i IMPLEMENTERING. Seksjoner renummerert til 12. |
 | **v0.6.9** | **2026-11-12** | Rettet seksjon 6.6 og tilhørende tabell: HelseID er en identitetsføderasjon der ID-porten er én av flere leverandører (ikke «identitetsrot»), og felles `pid` gir korrelasjon, ikke SSO. Se INNLOGGING-HELSEID-IDPORTEN.md. |
+| **v0.6.10** | **2026-11-12** | Lagt til føring i seksjon 6.6: bruk av HelseID er avgjørende, og kravet kan ikke løses med en tilleggsflyt alene (Altinn Party i instansmodellen). Se ARKITEKTURVURDERING-SEKTORPLATTFORM.md. |

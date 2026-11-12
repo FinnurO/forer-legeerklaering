@@ -104,6 +104,7 @@ Fant `IInstantiationProcessor.DataCreation(Instance instance, object data, Dicti
 4. ⬜ **`PersonLookup`-komponent** i layout, synlig kun i portal-modus — kan bygges nå.
 5. ⬜ **HelseID-tilleggsflyt + HPR-bekreftelse** — **venter** på at Johann registrerer en HelseID authorization_code-klient og en Maskinporten `nhn:hpr/basic`-klient (besluttet 2026-08-13: bygging avventes til klientene finnes).
 6. ⬜ **`IInstantiationValidator`** for tilgangsstyring — avhenger av #5 (bruker samme HPR-bekreftelse).
+7. ⬜ **Plattformspørsmålet (lagt til 2026-11-12):** føringen om at HelseID er avgjørende gjør at portalmodus med ID-porten ikke er sluttløsningen. Om helsepersonell skal logge inn med HelseID i en Altinn-app, avhenger av om Altinn får HelseID som leverandør, eller om helse får en egen installasjon. Se [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) og [BESLUTNINGER.md](BESLUTNINGER.md) C-8.
 
 ---
 

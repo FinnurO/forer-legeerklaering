@@ -60,6 +60,8 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 
 **Avhengighet:** Spor B starter etter at Spor A har produsert et stabilt, produksjonsklar SMART-klient (fase 1–3).
 
+**Lagt til 2026-11-12 — plattformspørsmålet:** føringen er at bruk av HelseID er avgjørende. Da holder det ikke å lage helseskjemaer i Altinn-profilen (ID-porten, Altinn Party, Altinn Storage). Arkitekturvurderingen i [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) foreslår at Studio og Apps Runtime gjenbrukes som felles teknologi, med en egen **helseprofil** (HelseID, egen aktør- og autorisasjonsmodell, eget mottak og arkiv) som egne installasjoner. Det er en hypotese som må prøves med en PoC, ikke en beslutning.
+
 ---
 
 ## Fire leveransemodeller for nasjonal utbredelse
@@ -203,6 +205,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) for alle åpne beslutninger. De mest strat
 
 | ID | Spørsmål | Blokkerer |
 |---|---|---|
+| C-8 | Altinn som felles teknologi med sektorprofiler, og HelseID som innlogging | Spor B, og om fase 1b er en omvei |
 | C-6 | Altinn Studio vs. Helsenorge-plattformen — rollefordeling | Fase 3 |
 | C-3 | Mottaksarkitektur — hvem er tjenesteeier? | Fase 3 |
 | C-4 | Rettslig grunnlag og DPIA | Fase 3 |

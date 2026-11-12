@@ -35,6 +35,7 @@ $sections = @(
     @{ File = "SAMMENLIGNING-syk-inn.md";        Title = "Sammenligning: forer vs. syk-inn vs. NHN Førerrett-App" }
     @{ File = "NHN-DOKUMENTASJON.md";            Title = "NHN-dokumentasjon" }
     @{ File = "INNLOGGING-HELSEID-IDPORTEN.md";   Title = "Innlogging: HelseID og ID-porten" }
+    @{ File = "ARKITEKTURVURDERING-SEKTORPLATTFORM.md"; Title = "Arkitekturvurdering: Altinn Studio som gjenbrukbar plattform på tvers av sektorer (HelseID)" }
     @{ File = "PORTALOPPDRAGET.md";              Title = "Portaloppdraget (TB2023-17) - rapport om informasjonsutveksling mellom helsepersonell og myndigheter" }
     @{ File = "KARTLEGGING-kandidater.md";       Title = "Kartlegging av rapporteringsplikter" }
     @{ File = "STRATEGI.md";                     Title = "Strategi" }
