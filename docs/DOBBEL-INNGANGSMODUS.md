@@ -12,12 +12,14 @@
 | | A — SMART EHR Launch | B — Normal Altinn-pålogging |
 |---|---|---|
 | **Forutsetning** | EPJ støtter SMART App Launch | Ingen — fungerer for enhver Altinn-bruker |
-| **Hvordan legen kommer inn** | EPJ åpner appen med `iss`/`launch`-parametere | Legen finner tjenesten i Altinn (portal/tjenesteoversikt) og logger inn med ID-porten som normalt |
+| **Hvordan legen kommer inn** | EPJ åpner appen med `iss`/`launch`-parametere | Legen finner tjenesten i Altinn (portal/tjenesteoversikt) og logger inn med ID-porten, som er det Altinn tilbyr i dag. Det er ikke innloggingen helsepersonell er vant til (HelseID) |
 | **Pasientkontekst** | Kjent fra launch (patient-ID, encounter-ID) | Ukjent — må oppgis manuelt |
 | **FHIR-prefill** | Automatisk (`FhirPrefillService.ProcessDataRead`) | Ikke mulig — ingen FHIR-tilkobling finnes |
 | **Status i dag** | ✅ Fullstendig verifisert (IMPLEMENTERING.md §13) | ⚠️ Fungerer trolig som utilsiktet bivirkning — aldri designet eller testet bevisst |
 
 **Lagt til 2026-11-12 — støtte fra Portaloppdraget:** rapporten fra Direktoratet for e-helse ([PORTALOPPDRAGET.md](PORTALOPPDRAGET.md), kap. 4.1.6) sier at fordi det vil ta tid å få SMART on FHIR-støtte i alle fastlege-EPJ-er, kan et innrapporteringsbehov i en periode både være tilgjengelig via portal (for EPJ-er uten støtte) og via SMART-app. Det bekrefter behovet for to innganger. Rapporten ser dem som to separate løsninger i en overgangsperiode; at *samme app* håndterer begge, slik dette dokumentet foreslår, er en videreføring og ikke noe rapporten anbefaler.
+
+**Lagt til 2026-11-12 — innloggingen i portalmodus:** for helsepersonell er HelseID den vanlige innloggingen (Johann nevner Helseaktørportalen som eksempel; ikke selvstendig verifisert). Portalmodus betyr i dag i stedet ID-porten i Altinn, uten HPR-nummer, og tilleggsflyten under krever en andre innlogging (HelseID). Appens tilgangsregel sjekker heller ikke at brukeren er helsepersonell, se [RISIKOREGISTER.md](RISIKOREGISTER.md) R12 og [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md).
 
 ---
 
@@ -57,7 +59,7 @@ Viktig innsikt: Altinn vet allerede hvem som er innlogget (ID-porten-fødselsnum
 
 **Oppdatert 2026-08-13 — arkitektur besluttet, ikke bygget ennå.** HPR-nummer er ikke tilgjengelig fra en vanlig ID-porten-pålogging. Undersøkt to veier:
 
-1. **Kunne HelseID vært Altinns egen innloggingsmetode** (i stedet for ID-porten), slik at `hpr_number`-claimet kom automatisk? **Nei, ikke uten videre** — Altinn Platform sin native innlogging støtter i dag kun ID-porten, Feide og UIDP som godkjente identitetsleverandører ([kilde](https://docs.altinn.studio/technology/architecture/capabilities/runtime/security/authentication/oidcproviders/)). Å legge til HelseID der er en plattformendring Altinn Studio-teamet selv må gjøre — ikke noe denne appen kan løse alene. Bekreftet av Johann: «Det finnes ikke støtte for HelseID pålogging mot Altinn Studio apper... men det er mulig med OAuth og har blitt gjort med Feide.»
+1. **Kunne HelseID vært Altinns egen innloggingsmetode** (i stedet for ID-porten), slik at `hpr_number`-claimet kom automatisk? **Nei, ikke uten videre** — Altinns dokumentasjon (sist endret september 2025) lister bare Feide og UIDP som godkjente leverandører utover standarden ID-porten ([kilde](https://docs.altinn.studio/nb/technology/architecture/capabilities/runtime/security/authentication/oidcproviders/); den opprinnelige adressen gir nå 404). **Rettet 2026-11-12:** Altinns kode har siden september 2026 fått HelseID-relaterte endringer, men ekte HelseID-innlogging er ikke verifisert og vi fant ingen bekreftelse for TT02 eller produksjon, se [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md) §5. Å legge til HelseID der er en plattformendring Altinn Studio-teamet selv må gjøre — ikke noe denne appen kan løse alene. Bekreftet av Johann: «Det finnes ikke støtte for HelseID pålogging mot Altinn Studio apper... men det er mulig med OAuth og har blitt gjort med Feide.»
 2. **Løsningen: en app-intern tilleggsflyt.** Legen logger inn i Altinn helt normalt (ID-porten, uendret), og appen tilbyr en *egen* HelseID-autorisasjonsflyt inni skjemaet (samme mønster som `SmartLaunchController`, bare trigget av legen selv). Etter callback: hent `hpr_number`-claim, slå opp i [HPR Offentlig API](https://utviklerportal.nhn.no/informasjonstjenester/helsepersonellregisteret) (`GET /v1/personer/{hpr_number}`, Maskinporten-sikret, scope `nhn:hpr/basic` — selvbetjent, ingen Helsedirektoratet-godkjenning nødvendig siden vi kun trenger oppslag på HPR-nummer, ikke fnr) for å bekrefte navn og autorisert rolle.
 
 Se [VEIKART.md fase 1b](VEIKART.md) for full tiltaksliste. **Status:** venter på to klientregistreringer (HelseID authorization_code-klient, Maskinporten `nhn:hpr/basic`-klient) — ikke igangsatt.
@@ -102,6 +104,7 @@ Fant `IInstantiationProcessor.DataCreation(Instance instance, object data, Dicti
 4. ⬜ **`PersonLookup`-komponent** i layout, synlig kun i portal-modus — kan bygges nå.
 5. ⬜ **HelseID-tilleggsflyt + HPR-bekreftelse** — **venter** på at Johann registrerer en HelseID authorization_code-klient og en Maskinporten `nhn:hpr/basic`-klient (besluttet 2026-08-13: bygging avventes til klientene finnes).
 6. ⬜ **`IInstantiationValidator`** for tilgangsstyring — avhenger av #5 (bruker samme HPR-bekreftelse).
+7. ⬜ **Plattformspørsmålet (lagt til 2026-11-12):** føringen om at HelseID er avgjørende gjør at portalmodus med ID-porten ikke er sluttløsningen. Om helsepersonell skal logge inn med HelseID i en Altinn-app, avhenger av om Altinn får HelseID som leverandør, eller om helse får en egen installasjon. Se [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) og [BESLUTNINGER.md](BESLUTNINGER.md) C-8.
 
 ---
 

@@ -120,6 +120,8 @@
               <tr><td id="r7">R7</td><td>Ingen automatiserte tester — regresjon kan innføres uten å bli fanget</td><td><span class="pill bad">Høy</span></td></tr>
               <tr><td>R10</td><td>Etter SMART callback finnes FHIR-kontekst, men ingen Altinn-sesjon i produksjon</td><td><span class="pill warn">Middels, mitigert i dev</span></td></tr>
               <tr><td>R11</td><td>SMART-konteksten ligger kun i in-process-sesjon — svikter ved flere replikaer eller lengre økter</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R12</td><td>Tilgangsregelen er standardmalens: ingen sjekk av at brukeren er helsepersonell, og autentiseringsnivå 2</td><td><span class="pill bad">Høy</span></td></tr>
+              <tr><td>R13</td><td>Altinns instansmodell og lagring hviler på Altinn Party, så HelseID-innlogging alene løser ikke kravet</td><td><span class="pill bad">Høy</span></td></tr>
               <tr><td>R9</td><td>Helsenorge EksternAPI: testmiljøtilgang og «digitalt aktive» testpersoner</td><td><span class="pill ok">Løst</span></td></tr>
             </tbody>
           </table>
@@ -138,6 +140,7 @@
           <li><span class="n">C-5</span><div><h4>Full IS-2569 og pasientens egenerklæring (NA-0201)</h4><p>Datamodell og feltstruktur er dokumentert; implementering utsatt.</p></div></li>
           <li><span class="n">C-6</span><div><h4>Altinn Studio eller Helsenorge som plattform</h4><p>Åpen. Den tekniske usikkerheten rundt Helsenorge-sporet er redusert betydelig, men selve plattformvalget er organisatorisk.</p></div></li>
           <li><span class="n">C-7</span><div><h4>DSOP og SMART on FHIR mot privat sektor (forsikring)</h4><p>Åpen.</p></div></li>
+          <li><span class="n">C-8</span><div><h4>Altinn som felles teknologi med sektorprofiler</h4><p>Ny. Føringen er at HelseID er avgjørende. Analysen foreslår felles kodegrunnlag og en egen helseinstallasjon, og en liten PoC for å prøve det. <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/ARKITEKTURVURDERING-SEKTORPLATTFORM.md" target="_blank" rel="noopener">Arkitekturvurdering</a>.</p></div></li>
         </ul>
         <p>Alternativer og konsekvenser: <a class="ds-link" href="https://github.com/FinnurO/forer-legeerklaering/blob/main/docs/BESLUTNINGER.md" target="_blank" rel="noopener"><code>docs/BESLUTNINGER.md</code></a>.</p>
       </section>

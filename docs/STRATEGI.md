@@ -60,6 +60,8 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 
 **Avhengighet:** Spor B starter etter at Spor A har produsert et stabilt, produksjonsklar SMART-klient (fase 1–3).
 
+**Lagt til 2026-11-12 — plattformspørsmålet:** føringen er at bruk av HelseID er avgjørende. Da holder det ikke å lage helseskjemaer i Altinn-profilen (ID-porten, Altinn Party, Altinn Storage). Arkitekturvurderingen i [ARKITEKTURVURDERING-SEKTORPLATTFORM.md](ARKITEKTURVURDERING-SEKTORPLATTFORM.md) foreslår at Studio og Apps Runtime gjenbrukes som felles teknologi, med en egen **helseprofil** (HelseID, egen aktør- og autorisasjonsmodell, eget mottak og arkiv) som egne installasjoner. Det er en hypotese som må prøves med en PoC, ikke en beslutning.
+
 ---
 
 ## Fire leveransemodeller for nasjonal utbredelse
@@ -88,7 +90,7 @@ Dette er det egentlige prosjektet. Legeerklæring for førerrett er demonstrasjo
 
 **Note til EPJ-modellens «levende eksempel», lagt til 2026-09-16:** FHI bekrefter (e-post fra `msis.drift@fhi.no`, 2026-09-14) at MSIS-klinikermelding allerede kjører SMART on FHIR i produksjon i minst ett EPJ-system, og at FHI ønsker å utvide til flere leverandører. Dette er ikke lenger en hypotetisk plassholder — det er det konkrete beviset på at EPJ-modellen fungerer i norsk helsesektor i dag, om enn per-leverandør og uten en delt, gjenbrukbar komponent (nøyaktig det problemet Altinn-modellen løser annerledes). Se [KARTLEGGING-kandidater.md, note til A5](KARTLEGGING-kandidater.md) for detaljer.
 
-**Tilleggsdifferensiator, lagt til 2026-08-12 — dobbel inngangsmodus:** ikke alle EPJ-leverandører har, eller vil, implementere SMART on FHIR. NAV-modellen (`syk-inn`), NHN-modellen (Førerrett-App) og EPJ-modellen har alle *dedikerte* apper som forutsetter sin respektive integrasjon og ikke fungerer uten. **Altinn-modellen er den eneste som kan tilby samme skjema uavhengig av om EPJ-en støtter SMART eller ikke** — legen kan komme inn via SMART EHR Launch *eller* logge inn i Altinn normalt (ID-porten) som en hvilken som helst annen Altinn-tjeneste, i samme app. Se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md) for full analyse av hva dette krever teknisk, og hvorfor det bør bli en eksplisitt del av «helse-template»-visjonen i Spor B.
+**Tilleggsdifferensiator, lagt til 2026-08-12 — dobbel inngangsmodus:** ikke alle EPJ-leverandører har, eller vil, implementere SMART on FHIR. NAV-modellen (`syk-inn`), NHN-modellen (Førerrett-App) og EPJ-modellen har alle *dedikerte* apper som forutsetter sin respektive integrasjon og ikke fungerer uten. **Altinn-modellen er den eneste som kan tilby samme skjema uavhengig av om EPJ-en støtter SMART eller ikke** — legen kan komme inn via SMART EHR Launch *eller* logge inn i Altinn normalt (i dag ID-porten, ikke HelseID, som er det helsepersonell er vant til — se [INNLOGGING-HELSEID-IDPORTEN.md](INNLOGGING-HELSEID-IDPORTEN.md)) som en hvilken som helst annen Altinn-tjeneste, i samme app. Se [DOBBEL-INNGANGSMODUS.md](DOBBEL-INNGANGSMODUS.md) for full analyse av hva dette krever teknisk, og hvorfor det bør bli en eksplisitt del av «helse-template»-visjonen i Spor B.
 
 ---
 
@@ -203,6 +205,7 @@ Se [BESLUTNINGER.md](BESLUTNINGER.md) for alle åpne beslutninger. De mest strat
 
 | ID | Spørsmål | Blokkerer |
 |---|---|---|
+| C-8 | Altinn som felles teknologi med sektorprofiler, og HelseID som innlogging | Spor B, og om fase 1b er en omvei |
 | C-6 | Altinn Studio vs. Helsenorge-plattformen — rollefordeling | Fase 3 |
 | C-3 | Mottaksarkitektur — hvem er tjenesteeier? | Fase 3 |
 | C-4 | Rettslig grunnlag og DPIA | Fase 3 |
